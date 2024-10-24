@@ -1,0 +1,29 @@
+{
+    "SOS-IT": {
+        "Snímače": [
+            {
+                "roomName": "Učebňa 1",
+                "nadr": "1",
+                "gateway": "sosit"
+            }
+        ]
+    },
+    "Gymnazium": {
+        "Snímače": [
+            {
+                "roomName": "Učebňa 2",
+                "nadr": "1",
+                "gateway": "gymnazium"
+            }
+        ]
+    },
+    "ZS": {
+        "Snímače": [
+            {
+                "roomName": "Učebňa 3",
+                "nadr": "1",
+                "gateway": "zakladna"
+            }
+        ]
+    }
+}
