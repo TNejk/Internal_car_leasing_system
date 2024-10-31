@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/signs/sign_in.css') }}">
+<script src="{{ url_for('static', filename='js/signs/sign_in.js' )}}"></script>
+<title>ICLS - Prihlásenie</title>
+{% endblock %}
+
+{% block body %}
+<div class="main-content">
+  <div class="sign-div">
+    <h1>Prihlás sa</h1>
+    <form action="/sign-in" method="POST">
+      <div class="sign-in-input">
+        <label>
+          <p>Email</p>
+          <input type="email" id="sign-in-email-input" name="email">
+        </label>
+        <label>
+          <p>Heslo</p>
+          <input type="password" id="sign-in-password-input" name="password">
+        </label>
+      </div>
+      <div class="signin-button">
+        <input type="submit" id="signin-button" value="Prihlás sa">
+      </div>
+      <div class="sign-in-error">
+        {% if error %}
+        <h3>Nastala chyba!</h3>
+        <p>{{ error }}</p>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+{% endblock %}

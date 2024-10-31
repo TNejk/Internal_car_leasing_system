@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>ICLS - Registrácia</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/signs/sign_up.css') }}">
+<script src="{{ url_for('static', filename='js/signs/sign_up.js' )}}"></script>
+{% endblock %}
+
+{% block script %}
+{% endblock %}
+
+{% block body %}
+<div class="main-content">
+  <div class="sign-div">
+    <h1>Registruj sa</h1>
+    <div class="sign-up-input">
+<!--      <label>-->
+<!--        <p>Meno</p>-->
+<!--        <input type="text" id="sign-up-name-input">-->
+<!--      </label>-->
+      <label>
+        <p>Email</p>
+        <input type="text" id="sign-up-email-input" name="email">
+      </label>
+      <label>
+        <p>Heslo</p>
+        <input type="password" id="sign-up-password-input" name="password">
+      </label>
+    </div>
+    <div class="signin-button">
+      <input type="submit" id="sign-up-button" value="Registruj sa">
+    </div>
+    <div class="signin-error">
+      {% if error %}
+      <h3>Nastala chyba!</h3>
+      <p>{{ error }}</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+{% endblock %}
