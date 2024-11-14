@@ -63,3 +63,15 @@ def login():
   finally:
     cur.close()
     db_conn.close()
+
+@app.route('/reports', methods = ['POST'])
+@require_token()
+def reports():
+  connect_to_db()
+  sql_string = "select * from reports;"
+  # the app will just use the url to get the file instead
+  # you need to just  retun
+  return {
+    'name':
+    'url':
+  }
