@@ -108,6 +108,24 @@ def lease_car():
   con.close()
   # Then we return a confirmation of order
   # so we can show a return car option
+
+  # either return a 
+
+  """ 
+  If a user tries to reserver an already reserved car
+  return {
+      status: reserved
+      private: false
+  }
+
+  If user tries to reserver a car for someone else while not a manager, also log it
+  return {
+      status: unauthorized
+      private: false
+  } 
+
+  """
+  
   return {
     "status": "ordered",
     "private": True
