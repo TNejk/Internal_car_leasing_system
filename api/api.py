@@ -3,7 +3,7 @@ import jwt
 import psycopg2
 from flask import Flask, request, jsonify
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '598474ea66434fa7992d54ff8881e7c2'
@@ -24,7 +24,7 @@ def require_token():
 
 def connect_to_db():
   try:
-    db_con = psycopg2.connect("dbname='postgres' user='postgres' host='localhost' password='<DB_ICLS_PASSWORD>'")
+    db_con = psycopg2.connect("dbname='postgres' user='postgres' host='' password='<DB_ICLS_PASSWORD>'")
     cur = db_con.cursor()
     return db_con, cur
   except psycopg2.Error as e:
@@ -64,14 +64,29 @@ def login():
     cur.close()
     db_conn.close()
 
+
+
 @app.route('/reports', methods = ['POST'])
-@require_token()
 def reports():
-  connect_to_db()
+  con, cur = connect_to_db()
+  
+  reports = []
   sql_string = "select * from reports;"
   # the app will just use the url to get the file instead
-  # you need to just  retun
+  # you need to just  return
+  result = cur.execute(sql_string)
+  
+  for i in result:
+    reports.append( {"name": i[1], "url": i[2]} )
+  con.close()
+
   return {
-    'name':
-    'url':
+    'reports': reports
   }
+
+
+
+
+
+if __name__ == "__main__":
+  app.run()
