@@ -85,6 +85,45 @@ def reports():
   }
 
 
+@app.route('/lease_car', methods = ['POST'])
+def lease_car():
+  # check token, 
+  # can the car be leased, 
+  # is the user a manager 
+  # (compare the user leasing and user thats recieving the lease, 
+  # if the user leasing is a manager and has the manager token, allow it.)
+  # we need: 
+  # the reserver
+  # the user recieving the reservation
+  # time from
+  # time to
+  # private ride?
+  data = request.get_json()
+  user = data["user"]
+  time_now = data["time_now"]
+  time_till = data["time_till"]
+  private = data["private"]
+
+  con, cur = connect_to_db()
+  con.close()
+  # Then we return a confirmation of order
+  # so we can show a return car option
+  return {
+    "status": "ordered",
+    "private": True
+  }
+
+@app.route('/return_car', methods = ['POST'])
+def return_car():
+  # check if a lease exist in the DB
+  # check if the user is either a manager or the reservist
+  # if yes, delete/mark it as complete
+  # if not a private ride save the return location
+  # save the note
+  # change the leased car status to free, and change its location driver and use metric
+
+  pass
+
 
 
 
