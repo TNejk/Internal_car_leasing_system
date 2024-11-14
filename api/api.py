@@ -1,6 +1,7 @@
 import hashlib
 import jwt
 import psycopg2
+import gunicorn
 from flask import Flask, request, jsonify
 from functools import wraps
 from datetime import datetime, timedelta
