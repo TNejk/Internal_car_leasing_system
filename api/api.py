@@ -1,3 +1,4 @@
+import hashlib
 import jwt
 import psycopg2
 from flask import Flask, request, jsonify
@@ -13,20 +14,52 @@ def require_token():
     def wrapper(*args, **kwargs):
       token = request.args.get('token')
       if not token:
-        return jsonify({'error': 'Token is missing'}), 401
+        return jsonify({'error': 'Chýba token!'}), 401
       try:
         payload = jwt.decode(token, app.config['SECRET_KEY'])
       except:
-        return jsonify({'error': 'Token is invalid'}), 401
+        return jsonify({'error': 'Token je neplatný!'}), 401
     return wrapper
   return decorator
+
+def connect_to_db():
+  try:
+    db_con = psycopg2.connect("dbname='postgres' user='postgres' host='localhost' password='<DB_ICLS_PASSWORD>'")
+    cur = db_con.cursor()
+    return db_con, cur
+  except psycopg2.Error as e:
+    return None, e
 
 @app.route('/login', methods=['POST'])
 def login():
   username=request.form.get('username')
   password=request.form.get('password')
   if not username or not password:
-    return jsonify({'error': 'Username or password is missing'}), 401
-  db_con = psycopg2.connect("dbname='postgres' user='postgres' host='localhost' password='<DB_ICLS_PASSWORD>'")
-  cur = db_con.cursor()
-  
+    return jsonify({'error': 'Chýba meno alebo heslo!'}), 401
+
+  db_conn, cur = connect_to_db()
+  if db_conn is None:
+    return jsonify({'error': cur}), 501
+
+  salt = '$2b$12$4/ZiN3Ga8VQjxm9.K2V3/.'
+  salted = salt+password+salt
+  hashed = hashlib.sha256(salted.encode()).hexdigest()
+  try:
+    query = "SELECT role FROM users WHERE username = %s AND password = %s;"
+    cur.execute(query, (username, hashed))
+    res = cur.fetchone()
+
+    if res is None:
+      return jsonify({'error': 'Meno alebo heslo sú nesprávne!'}), 401
+    else:
+      token = jwt.encode({
+        'user': username,
+        'role': res[0],
+        'exp': str(datetime.now() + timedelta(seconds=300)),
+        },
+        app.config['SECRET_KEY'])
+      return jsonify({'token': token.decode('utf-8')}), 200
+
+  finally:
+    cur.close()
+    db_conn.close()
