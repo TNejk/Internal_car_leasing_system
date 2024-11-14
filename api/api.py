@@ -30,3 +30,18 @@ def login():
   db_con = psycopg2.connect("dbname='postgres' user='postgres' host='localhost' password='<DB_ICLS_PASSWORD>'")
   cur = db_con.cursor()
   
+
+
+
+
+@app.route('/reports', methods = ['POST'])
+@require_token
+def reports():
+  connect_to_db()
+  sql_string = "select * from reports;"
+  # the app will just use the url to get the file instead
+  # you need to just  retun
+  return {
+    'name': 
+    'url':
+  }
