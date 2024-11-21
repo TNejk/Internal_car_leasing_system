@@ -59,12 +59,16 @@ def login():
     if res is None:
       return jsonify({'error': 'Meno alebo heslo sú nesprávne!'}), 401
     else:
-      token = jwt.encode({
+      payload = {
         'user': username,
         'role': res[0],
-        'exp': str(datetime.now() + timedelta(seconds=300)),
-        },
-        app.config['SECRET_KEY'])
+        'exp': datetime.now() + timedelta(seconds=300),
+      }
+      token = jwt.encode(
+        payload,
+        app.config['SECRET_KEY'],
+        algorithm="HS256"
+      )
       return jsonify({'token': token.decode('utf-8')}), 200
 
   finally:
