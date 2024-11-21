@@ -15,6 +15,7 @@ db_name = os.getenv('POSTGRES_DB')
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '598474ea66434fa7992d54ff8881e7c2'
 
+
 def require_token():
   def decorator(func):
     @wraps(func)
@@ -23,9 +24,14 @@ def require_token():
       if not token:
         return jsonify({'error': 'Chýba token!'}), 401
       try:
-        payload = jwt.decode(token, app.config['SECRET_KEY'])
-      except:
-        return jsonify({'error': 'Token je neplatný!'}), 401
+        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+        kwargs['user'] = payload
+      except jwt.ExpiredSignatureError:
+        return jsonify({'error': 'Token expiroval!'}), 401
+      except jwt.InvalidTokenError:
+        return jsonify({'error': 'Neplatný token!'}), 401
+
+      return func(*args, **kwargs)
     return wrapper
   return decorator
 
