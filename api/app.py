@@ -84,6 +84,7 @@ def login():
 
 
 @app.route('/reports', methods = ['POST'])
+@require_token()
 def reports():
   con, cur = connect_to_db()
   if con is None:
