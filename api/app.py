@@ -3,6 +3,7 @@ import hashlib
 import jwt
 import psycopg2
 from flask import Flask, request, jsonify
+from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 from functools import wraps
 from datetime import datetime, timedelta
 
@@ -15,25 +16,7 @@ db_name = os.getenv('POSTGRES_DB')
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '598474ea66434fa7992d54ff8881e7c2'
 
-
-def require_token():
-  def decorator(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-      token = request.args.get('token')
-      if not token:
-        return jsonify({'error': 'Chýba token!'}), 401
-      try:
-        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-        kwargs['user'] = payload
-      except jwt.ExpiredSignatureError:
-        return jsonify({'error': 'Token expiroval!'}), 401
-      except jwt.InvalidTokenError:
-        return jsonify({'error': 'Neplatný token!'}), 401
-
-      return func(*args, **kwargs)
-    return wrapper
-  return decorator
+jwt_manager = JWTManager(app)
 
 def connect_to_db():
   try:
@@ -67,24 +50,25 @@ def login():
     else:
       payload = {
         'user': username,
-        'role': res[0],
-        'exp': datetime.now() + timedelta(seconds=300),
+        'role': res[0]
       }
-      token = jwt.encode(
-        payload,
-        app.config['SECRET_KEY'],
-        algorithm="HS256"
-      )
-      return jsonify({'token': token}), 200
+      access_token = create_access_token(identity=payload, fresh=True, expires_delta=datetime.timedelta(minutes=30))
+      refresh_token = create_refresh_token(identity=payload, expires_delta=datetime.timedelta(days=1))
+      return jsonify(access_token=access_token, refresh_token=refresh_token), 200
 
   finally:
     cur.close()
     db_conn.close()
 
-
+@app.route('/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    current_user = get_jwt_identity()
+    access_token = create_access_token(identity=current_user, expires_delta=datetime.timedelta(minutes=30))
+    return jsonify(access_token=access_token), 200
 
 @app.route('/reports', methods = ['POST'])
-@require_token()
+#! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
 def reports():
   con, cur = connect_to_db()
   if con is None:
@@ -106,6 +90,7 @@ def reports():
 
 
 @app.route('/lease_car', methods = ['POST'])
+#! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
 def lease_car():
   # check token, 
   # can the car be leased, 
@@ -152,6 +137,7 @@ def lease_car():
   }
 
 @app.route('/return_car', methods = ['POST'])
+#! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
 def return_car():
   # check if a lease exist in the DB
   # check if the user is either a manager or the reservist
@@ -164,9 +150,9 @@ def return_car():
 
 
 @app.route('/token_test', methods = ['POST'])
-@require_token()
-def token_test(user):
-  return user
+@jwt_required()
+def token_test():
+  return jsonify({'token': get_jwt_identity()}), 200
 
 if __name__ == "__main__":
   app.run()
