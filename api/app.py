@@ -33,8 +33,8 @@ def login():
   if not username or not password:
     return jsonify({'error': 'Chýba meno alebo heslo!'}), 401
 
-  db_conn, cur = connect_to_db()
-  if db_conn is None:
+  conn, cur = connect_to_db()
+  if conn is None:
     return jsonify({'error': cur}), 501
 
   salt = '$2b$12$4/ZiN3Ga8VQjxm9.K2V3/.'
@@ -64,6 +64,31 @@ def refresh():
     additional_claims = get_jwt_claims()
     access_token = create_access_token(identity=current_user, expires_delta=timedelta(minutes=30), additional_claims=additional_claims)
     return jsonify(access_token=access_token), 200
+
+@app.route('/get_car_list', methods=['GET'])
+@jwt_required()
+def get_car_list():
+  conn, cur = connect_to_db()
+  if conn is None:
+    return jsonify({'error': cur}), 501
+  try:
+    location = request.args.get('location', 'none')
+    query = ''
+    if location == 'none':
+      query = ("SELECT CONCAT(name, ';', status, ';', usage_metric, ';', location) AS car_details "
+              "FROM car ORDER BY usage_metric ASC;")
+    elif location != 'none':
+      query = ("SELECT CONCAT(name, ';', status, ';', usage_metric, ';', location) AS car_details FROM car "
+       "ORDER BY CASE WHEN location = %s THEN 1 ELSE 2 END, usage_metric ASC;")
+    cur.execute(query, location)
+    res = cur.fetchone()
+    return jsonify(car_details=res), 200
+
+  finally:
+    cur.close()
+    db_conn.close()
+
+
 
 @app.route('/reports', methods = ['POST'])
 #! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
@@ -147,13 +172,13 @@ def return_car():
   pass
 
 
-@app.route('/token_test', methods = ['POST'])
-@jwt_required()
-def token_test():
-  claims = get_jwt()
-  role = claims.get('role', 'Nenašla sa žiadna rola')
-  return jsonify({'identity': get_jwt_identity(),
-                  'additional_claims': role}), 200
+# @app.route('/token_test', methods = ['POST'])
+# @jwt_required()
+# def token_test():
+#   claims = get_jwt()
+#   role = claims.get('role', 'Nenašla sa žiadna rola')
+#   return jsonify({'identity': get_jwt_identity(),
+#                   'additional_claims': role}), 200
 
 if __name__ == "__main__":
   app.run()
