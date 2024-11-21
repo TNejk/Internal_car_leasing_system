@@ -3,7 +3,7 @@ import hashlib
 import jwt
 import psycopg2
 from flask import Flask, request, jsonify
-from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from functools import wraps
 from datetime import datetime, timedelta
 
@@ -150,8 +150,10 @@ def return_car():
 @app.route('/token_test', methods = ['POST'])
 @jwt_required()
 def token_test():
+  claims = get_jwt()
+  role = claims.get('role', 'Nenašla sa žiadna rola')
   return jsonify({'identity': get_jwt_identity(),
-                  'additional_claims': get_jwt_claims()}), 200
+                  'additional_claims': role}), 200
 
 if __name__ == "__main__":
   app.run()
