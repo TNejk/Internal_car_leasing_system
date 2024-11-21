@@ -163,7 +163,10 @@ def return_car():
   pass
 
 
-
+@app.route('/token_test', methods = ['POST'])
+@require_token()
+def token_test(user):
+  return user
 
 if __name__ == "__main__":
   app.run()
