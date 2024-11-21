@@ -52,8 +52,8 @@ def login():
         'user': username,
         'role': res[0]
       }
-      access_token = create_access_token(identity=payload, fresh=True, expires_delta=datetime.timedelta(minutes=30))
-      refresh_token = create_refresh_token(identity=payload, expires_delta=datetime.timedelta(days=1))
+      access_token = create_access_token(identity=payload, fresh=True, expires_delta=timedelta(minutes=30))
+      refresh_token = create_refresh_token(identity=payload, expires_delta=timedelta(days=1))
       return jsonify(access_token=access_token, refresh_token=refresh_token), 200
 
   finally:
@@ -64,7 +64,7 @@ def login():
 @jwt_required(refresh=True)
 def refresh():
     current_user = get_jwt_identity()
-    access_token = create_access_token(identity=current_user, expires_delta=datetime.timedelta(minutes=30))
+    access_token = create_access_token(identity=current_user, expires_delta=timedelta(minutes=30))
     return jsonify(access_token=access_token), 200
 
 @app.route('/reports', methods = ['POST'])
