@@ -1,9 +1,12 @@
+import os
 import hashlib
 import jwt
 import psycopg2
 from flask import Flask, request, jsonify
 from functools import wraps
 from datetime import datetime, timedelta
+
+db_pass = os.getenv('DB_ICLS_PASSWORD')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '598474ea66434fa7992d54ff8881e7c2'
@@ -24,7 +27,7 @@ def require_token():
 
 def connect_to_db():
   try:
-    db_con = psycopg2.connect("dbname='postgres' user='postgres' host='' password='<DB_ICLS_PASSWORD>'")
+    db_con = psycopg2.connect(dbname='postgres', user='postgres', host='localhost', port=5432, password=db_pass)
     cur = db_con.cursor()
     return db_con, cur
   except psycopg2.Error as e:
