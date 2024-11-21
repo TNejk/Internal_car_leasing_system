@@ -111,7 +111,7 @@ def get_full_car_info():
   car = request.args.get('car', 'none')
   if car == 'none':
     return jsonify({'error': 'Chýba parameter: car'}), 501
-  query = ("SELECT * FROM car WHERE id = %s;")
+  query = ("SELECT * FROM car WHERE id_car = %s;")
   cur.execute(query, (car,))
   res = cur.fetchall()
   return jsonify({"car_details": res}), 200
