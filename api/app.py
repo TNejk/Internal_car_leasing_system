@@ -1,7 +1,6 @@
 import hashlib
 import jwt
 import psycopg2
-import gunicorn
 from flask import Flask, request, jsonify
 from functools import wraps
 from datetime import datetime, timedelta
@@ -31,7 +30,7 @@ def connect_to_db():
   except psycopg2.Error as e:
     return None, e
 
-@app.route('/login', methods=['GET'])
+@app.route('/login', methods=['POST'])
 def login():
   username=request.form.get('username')
   password=request.form.get('password')
@@ -70,6 +69,8 @@ def login():
 @app.route('/reports', methods = ['POST'])
 def reports():
   con, cur = connect_to_db()
+  if con is None:
+    return jsonify({'error': cur}), 501
   
   reports = []
   sql_string = "select * from reports;"
