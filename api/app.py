@@ -52,7 +52,7 @@ def login():
   salted = salt+password+salt
   hashed = hashlib.sha256(salted.encode()).hexdigest()
   try:
-    query = "SELECT role FROM users WHERE username = %s AND password = %s;"
+    query = "SELECT role FROM driver WHERE email = %s AND password = %s;"
     cur.execute(query, (username, hashed))
     res = cur.fetchone()
 
