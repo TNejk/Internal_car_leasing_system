@@ -60,8 +60,10 @@ def login():
 @app.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
 def refresh():
+    claims = get_jwt()
+    role = claims.get('role', 'Nenašla sa žiadna rola')
     current_user = get_jwt_identity()
-    additional_claims = get_jwt_claims()
+    additional_claims = {'role': role}
     access_token = create_access_token(identity=current_user, expires_delta=timedelta(minutes=30), additional_claims=additional_claims)
     return jsonify(access_token=access_token), 200
 
@@ -90,7 +92,7 @@ def get_car_list():
                   FROM car
                   ORDER BY usage_metric ASC;
               """
-      
+
     cur.execute(query, (location,) if location != 'none' else ())
     res = cur.fetchall()
     return jsonify({"car_details": [row[0] for row in res]}), 200
@@ -99,7 +101,20 @@ def get_car_list():
     cur.close()
     conn.close()
 
+@app.route('/get_full_car_info', methods=['GET'])
+@jwt_required()
+def get_full_car_info():
+  conn, cur = connect_to_db()
+  if conn is None:
+    return jsonify({'error': cur}), 501
 
+  car = request.args.get('car', 'none')
+  if car == 'none':
+    return jsonify({'error': 'Chýba parameter: car'}), 501
+  query = ("SELECT * FROM car WHERE id = $s")
+  cur.execute(query, (car,))
+  res = cur.fetchall()
+  return jsonify({"car_details": res}), 200
 
 @app.route('/reports', methods = ['POST'])
 #! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
