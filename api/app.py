@@ -150,7 +150,8 @@ def return_car():
 @app.route('/token_test', methods = ['POST'])
 @jwt_required()
 def token_test():
-  return jsonify({'token': get_jwt_identity()}), 200
+  return jsonify({'identity': get_jwt_identity(),
+                  'additional_claims': get_jwt_claims()}), 200
 
 if __name__ == "__main__":
   app.run()
