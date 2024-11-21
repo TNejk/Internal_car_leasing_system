@@ -55,7 +55,7 @@ def login():
 
   finally:
     cur.close()
-    db_conn.close()
+    conn.close()
 
 @app.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
@@ -86,7 +86,7 @@ def get_car_list():
 
   finally:
     cur.close()
-    db_conn.close()
+    conn.close()
 
 
 
