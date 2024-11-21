@@ -69,7 +69,7 @@ def login():
         app.config['SECRET_KEY'],
         algorithm="HS256"
       )
-      return jsonify({'token': token.decode('utf-8')}), 200
+      return jsonify({'token': token}), 200
 
   finally:
     cur.close()
