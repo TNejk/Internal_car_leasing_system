@@ -28,12 +28,12 @@ def connect_to_db():
     cur = db_con.cursor()
     return db_con, cur
   except psycopg2.Error as e:
-    return None, e
+    return None, str(e)
 
 @app.route('/login', methods=['POST'])
 def login():
-  username=request.form.get('username')
-  password=request.form.get('password')
+  username=request.args.get('username')
+  password=request.args.get('password')
   if not username or not password:
     return jsonify({'error': 'Chýba meno alebo heslo!'}), 401
 
