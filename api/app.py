@@ -73,16 +73,27 @@ def get_car_list():
     return jsonify({'error': cur}), 501
   try:
     location = request.args.get('location', 'none')
-    query = ''
-    if location == 'none':
-      query = ("SELECT CONCAT(name, ';', status, ';', usage_metric, ';', location) AS car_details "
-              "FROM car ORDER BY usage_metric ASC;")
-    elif location != 'none':
-      query = ("SELECT CONCAT(name, ';', status, ';', usage_metric, ';', location) AS car_details FROM car "
-       "ORDER BY CASE WHEN location = %s THEN 1 ELSE 2 END, usage_metric ASC;")
-    cur.execute(query, location)
-    res = cur.fetchone()
-    return jsonify(car_details=res), 200
+    if location != 'none':
+      query = """
+            SELECT CONCAT(name, ';', status, ';', usage_metric, ';', location) AS car_details
+            FROM car
+            ORDER BY 
+                CASE 
+                    WHEN location = %s THEN 1 
+                    ELSE 2 
+                END,
+                usage_metric ASC;
+        """
+    else:
+      query = """
+                  SELECT CONCAT(name, ';', status, ';', usage_metric, ';', location) AS car_details
+                  FROM car
+                  ORDER BY usage_metric ASC;
+              """
+      
+    cur.execute(query, (location,) if location != 'none' else ())
+    res = cur.fetchall()
+    return jsonify({"car_details": [row[0] for row in res]}), 200
 
   finally:
     cur.close()
