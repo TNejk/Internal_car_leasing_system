@@ -48,7 +48,7 @@ def login():
     if res is None:
       return jsonify({'error': 'Meno alebo heslo sú nesprávne!'}), 401
     else:
-      additional_claims = {'role': res[0]},
+      additional_claims = {'role': res[0]}
       access_token = create_access_token(identity=username, fresh=True, expires_delta=timedelta(minutes=30), additional_claims=additional_claims)
       refresh_token = create_refresh_token(identity=username, expires_delta=timedelta(days=1), additional_claims=additional_claims)
       return jsonify(access_token=access_token, refresh_token=refresh_token), 200
