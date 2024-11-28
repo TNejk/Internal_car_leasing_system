@@ -316,7 +316,7 @@ def return_car():
   try:
     query = ("SELECT id_car FROM lease WHERE id_lease = %s;")
     cur.execute(query, (id_lease,))
-    id_car = cur.fetchall()
+    id_car = cur.fetchone()
   except psycopg2.Error as e:
     cur.close()
     conn.close()
