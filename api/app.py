@@ -26,6 +26,38 @@ def connect_to_db():
   except psycopg2.Error as e:
     return None, str(e)
 
+
+# Callback function to check if a JWT exists in the database blocklist
+@jwt_manager.token_in_blocklist_loader
+def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool: # None if an error happnes or a borken poipo
+    jti = jwt_payload["jti"]
+    try:
+      conn, cur = connect_to_db()
+      result = cur.execute(f"select * from revoked_jwt where jti = {jti}")
+    except:
+      return BrokenPipeError
+
+    return result is not None
+
+
+
+@app.route("/logout", methods=["POST"])
+@jwt_required()
+def modify_token():
+    jti = request.get_json()["jti"]
+    now = datetime.now()
+    conn, cur = connect_to_db()
+    try:
+      cur.execute(f"insert into revoked_jwt(jti, added_at) values ({jti}, {now})")
+      conn.commit()
+    except Exception as e:
+      return jsonify(msg= f"Error rewoking JWT!:  {'e'}")
+
+    conn.close()
+    return jsonify(msg="JWT revoked")
+
+
+
 @app.route('/login', methods=['POST'])
 def login():
   username=request.args.get('username')
@@ -147,6 +179,7 @@ def lease_car():
   # is the user a manager 
   # (compare the user leasing and user thats recieving the lease, 
   # if the user leasing is a manager and has the manager token, allow it.)
+
   # we need: 
   # the reserver
   # the user recieving the reservation
