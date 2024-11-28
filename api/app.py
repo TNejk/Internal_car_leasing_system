@@ -200,7 +200,7 @@ def cancel_lease():
   conn, cur = connect_to_db()
   
   # need to get the car name id  and driver name id 
-  cur.execute("select id_driver from driver where name = %s", (data["driver"],))
+  cur.execute("select id_driver from driver where email = %s", (data["driver"],))
   id_name = cur.fetchall()[0][0]
 
   cur.execute("select id_car from car where name = %s", (data["car"],))
