@@ -18,7 +18,6 @@ db_name = os.getenv('POSTGRES_DB')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '598474ea66434fa7992d54ff8881e7c2'
-
 jwt_manager = JWTManager(app)
 
 def connect_to_db():
@@ -47,7 +46,7 @@ def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool: # None if an 
       return jsonify({'error': cur})
     print(result)
 
-    return result is not None
+    return True
 
 
 
@@ -113,7 +112,6 @@ def login():
 @app.route('/get_car_list', methods=['GET'])
 
 @jwt_required()
-@jwt_manager.token_in_blocklist_loader()
 def get_car_list():
   conn, cur = connect_to_db()
   if conn is None:
