@@ -44,7 +44,7 @@ def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool: # None if an 
     try:
       result = cur.execute(f"select * from revoked_jwt where jti = '{jti}'")
     except Exception as e:
-      print(e)
+      return jsonify({'error': cur})
     print(result)
 
     return result is not None
