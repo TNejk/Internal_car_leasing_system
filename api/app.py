@@ -46,7 +46,7 @@ def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool: # None if an 
       return jsonify({'error': cur})
     print(result)
 
-    return True
+    return result is not None
 
 
 
