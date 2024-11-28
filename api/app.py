@@ -233,8 +233,8 @@ def lease_car():
       else: return jsonify("Users cannot order private rides!")
 
     try:
-      # id, userid, carid, timeof, timeto, tiemreturn, status, note
-      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, note) values (%s, %s, %s, %s, %s, %s)", (car_data[0][0], user[0][0], timeof, timeto, True, note,))
+      # id, userid, carid, timeof, timeto, tiemreturn, status, note, status is either 1 or zero to indicate boolean values
+      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, note) values (%s, %s, %s, %s, %s, %s)", (car_data[0][0], user[0][0], timeof, timeto, 1, note,))
       cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
       con.commit()
     except Exception as e:
@@ -245,7 +245,7 @@ def lease_car():
   # If the user leasing is a manager allow him to order lease for other users
   elif user[0][3]  == role:
     try:
-      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, note) values (%s, %s, %s, %s, %s, %s)", (car_data[0][0], user[0][0], timeof, timeto, True, note,))
+      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, note) values (%s, %s, %s, %s, %s, %s)", (car_data[0][0], user[0][0], timeof, timeto, 1, note,))
       cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
       con.commit()
     except Exception as e:
