@@ -50,22 +50,23 @@ def login():
     else:
       additional_claims = {'role': res[0]}
       access_token = create_access_token(identity=username, fresh=True, expires_delta=timedelta(minutes=30), additional_claims=additional_claims)
-      refresh_token = create_refresh_token(identity=username, expires_delta=timedelta(days=1), additional_claims=additional_claims)
-      return jsonify(access_token=access_token, refresh_token=refresh_token), 200
+      # refresh_token = create_refresh_token(identity=username, expires_delta=timedelta(days=1), additional_claims=additional_claims)
+      # return jsonify(access_token=access_token, refresh_token=refresh_token), 200
+      return jsonify(access_token=access_token), 200
 
   finally:
     cur.close()
     conn.close()
 
-@app.route('/refresh', methods=['POST'])
-@jwt_required(refresh=True)
-def refresh():
-    claims = get_jwt()
-    role = claims.get('role', 'Nenašla sa žiadna rola')
-    current_user = get_jwt_identity()
-    additional_claims = {'role': role}
-    access_token = create_access_token(identity=current_user, expires_delta=timedelta(minutes=30), additional_claims=additional_claims)
-    return jsonify(access_token=access_token), 200
+# @app.route('/refresh', methods=['POST'])
+# @jwt_required(refresh=True)
+# def refresh():
+#     claims = get_jwt()
+#     role = claims.get('role', 'Nenašla sa žiadna rola')
+#     current_user = get_jwt_identity()
+#     additional_claims = {'role': role}
+#     access_token = create_access_token(identity=current_user, expires_delta=timedelta(minutes=30), additional_claims=additional_claims)
+#     return jsonify(access_token=access_token), 200
 
 @app.route('/get_car_list', methods=['GET'])
 @jwt_required()
