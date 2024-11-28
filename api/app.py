@@ -317,7 +317,7 @@ def return_car():
   finally:
     cur.close()
     conn.close()
-    return jsonify({'status': 'stand_by', 'health': health, 'um': um, 'timenow': time_now, 'id_car': id_car}), 201
+    return jsonify({'status': 'stand_by', 'health': health, 'um': um, 'timenow': tor, 'id_car': id_car}), 201
 
 def _usage_metric(id_car, conn, cur):
   try:
