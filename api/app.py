@@ -209,7 +209,7 @@ def lease_car():
 
   # STATUS CHECKER
   cur.execute("select status from car where name = %s", (car_name,))
-  car_status = cur.fetchall()[0]
+  car_status = cur.fetchall()[0][0]
   if car_status != "stand_by":
     return jsonify(msg = f"Car is not available!, {car_status}")
 
@@ -220,7 +220,7 @@ def lease_car():
   user_id = user[0]
 
   cur.execute("select id from cars where name = %s", (car_name,))
-  car_data = cur.fetchall()[0]
+  car_data = cur.fetchall()[0][0]
 
   # compare the user leasing and user thats recieving the lease,
   if user[1] ==  username:
