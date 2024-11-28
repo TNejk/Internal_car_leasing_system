@@ -217,6 +217,7 @@ def lease_car():
   # USER CHECKER 
   cur.execute("select * from driver where email = %s and role = %s", (username, role,))
   user = cur.fetchall()
+  return jsonify(msg = user)
   user_id = user[0]
 
   cur.execute("select id_car from car where name = %s", (car_name,))
