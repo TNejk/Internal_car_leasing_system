@@ -41,11 +41,13 @@ def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool: # None if an 
    
     conn, cur = connect_to_db()
     try:
-      result = cur.execute("select * from revoked_jwt where jti = %s", (jti,))
+      cur.execute("select * from revoked_jwt where jti = %s", (jti,))
+      result = cur.fetchone()
+
     except Exception as e:
       return jsonify({'error': cur})
-    print(result)
-
+      
+    conn.close()
     return result is not None
 
 
