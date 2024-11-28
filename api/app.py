@@ -199,7 +199,16 @@ def cancel_lease():
   data = request.get_json()
   conn, cur = connect_to_db()
   
-  cur.execute("UPDATE lease SET status = false WHERE id_lease = (SELECT id_lease FROM lease WHERE driver = %s AND car = %s ORDER BY id_lease DESC LIMIT 1)", (data["driver"], data["car"]))
+  # need to get the car name id  and driver name id 
+  cur.execute("select id_driver from driver where name = %s", (data["driver"]))
+  id_name = cur.fetchall()[0][0]
+
+  cur.execute("select id_car from car where name = %s", (data["car"]))
+  id_car = cur.fetchall()[0][0]
+
+  cur.execute("UPDATE lease SET status = false WHERE id_lease = (SELECT id_lease FROM lease WHERE id_driver = %s AND id_car = %s ORDER BY id_lease DESC LIMIT 1)", (id_name, id_car))
+  conn.commit()
+  conn.close()
 
 @app.route('/lease_car', methods = ['POST'])
 @jwt_required()
@@ -213,11 +222,9 @@ def lease_car():
   timeof = datetime.now()
   timeto = datetime.now() + timedelta(hours=1)
 
-
   con, cur = connect_to_db()
 
   # You dont need to check if you can reserve a car in a timeframe as the car would allready be in reserved status mode
-
   # STATUS CHECKER
   cur.execute("select status from car where name = %s", (car_name,))
   car_status = cur.fetchall()[0][0]
@@ -248,7 +255,7 @@ def lease_car():
       con.commit()
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {e}")
-
+    con.close()
     return {"status": True, "private": private}
 
   # If the user leasing is a manager allow him to order lease for other users
@@ -259,7 +266,7 @@ def lease_car():
       con.commit()
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {e}")
-
+    con.close()
     return {"status": True, "private": private}
   else:
     return jsonify(msg= "Users do not match, nor is the requester a manager.")
