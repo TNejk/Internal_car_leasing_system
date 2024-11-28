@@ -46,7 +46,7 @@ def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool: # None if an 
 
     except Exception as e:
       return jsonify({'error': cur})
-      
+
     conn.close()
     return result is not None
 
@@ -183,53 +183,75 @@ def reports():
   }
 
 
-@app.route('/lease_car', methods = ['POST'])
-#! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
-def lease_car():
-  # check token, 
-  # can the car be leased, 
-  # is the user a manager 
-  # (compare the user leasing and user thats recieving the lease, 
-  # if the user leasing is a manager and has the manager token, allow it.)
 
-  # we need: 
-  # the reserver
-  # the user recieving the reservation
-  # time from
-  # time to
-  # private ride?
-  data = request.get_json()
-  user = data["user"]
-  time_now = data["time_now"]
-  time_till = data["time_till"]
-  private = data["private"]
+@app.route('/allowed_dates', methods = ['GET'])
+@jwt_required()
+def allowed_dates():
+  pass
+
+
+@app.route('/lease_car', methods = ['POST'])
+@jwt_required() #AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
+def lease_car():
+
+  data =  request.get_json()
+
+  username = data["username"]
+  role = data["password"]
+  car_name  = data["car_name"]
+  private = data["is_private"]
+  timeof = data["timeof"]
+  timeto = data["timeto"]
+  note = data["note"]
 
   con, cur = connect_to_db()
-  con.close()
-  # Then we return a confirmation of order
-  # so we can show a return car option
-
-  # either return a 
-
-  """ 
-  If a user tries to reserver an already reserved car
-  return {
-      status: reserved
-      private: false
-  }
-
-  If user tries to reserver a car for someone else while not a manager, also log it
-  return {
-      status: unauthorized
-      private: false
-  } 
-
-  """
   
-  return {
-    "status": "ordered",
-    "private": True
-  }
+  # You dont need to check if you can reserve a car in a timeframe as the car would allready be in reserved status mode 
+
+  # STATUS CHECKER
+  cur.execute("select (status) from lease where name = %s", (car_name))
+  car_status = cur.fetchone()
+  if car_status != "stand_by":
+    return jsonify(msg = "Car is not available!")
+
+  
+  # USER CHECKER 
+  cur.execute("select * from users where name = %s and role = %s", (username, role))
+  user = cur.fetchone()
+  user_id = user[0]
+
+  cur.execute("select id from cars where name = %s", (car_name,))
+  car_data = cur.fetchone()
+
+  # compare the user leasing and user thats recieving the lease,
+  if user[1] ==  username:
+    # Priavte ride check
+    if private == True:
+      if user[3] == role:
+        pass
+      else: return jsonify("Users cannot order private rides!")
+    
+    try:
+      # id, userid, carid, timeof, timeto, tiemreturn, status, note
+      cur.execute("insert into lease_car(id_car, id_driver, time_of_lease, time_to_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_id, timeof, timeto, status, note))
+      cur.execute("update car set status = %s where name = %s", ("leased", car_name))
+    except Exception as e:
+      return jsonify(msg= f"Error occured when leasing. {cur}")
+
+    return {"status": True, "private": private}
+  
+  # If the user leasing is a manager allow him to order lease for other users
+  elif user[3]  == role:
+    try:
+      cur.execute("insert into lease_car values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note))
+      cur.execute("update car set status = %s where name = %s", ("leased", car_name))
+    except Exception as e:
+      return jsonify(msg= f"Error occured when leasing. {cur}")
+
+    return {"status": True, "private": private}
+  else: 
+    return jsonify(msg= "Users do not match, nor is the requester a manager.")
+
 
 @app.route('/return_car', methods = ['POST'])
 #! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
