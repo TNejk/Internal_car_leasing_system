@@ -290,7 +290,7 @@ def return_car():
   try:
     query = "UPDATE lease SET status = %s, time_of_return = %s, note = %s WHERE id_lease = %s;"
     cur.execute(query, (False, tor, note, id_lease))
-    con.commit()
+    conn.commit()
   except psycopg2.Error as e:
     cur.close()
     conn.close()
