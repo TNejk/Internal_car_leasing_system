@@ -306,7 +306,7 @@ def return_car():
     if not res:
       cur.close()
       conn.close()
-      return jsonify({'error': 'Jazda už neexistuje!'}), 501
+      return jsonify({'error1': 'Jazda už neexistuje!'}), 501
   except psycopg2.Error as e:
     cur.close()
     conn.close()
@@ -319,7 +319,7 @@ def return_car():
   except psycopg2.Error as e:
     cur.close()
     conn.close()
-    return jsonify({'error': str(e)}), 501
+    return jsonify({'error2': str(e)}), 501
 
   # get the car id
   try:
@@ -329,7 +329,7 @@ def return_car():
   except psycopg2.Error as e:
     cur.close()
     conn.close()
-    return jsonify({'error': str(e)}), 501
+    return jsonify({'error3': str(e)}), 501
 
   # update the car table with chnage of car status, health and calculate the metric
   try:
@@ -341,7 +341,7 @@ def return_car():
   except psycopg2.Error as e:
     cur.close()
     conn.close()
-    return jsonify({'error': str(e)}), 501
+    return jsonify({'error4': str(e)}), 501
 
 def _usage_metric(id_car, conn, cur):
   try:
@@ -355,7 +355,7 @@ def _usage_metric(id_car, conn, cur):
   except psycopg2.Error as e:
     cur.close()
     conn.close()
-    return jsonify({'error': str(e)}), 501
+    return jsonify({'error5': str(e)}), 501
 
   num_of_leases = len(res) # max should be 14
   hours = 0.0 # max should be 336.0
