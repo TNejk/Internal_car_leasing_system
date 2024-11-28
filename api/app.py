@@ -234,6 +234,7 @@ def lease_car():
       # id, userid, carid, timeof, timeto, tiemreturn, status, note
       cur.execute("insert into lease(id_car, id_driver, time_of_lease, time_to_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note))
       cur.execute("update car set status = %s where name = %s", ("leased", car_name))
+      con.commit()
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {cur}")
 
@@ -244,6 +245,7 @@ def lease_car():
     try:
       cur.execute("insert into lease(id_car, id_driver, time_of_lease, time_to_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note))
       cur.execute("update car set status = %s where name = %s", ("leased", car_name))
+      con.commit()
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {cur}")
 
