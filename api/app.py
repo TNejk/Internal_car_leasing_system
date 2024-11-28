@@ -61,7 +61,7 @@ def modify_token():
       cur.execute("insert into revoked_jwt(jti, added_at) values (%s, %s)", (jti, now))
       conn.commit()
     except Exception as e:
-      return jsonify(msg= f"Error rewoking JWT!:  {'e'}")
+      return jsonify(msg= f"Error rewoking JWT!:  {e}")
 
     conn.close()
     return jsonify(msg="JWT revoked")
@@ -111,7 +111,9 @@ def login():
 #     return jsonify(access_token=access_token), 200
 
 @app.route('/get_car_list', methods=['GET'])
+
 @jwt_required()
+@jwt_manager.token_in_blocklist_loader()
 def get_car_list():
   conn, cur = connect_to_db()
   if conn is None:
