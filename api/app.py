@@ -193,11 +193,10 @@ def allowed_dates():
 @app.route('/lease_car', methods = ['POST'])
 @jwt_required() #AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
 def lease_car():
-
   data =  request.get_json()
 
   username = data["username"]
-  role = data["password"]
+  role = data["role"]
   car_name  = data["car_name"]
   private = data["is_private"]
   timeof = data["timeof"]
