@@ -7,6 +7,9 @@ from flask_jwt_extended import JWTManager, create_access_token, create_refresh_t
 from functools import wraps
 from datetime import datetime, timedelta
 
+
+
+
 db_host = os.getenv('DB_HOST')
 db_port = os.getenv('DB_PORT')
 db_user = os.getenv('POSTGRES_USER')
@@ -36,11 +39,13 @@ def connect_to_db():
 def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool: # None if an error happnes or a borken poipo
     jwt = jwt_header
     jti = jwt_payload["jti"]
+   
+    conn, cur = connect_to_db()
     try:
-      conn, cur = connect_to_db()
-      result = cur.execute(f"select * from revoked_jwt where jti = {jti}")
-    except:
-      return BrokenPipeError
+      result = cur.execute(f"select * from revoked_jwt where jti = '{jti}'")
+    except Exception as e:
+      print(e)
+    print(result)
 
     return result is not None
 
@@ -49,11 +54,11 @@ def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool: # None if an 
 @app.route("/logout", methods=["POST"])
 @jwt_required()
 def modify_token():
-    jti = request.get_json()["jti"]
+    jti = get_jwt()["jti"]
     now = datetime.now()
     conn, cur = connect_to_db()
     try:
-      cur.execute(f"insert into revoked_jwt(jti, added_at) values ({jti}, {now})")
+      cur.execute("insert into revoked_jwt(jti, added_at) values (%s, %s)", (jti, now))
       conn.commit()
     except Exception as e:
       return jsonify(msg= f"Error rewoking JWT!:  {'e'}")
