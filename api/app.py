@@ -208,18 +208,18 @@ def lease_car():
   # You dont need to check if you can reserve a car in a timeframe as the car would allready be in reserved status mode 
 
   # STATUS CHECKER
-  cur.execute("select status from car where name = %s", (car_name,))
+  cur.execute("select status from car where name = '%s'", (car_name,))
   car_status = cur.fetchone()
   if car_status != "stand_by":
     return jsonify(msg = "Car is not available!")
 
   
   # USER CHECKER 
-  cur.execute("select * from driver where name = %s and role = %s", (username, role,))
+  cur.execute("select * from driver where name = '%s' and role = '%s'", (username, role,))
   user = cur.fetchone()
   user_id = user[0]
 
-  cur.execute("select id from cars where name = %s", (car_name,))
+  cur.execute("select id from cars where name = '%s'", (car_name,))
   car_data = cur.fetchone()
 
   # compare the user leasing and user thats recieving the lease,
@@ -233,7 +233,7 @@ def lease_car():
     try:
       # id, userid, carid, timeof, timeto, tiemreturn, status, note
       cur.execute("insert into lease(id_car, id_driver, time_of_lease, time_to_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note,))
-      cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
+      cur.execute("update car set status = '%s' where name = '%s'", ("leased", car_name,))
       con.commit()
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {cur}")
@@ -244,7 +244,7 @@ def lease_car():
   elif user[3]  == role:
     try:
       cur.execute("insert into lease(id_car, id_driver, time_of_lease, time_to_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note,))
-      cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
+      cur.execute("update car set status = '%s' where name = '%s'", ("leased", car_name,))
       con.commit()
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {cur}")
