@@ -195,27 +195,27 @@ def allowed_dates():
 def lease_car():
   data =  request.get_json()
 
-  username = data["username"]
-  role = data["role"]
-  car_name  = data["car_name"]
+  username = str(data["username"])
+  role = str(data["role"])
+  car_name  = str(data["car_name"])
   private = data["is_private"]
   timeof = datetime.now()
   timeto = datetime.now() + timedelta(hours=1)
-  note = data["note"]
+  note = str(data["note"])
 
   con, cur = connect_to_db()
   
   # You dont need to check if you can reserve a car in a timeframe as the car would allready be in reserved status mode 
 
   # STATUS CHECKER
-  cur.execute("select status from car where name = %s", (car_name))
+  cur.execute("select status from car where name = %s", (car_name,))
   car_status = cur.fetchone()
   if car_status != "stand_by":
     return jsonify(msg = "Car is not available!")
 
   
   # USER CHECKER 
-  cur.execute("select * from driver where name = %s and role = %s", (username, role))
+  cur.execute("select * from driver where name = %s and role = %s", (username, role,))
   user = cur.fetchone()
   user_id = user[0]
 
@@ -232,8 +232,8 @@ def lease_car():
     
     try:
       # id, userid, carid, timeof, timeto, tiemreturn, status, note
-      cur.execute("insert into lease(id_car, id_driver, time_of_lease, time_to_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note))
-      cur.execute("update car set status = %s where name = %s", ("leased", car_name))
+      cur.execute("insert into lease(id_car, id_driver, time_of_lease, time_to_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note,))
+      cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
       con.commit()
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {cur}")
@@ -243,8 +243,8 @@ def lease_car():
   # If the user leasing is a manager allow him to order lease for other users
   elif user[3]  == role:
     try:
-      cur.execute("insert into lease(id_car, id_driver, time_of_lease, time_to_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note))
-      cur.execute("update car set status = %s where name = %s", ("leased", car_name))
+      cur.execute("insert into lease(id_car, id_driver, time_of_lease, time_to_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note,))
+      cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
       con.commit()
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {cur}")
