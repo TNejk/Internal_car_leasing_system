@@ -221,8 +221,8 @@ def lease_car():
 
   user_id = user[0]
 
-  cur.execute("select id_car from car where name = %s", (car_name,))
-  car_data = cur.fetchall()[0][0]
+  cur.execute("select * from car where name = %s", (car_name,))
+  car_data = cur.fetchall()
 
   # compare the user leasing and user thats recieving the lease,
   if user[0][1] ==  username:
@@ -234,7 +234,7 @@ def lease_car():
     
     try:
       # id, userid, carid, timeof, timeto, tiemreturn, status, note
-      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note,))
+      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0][0], timeof, timeto, car_data[0][3], note,))
       cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
       con.commit()
     except Exception as e:
@@ -245,7 +245,7 @@ def lease_car():
   # If the user leasing is a manager allow him to order lease for other users
   elif user[0][3]  == role:
     try:
-      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note,))
+      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0][0], timeof, timeto, car_data[0][3], note,))
       cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
       con.commit()
     except Exception as e:
