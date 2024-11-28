@@ -216,18 +216,19 @@ def lease_car():
   
   # USER CHECKER 
   cur.execute("select * from driver where email = %s and role = %s", (username, role,))
+  # user is a list within a list [[]] to access it use double [0][1,2,3,4]
   user = cur.fetchall()
-  return jsonify(msg = user)
+
   user_id = user[0]
 
   cur.execute("select id_car from car where name = %s", (car_name,))
   car_data = cur.fetchall()[0][0]
 
   # compare the user leasing and user thats recieving the lease,
-  if user[1] ==  username:
+  if user[0][1] ==  username:
     # Priavte ride check
     if private == True:
-      if user[3] == role:
+      if user[0][3] == role:
         pass
       else: return jsonify("Users cannot order private rides!")
     
@@ -242,7 +243,7 @@ def lease_car():
     return {"status": True, "private": private}
   
   # If the user leasing is a manager allow him to order lease for other users
-  elif user[3]  == role:
+  elif user[0][3]  == role:
     try:
       cur.execute("insert into lease(id_car, id_driver, time_of_lease, time_to_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note,))
       cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
