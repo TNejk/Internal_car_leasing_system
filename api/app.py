@@ -215,11 +215,11 @@ def lease_car():
 
   
   # USER CHECKER 
-  cur.execute("select * from driver where name = %s and role = %s", (username, role,))
+  cur.execute("select * from driver where email = %s and role = %s", (username, role,))
   user = cur.fetchall()
   user_id = user[0]
 
-  cur.execute("select id from cars where name = %s", (car_name,))
+  cur.execute("select id from car where name = %s", (car_name,))
   car_data = cur.fetchall()[0][0]
 
   # compare the user leasing and user thats recieving the lease,
