@@ -27,9 +27,14 @@ def connect_to_db():
     return None, str(e)
 
 
+# headers = {
+#     "Authorization": f"Bearer {jwt_token}",
+#     "Content-Type": "application/json"  # Ensure the server expects JSON
+# }
 # Callback function to check if a JWT exists in the database blocklist
 @jwt_manager.token_in_blocklist_loader
 def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool: # None if an error happnes or a borken poipo
+    jwt = jwt_header
     jti = jwt_payload["jti"]
     try:
       conn, cur = connect_to_db()
