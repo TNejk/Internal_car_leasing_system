@@ -298,90 +298,79 @@ def return_car():
   if conn is None:
     return jsonify({'error': error}), 501
 
-  # check if a lease exist in the DB
   try:
     with conn.cursor() as cur:
-      query = ("SELECT * FROM lease WHERE id_lease = %s;")
+      # Check if a lease exists in the DB
+      query = "SELECT * FROM lease WHERE id_lease = %s;"
       cur.execute(query, (id_lease,))
       res = cur.fetchall()
-    if not res:
-      cur.close()
-      conn.close()
-      return jsonify({'error1': 'Jazda už neexistuje!'}), 501
-  except psycopg2.Error as e:
-    cur.close()
-    conn.close()
-    return jsonify({'error': str(e)}), 501
+      if not res:
+        return jsonify({'error1': 'Jazda už neexistuje!'}), 501
 
-  # update the lease table with change of status, time_of_return and note
-  try:
-    with conn.cursor() as cur:
+      # Update the lease table
       query = "UPDATE lease SET status = %s, time_of_return = %s, note = %s WHERE id_lease = %s;"
       cur.execute(query, (False, tor, note, id_lease))
-  except psycopg2.Error as e:
-    cur.close()
-    conn.close()
-    return jsonify({'error2': str(e)}), 501
 
-  # get the car id
-  try:
-    with conn.cursor() as cur:
-      query = ("SELECT id_car FROM lease WHERE id_lease = %s;")
+      # Get the car ID
+      query = "SELECT id_car FROM lease WHERE id_lease = %s;"
       cur.execute(query, (id_lease,))
       id_car, = cur.fetchone()
-  except psycopg2.Error as e:
-    cur.close()
-    conn.close()
-    return jsonify({'error3': str(e)}), 501
 
-  # update the car table with chnage of car status, health and calculate the metric
-  try:
-    with conn.cursor() as cur:
+      # Update the car table
       um = _usage_metric(id_car, conn)
-      query = ("UPDATE car SET health = %s, status = %s, usage_metric = %s WHERE id_car = %s;")
-      cur.execute(query, (health, 'stand_by', um, tor, id_car))
-      conn.commit()
+      query = "UPDATE car SET health = %s, status = %s, usage_metric = %s WHERE id_car = %s;"
+      cur.execute(query, (health, 'stand_by', um, id_car))
+
+    conn.commit()
     return f'stand_by, {health}, {um}, {tor}, {id_car}'
+
   except psycopg2.Error as e:
-    cur.close()
+    conn.rollback()
+    return jsonify({'error': str(e)}), 501
+  finally:
     conn.close()
-    return jsonify({'error4': str(e)}), 501
+
 
 def _usage_metric(id_car, conn):
   try:
     with conn.cursor() as cur:
-      query = ("SELECT start_of_lease FROM lease ORDER BY id_lease DESC LIMIT 1 WHERE id_car = %s;")
-      cur.execute(query)
-      start_of_lease = cur.fetchone()[0][0]
-      query = ("SELECT start_of_lease, time_of_return FROM lease WHERE id_car = %s AND %s - start_of_lease >= $s;")
-      cur.execute(query, (id_car, start_of_lease, '14 days'))
-      res = cur.fetchall()
-    res = [row[0] for row in res]
+      # Fix query syntax
+      query = "SELECT start_of_lease FROM lease WHERE id_car = %s ORDER BY id_lease DESC LIMIT 1;"
+      cur.execute(query, (id_car,))
+      result = cur.fetchone()
+      if not result:
+        return 1  # Default metric if no leases exist
+      start_of_lease = result[0]
+
+      query = """
+                SELECT start_of_lease, time_of_return 
+                FROM lease 
+                WHERE id_car = %s AND start_of_lease >= %s - INTERVAL '14 days';
+            """
+      cur.execute(query, (id_car, start_of_lease))
+      leases = cur.fetchall()
+
+    hours = 0.0
+    num_of_leases = len(leases)
+    for lease in leases:
+      time1 = datetime.strptime(lease[1], "%Y-%m-%d %H:%M:%S.%f")
+      time2 = datetime.strptime(lease[0], "%Y-%m-%d %H:%M:%S.%f")
+      difference = time1 - time2
+      hours += difference.total_seconds() / 3600
+
+    if num_of_leases <= 2 and hours <= 48.0:
+      return 1
+    elif 3 <= num_of_leases <= 4 and hours <= 72.0:
+      return 2
+    elif 5 <= num_of_leases <= 7 and hours <= 144.0:
+      return 3
+    elif 8 <= num_of_leases <= 11 and hours <= 288.0:
+      return 4
+    else:
+      return 5
+
   except psycopg2.Error as e:
-    cur.close()
-    conn.close()
-    return jsonify({'error5': str(e)}), 501
-
-  num_of_leases = len(res) # max should be 14
-  hours = 0.0 # max should be 336.0
-  for lease in res:
-    time1 = datetime.strptime(lease[1], "%Y-%m-%d %H:%M:%S.%f")
-    time2 = datetime.strptime(lease[0], "%Y-%m-%d %H:%M:%S.%f")
-    difference = time1 - time2
-    h, r = divmod(difference.seconds, 3600)
-    m, _ = divmod(r, 100)
-    hours += h + (m/60)
-
-  if num_of_leases <= 2 and hours <= 48.0:
-    return 1
-  elif 3 <= num_of_leases <= 4 and hours <= 72.0:
-    return 2
-  elif 5 <= num_of_leases <= 7 and hours <= 144.0:
-    return 3
-  elif 8 <= num_of_leases <= 11 and hours <= 288.0:
-    return 4
-  else:
-    return 5
+    return jsonify({'error': str(e)}), 501
 
 
 # @app.route('/token_test', methods = ['POST'])
