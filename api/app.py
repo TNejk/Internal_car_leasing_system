@@ -192,6 +192,12 @@ def allowed_dates():
   pass
 
 
+@app.route('/cancel_lease', methods = ['POST'])
+@jwt_required()
+def cancel_lease():
+  conn, cur = connect_to_db()
+  cur.execute("update lease set status = ")
+
 @app.route('/lease_car', methods = ['POST'])
 @jwt_required()
 def lease_car():
@@ -234,7 +240,7 @@ def lease_car():
 
     try:
       # id, userid, carid, timeof, timeto, tiemreturn, status, note, status is either 1 or zero to indicate boolean values
-      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status) values (%s, %s, %s, %s, %s)", (car_data[0][0], user[0][0], timeof, timeto, False))
+      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status) values (%s, %s, %s, %s, %s)", (car_data[0][0], user[0][0], timeof, timeto, True))
       cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
       con.commit()
     except Exception as e:
@@ -245,7 +251,7 @@ def lease_car():
   # If the user leasing is a manager allow him to order lease for other users
   elif user[0][3]  == role:
     try:
-      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status) values (%s, %s, %s, %s, %s)", (car_data[0][0], user[0][0], timeof, timeto, False))
+      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status) values (%s, %s, %s, %s, %s)", (car_data[0][0], user[0][0], timeof, timeto, True))
       cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
       con.commit()
     except Exception as e:
