@@ -199,17 +199,26 @@ def cancel_lease():
   data = request.get_json()
   conn, cur = connect_to_db()
   
-  # need to get the car name id  and driver name id 
-  cur.execute("select id_driver from driver where email = %s", (data["driver"],))
-  id_name = cur.fetchall()[0][0]
+  try:
+    # need to get the car name id  and driver name id 
+    cur.execute("select id_driver from driver where email = %s", (data["driver"],))
+    id_name = cur.fetchall()[0][0]
 
-  cur.execute("select id_car from car where name = %s", (data["car"],))
-  id_car = cur.fetchall()[0][0]
+    cur.execute("select id_car from car where name = %s", (data["car"],))
+    id_car = cur.fetchall()[0][0]
+  except Exception as e:
+    return jsonify(msg= f"Error cancelling lease!, {e}")
+  
+  try:
+    cur.execute("UPDATE lease SET status = false WHERE id_lease = (SELECT id_lease FROM lease WHERE id_driver = %s AND id_car = %s ORDER BY id_lease DESC LIMIT 1)", (id_name, id_car))
+    cur.execute("update car set status = %s where id_car = %s", ("stand_by", id_car))
+  except Exception as e:
+    return jsonify(msg= f"Error cancelling lease!, {e}")
 
-  cur.execute("UPDATE lease SET status = false WHERE id_lease = (SELECT id_lease FROM lease WHERE id_driver = %s AND id_car = %s ORDER BY id_lease DESC LIMIT 1)", (id_name, id_car))
-  cur.execute("update car set status = %s where id_car = %s", ("stand_by", id_car))
   conn.commit()
   conn.close()
+
+  return {"cancelled": True}
 
 @app.route('/lease_car', methods = ['POST'])
 @jwt_required()
