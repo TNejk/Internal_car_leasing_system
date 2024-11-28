@@ -15,9 +15,12 @@ db_port = os.getenv('DB_PORT')
 db_user = os.getenv('POSTGRES_USER')
 db_pass = os.getenv('POSTGRES_PASS')
 db_name = os.getenv('POSTGRES_DB')
+app_secret_key = os.getenv('APP_SECRET_KEY')
+login_salt = os.getenv('LOGIN_SALT')
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '598474ea66434fa7992d54ff8881e7c2'
+app.config['SECRET_KEY'] = app_secret_key
+
 jwt_manager = JWTManager(app)
 
 def connect_to_db():
@@ -38,7 +41,7 @@ def connect_to_db():
 def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool: # None if an error happnes or a borken poipo
     jwt = jwt_header
     jti = jwt_payload["jti"]
-   
+
     conn, cur = connect_to_db()
     try:
       cur.execute("select * from revoked_jwt where jti = %s", (jti,))
@@ -71,8 +74,9 @@ def modify_token():
 
 @app.route('/login', methods=['POST'])
 def login():
-  username=request.args.get('username')
-  password=request.args.get('password')
+  data = request.get_json()
+  username=data['username']
+  password=data['password']
   if not username or not password:
     return jsonify({'error': 'Chýba meno alebo heslo!'}), 401
 
@@ -80,8 +84,7 @@ def login():
   if conn is None:
     return jsonify({'error': cur}), 501
 
-  salt = '$2b$12$4/ZiN3Ga8VQjxm9.K2V3/.'
-  salted = salt+password+salt
+  salted = login_salt+password+login_salt
   hashed = hashlib.sha256(salted.encode()).hexdigest()
   try:
     query = "SELECT role FROM driver WHERE email = %s AND password = %s;"
@@ -112,7 +115,6 @@ def login():
 #     return jsonify(access_token=access_token), 200
 
 @app.route('/get_car_list', methods=['GET'])
-
 @jwt_required()
 def get_car_list():
   conn, cur = connect_to_db()
@@ -191,7 +193,7 @@ def allowed_dates():
 
 
 @app.route('/lease_car', methods = ['POST'])
-@jwt_required() #AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
+@jwt_required()
 def lease_car():
   data =  request.get_json()
 
@@ -204,8 +206,8 @@ def lease_car():
   note = str(data["note"])
 
   con, cur = connect_to_db()
-  
-  # You dont need to check if you can reserve a car in a timeframe as the car would allready be in reserved status mode 
+
+  # You dont need to check if you can reserve a car in a timeframe as the car would allready be in reserved status mode
 
   # STATUS CHECKER
   cur.execute("select status from car where name = %s", (car_name,))
@@ -213,8 +215,8 @@ def lease_car():
   if car_status != "stand_by":
     return jsonify(msg = f"Car is not available!, {car_status}")
 
-  
-  # USER CHECKER 
+
+  # USER CHECKER
   cur.execute("select * from driver where email = %s and role = %s", (username, role,))
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
   user = cur.fetchall()
@@ -231,7 +233,7 @@ def lease_car():
       if user[0][3] == role:
         pass
       else: return jsonify("Users cannot order private rides!")
-    
+
     try:
       # id, userid, carid, timeof, timeto, tiemreturn, status, note
       cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, note) values (%s, %s, %s, %s, %s, %s)", (user_id, car_data[0][0], timeof, timeto, car_data[0][3], note,))
@@ -241,7 +243,7 @@ def lease_car():
       return jsonify(msg= f"Error occured when leasing. {e}")
 
     return {"status": True, "private": private}
-  
+
   # If the user leasing is a manager allow him to order lease for other users
   elif user[0][3]  == role:
     try:
@@ -252,21 +254,103 @@ def lease_car():
       return jsonify(msg= f"Error occured when leasing. {e}")
 
     return {"status": True, "private": private}
-  else: 
+  else:
     return jsonify(msg= "Users do not match, nor is the requester a manager.")
 
 
 @app.route('/return_car', methods = ['POST'])
 #! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
 def return_car():
-  # check if a lease exist in the DB
-  # check if the user is either a manager or the reservist
-  # if yes, delete/mark it as complete
-  # if not a private ride save the return location
-  # save the note
-  # change the leased car status to free, and change its location driver and use metric
+  data = request.get_json()
+  if not data:
+    return jsonify({'error': 'No data'}), 501
 
-  pass
+  id_lease = data["id_lease"]
+  tor = data["time_of_return"]
+  health = data["health"]
+  note = data["note"]
+
+  conn, cur = connect_to_db()
+  if conn is None:
+    return jsonify({'error': cur}), 501
+
+  # check if a lease exist in the DB
+  try:
+    query = ("SELECT * FROM lease WHERE id_lease = %s;")
+    cur.execute(query, (id_lease,))
+    res = cur.fetchall()
+    if not res:
+      cur.close()
+      conn.close()
+      return jsonify({'error': 'Jazda už neexistuje!'}), 501
+  except psycopg2.Error as e:
+    cur.close()
+    conn.close()
+    return jsonify({'error': str(e)}), 501
+
+  # update the lease table with change of status, time_of_return and note
+  try:
+    query = "UPDATE lease SET status = %s, time_of_return = %s, note = %s WHERE id_lease = %s;"
+    cur.execute(query, (False, tor, note, id_lease))
+    con.commit()
+  except psycopg2.Error as e:
+    cur.close()
+    conn.close()
+    return jsonify({'error': str(e)}), 501
+
+  # get the car id
+  try:
+    query = ("SELECT id_car FROM lease WHERE id_lease = %s;")
+    cur.execute(query, (id_lease,))
+    id_car = cur.fetchall()
+  except psycopg2.Error as e:
+    cur.close()
+    conn.close()
+    return jsonify({'error': str(e)}), 501
+
+  # update the car table with chnage of car status, health and calculate the metric
+  try:
+    um = _usage_metric(id_car, conn, cur)
+    query = ("UPDATE car SET health = %s, status = %s, usage_metric = %s WHERE id_car = %s;")
+    cur.execute(query, (health, 'stand_by', um, time_now, id_car))
+    con.commit()
+  except psycopg2.Error as e:
+    return jsonify({'error': str(e)}), 501
+  finally:
+    cur.close()
+    conn.close()
+    return ''
+
+def _usage_metric(id_car, conn, cur):
+  try:
+    query = ("SELECT start_of_lease FROM lease ORDER BY id_lease DESC LIMIT 1 WHERE id_car = %s;")
+    cur.execute(query)
+    start_of_lease = cur.fetchone()[0][0]
+    query = ("SELECT start_of_lease, time_of_return FROM lease WHERE id_car = %s AND %s - start_of_lease >= $s;")
+    cur.execute(query, (id_car, start_of_lease, '14 days'))
+    res = cur.fetchall()
+    res = [row[0] for row in res]
+  except psycopg2.Error as e:
+    cur.close()
+    conn.close()
+    return jsonify({'error': str(e)}), 501
+
+  num_of_leases = len(res) # max should be 14
+  hours = 0.0 # max should be 336.0
+  for lease in res:
+    lease[1] -= lease[0]
+    hours += lease[1]
+
+  if num_of_leases <= 2 and hours <= 48.0:
+    return 1
+  elif 3 <= num_of_leases <= 4 and hours <= 72.0:
+    return 2
+  elif 5 <= num_of_leases <= 7 and hours <= 144.0:
+    return 3
+  elif 8 <= num_of_leases <= 11 and hours <= 288.0:
+    return 4
+  else:
+    return 5
 
 
 # @app.route('/token_test', methods = ['POST'])
