@@ -306,7 +306,6 @@ def return_car():
   try:
     query = "UPDATE lease SET status = %s, time_of_return = %s, note = %s WHERE id_lease = %s;"
     cur.execute(query, (False, tor, note, id_lease))
-    conn.commit()
   except psycopg2.Error as e:
     cur.close()
     conn.close()
@@ -331,6 +330,7 @@ def return_car():
   except psycopg2.Error as e:
     return jsonify({'error': str(e)}), 501
   finally:
+    conn.commit()
     cur.close()
     conn.close()
     return f'stand_by, {health}, {um}, {tor}, {id_car}'
