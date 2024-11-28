@@ -209,18 +209,18 @@ def lease_car():
 
   # STATUS CHECKER
   cur.execute("select status from car where name = %s", (car_name,))
-  car_status = cur.fetchone()
+  car_status = cur.fetchall()[0]
   if car_status != "stand_by":
     return jsonify(msg = f"Car is not available!, {car_status}")
 
   
   # USER CHECKER 
-  cur.execute("select * from driver where name = '%s' and role = '%s'", (username, role,))
-  user = cur.fetchone()
+  cur.execute("select * from driver where name = %s and role = %s", (username, role,))
+  user = cur.fetchall()
   user_id = user[0]
 
-  cur.execute("select id from cars where name = '%s'", (car_name,))
-  car_data = cur.fetchone()
+  cur.execute("select id from cars where name = %s", (car_name,))
+  car_data = cur.fetchall()[0]
 
   # compare the user leasing and user thats recieving the lease,
   if user[1] ==  username:
@@ -233,7 +233,7 @@ def lease_car():
     try:
       # id, userid, carid, timeof, timeto, tiemreturn, status, note
       cur.execute("insert into lease(id_car, id_driver, time_of_lease, time_to_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note,))
-      cur.execute("update car set status = '%s' where name = '%s'", ("leased", car_name,))
+      cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
       con.commit()
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {cur}")
@@ -244,7 +244,7 @@ def lease_car():
   elif user[3]  == role:
     try:
       cur.execute("insert into lease(id_car, id_driver, time_of_lease, time_to_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note,))
-      cur.execute("update car set status = '%s' where name = '%s'", ("leased", car_name,))
+      cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
       con.commit()
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {cur}")
