@@ -207,7 +207,7 @@ def cancel_lease():
   id_car = cur.fetchall()[0][0]
 
   cur.execute("UPDATE lease SET status = false WHERE id_lease = (SELECT id_lease FROM lease WHERE id_driver = %s AND id_car = %s ORDER BY id_lease DESC LIMIT 1)", (id_name, id_car))
-  cur.execute("update car set status = %s where id_driver = %s", ("stand_by", id_car))
+  cur.execute("update car set status = %s where id_car = %s", ("stand_by", id_car))
   conn.commit()
   conn.close()
 
