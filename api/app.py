@@ -195,8 +195,11 @@ def allowed_dates():
 @app.route('/cancel_lease', methods = ['POST'])
 @jwt_required()
 def cancel_lease():
+  # make a sql statement that updates the table lease and sets it stauts to false where you will filter the result by the driver, car, and order by id_lease descending limit 1
+  data = request.get_json()
   conn, cur = connect_to_db()
-  cur.execute("update lease set status = ")
+  
+  cur.execute("UPDATE lease SET status = false WHERE id_lease = (SELECT id_lease FROM lease WHERE driver = '%s' AND car = '%s' ORDER BY id_lease DESC LIMIT 1)", (data["driver"], data["car"]))
 
 @app.route('/lease_car', methods = ['POST'])
 @jwt_required()
