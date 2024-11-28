@@ -353,8 +353,8 @@ def _usage_metric(id_car, conn):
     hours = 0.0
     num_of_leases = len(leases)
     for lease in leases:
-      time1 = datetime.strptime(lease[1], "%Y-%m-%d %H:%M:%S.%f")
-      time2 = datetime.strptime(lease[0], "%Y-%m-%d %H:%M:%S.%f")
+      time1 = datetime.strptime(str(lease[1]), "%Y-%m-%d %H:%M:%S.%f")
+      time2 = datetime.strptime(str(lease[0]), "%Y-%m-%d %H:%M:%S.%f")
       difference = time1 - time2
       hours += difference.total_seconds() / 3600
 
