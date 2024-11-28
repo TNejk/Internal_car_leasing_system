@@ -353,8 +353,12 @@ def _usage_metric(id_car, conn, cur):
   num_of_leases = len(res) # max should be 14
   hours = 0.0 # max should be 336.0
   for lease in res:
-    lease[1] -= lease[0]
-    hours += lease[1]
+    time1 = datetime.strptime(lease[1], "%Y-%m-%d %H:%M:%S.%f")
+    time2 = datetime.strptime(lease[0], "%Y-%m-%d %H:%M:%S.%f")
+    difference = time1 - time2
+    h, r = divmod(difference.seconds, 3600)
+    m, _ = divmod(r, 100)
+    hours += h + (m/60)
 
   if num_of_leases <= 2 and hours <= 48.0:
     return 1
