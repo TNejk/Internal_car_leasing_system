@@ -211,7 +211,7 @@ def lease_car():
   cur.execute("select status from car where name = '%s'", (car_name,))
   car_status = cur.fetchone()
   if car_status != "stand_by":
-    return jsonify(msg = "Car is not available!")
+    return jsonify(msg = f"Car is not available!, {car_status}")
 
   
   # USER CHECKER 
