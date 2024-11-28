@@ -234,22 +234,22 @@ def lease_car():
     
     try:
       # id, userid, carid, timeof, timeto, tiemreturn, status, note
-      cur.execute("insert into lease(id_car, id_driver, time_of_lease, time_to_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note,))
+      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note,))
       cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
       con.commit()
     except Exception as e:
-      return jsonify(msg= f"Error occured when leasing. {cur}")
+      return jsonify(msg= f"Error occured when leasing. {e}")
 
     return {"status": True, "private": private}
   
   # If the user leasing is a manager allow him to order lease for other users
   elif user[0][3]  == role:
     try:
-      cur.execute("insert into lease(id_car, id_driver, time_of_lease, time_to_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note,))
+      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, note) values (%s, %s, %s, %s, %s, %s,)", (user_id, car_data[0], timeof, timeto, car_data[3], note,))
       cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
       con.commit()
     except Exception as e:
-      return jsonify(msg= f"Error occured when leasing. {cur}")
+      return jsonify(msg= f"Error occured when leasing. {e}")
 
     return {"status": True, "private": private}
   else: 
