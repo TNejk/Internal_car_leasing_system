@@ -208,7 +208,7 @@ def lease_car():
   # You dont need to check if you can reserve a car in a timeframe as the car would allready be in reserved status mode 
 
   # STATUS CHECKER
-  cur.execute("select status from car where name = '%s'", (car_name,))
+  cur.execute("select status from car where name = %s", (car_name,))
   car_status = cur.fetchone()
   if car_status != "stand_by":
     return jsonify(msg = f"Car is not available!, {car_status}")
