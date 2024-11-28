@@ -336,9 +336,10 @@ def return_car():
     um = _usage_metric(id_car, conn, cur)
     query = ("UPDATE car SET health = %s, status = %s, usage_metric = %s WHERE id_car = %s;")
     cur.execute(query, (health, 'stand_by', um, tor, id_car))
-    con.commit()
+    conn.commit()
   except psycopg2.Error as e:
     return jsonify({'error': str(e)}), 501
+
   finally:
     conn.commit()
     cur.close()
