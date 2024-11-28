@@ -294,19 +294,20 @@ def return_car():
   health = data["health"]
   note = data["note"]
 
-  conn, cur = connect_to_db()
+  conn, error = connect_to_db()
   if conn is None:
-    return jsonify({'error': cur}), 501
+    return jsonify({'error': error}), 501
 
   # check if a lease exist in the DB
   try:
-    query = ("SELECT * FROM lease WHERE id_lease = %s;")
-    cur.execute(query, (id_lease,))
-    res = cur.fetchall()
+    with conn.cursor() as cur:
+      query = ("SELECT * FROM lease WHERE id_lease = %s;")
+      cur.execute(query, (id_lease,))
+      res = cur.fetchall()
     if not res:
       cur.close()
       conn.close()
-      return jsonify({'error': 'Jazda už neexistuje!'}), 501
+      return jsonify({'error1': 'Jazda už neexistuje!'}), 501
   except psycopg2.Error as e:
     cur.close()
     conn.close()
@@ -314,51 +315,55 @@ def return_car():
 
   # update the lease table with change of status, time_of_return and note
   try:
-    query = "UPDATE lease SET status = %s, time_of_return = %s, note = %s WHERE id_lease = %s;"
-    cur.execute(query, (False, tor, note, id_lease))
+    with conn.cursor() as cur:
+      query = "UPDATE lease SET status = %s, time_of_return = %s, note = %s WHERE id_lease = %s;"
+      cur.execute(query, (False, tor, note, id_lease))
   except psycopg2.Error as e:
     cur.close()
     conn.close()
-    return jsonify({'error': str(e)}), 501
+    return jsonify({'error2': str(e)}), 501
 
   # get the car id
   try:
-    query = ("SELECT id_car FROM lease WHERE id_lease = %s;")
-    cur.execute(query, (id_lease,))
-    id_car = cur.fetchone()
+    with conn.cursor() as cur:
+      query = ("SELECT id_car FROM lease WHERE id_lease = %s;")
+      cur.execute(query, (id_lease,))
+      id_car, = cur.fetchone()
   except psycopg2.Error as e:
     cur.close()
     conn.close()
-    return jsonify({'error': str(e)}), 501
+    return jsonify({'error3': str(e)}), 501
 
   # update the car table with chnage of car status, health and calculate the metric
   try:
-    um = _usage_metric(id_car, conn, cur)
-    query = ("UPDATE car SET health = %s, status = %s, usage_metric = %s WHERE id_car = %s;")
-    cur.execute(query, (health, 'stand_by', um, tor, id_car))
-    conn.commit()
+    with conn.cursor() as cur:
+      um = _usage_metric(id_car, conn)
+      query = ("UPDATE car SET health = %s, status = %s, usage_metric = %s WHERE id_car = %s;")
+      cur.execute(query, (health, 'stand_by', um, tor, id_car))
+      conn.commit()
+    return f'stand_by, {health}, {um}, {tor}, {id_car}'
   except psycopg2.Error as e:
     return jsonify({'error': str(e)}), 501
-
   finally:
     conn.commit()
     cur.close()
     conn.close()
-    return f'stand_by, {health}, {um}, {tor}, {id_car}'
+    return jsonify({'error4': str(e)}), 501
 
-def _usage_metric(id_car, conn, cur):
+def _usage_metric(id_car, conn):
   try:
-    query = ("SELECT start_of_lease FROM lease ORDER BY id_lease DESC LIMIT 1 WHERE id_car = %s;")
-    cur.execute(query)
-    start_of_lease = cur.fetchone()[0][0]
-    query = ("SELECT start_of_lease, time_of_return FROM lease WHERE id_car = %s AND %s - start_of_lease >= $s;")
-    cur.execute(query, (id_car, start_of_lease, '14 days'))
-    res = cur.fetchall()
+    with conn.cursor() as cur:
+      query = ("SELECT start_of_lease FROM lease ORDER BY id_lease DESC LIMIT 1 WHERE id_car = %s;")
+      cur.execute(query)
+      start_of_lease = cur.fetchone()[0][0]
+      query = ("SELECT start_of_lease, time_of_return FROM lease WHERE id_car = %s AND %s - start_of_lease >= $s;")
+      cur.execute(query, (id_car, start_of_lease, '14 days'))
+      res = cur.fetchall()
     res = [row[0] for row in res]
   except psycopg2.Error as e:
     cur.close()
     conn.close()
-    return jsonify({'error': str(e)}), 501
+    return jsonify({'error5': str(e)}), 501
 
   num_of_leases = len(res) # max should be 14
   hours = 0.0 # max should be 336.0
