@@ -199,7 +199,7 @@ def cancel_lease():
   data = request.get_json()
   conn, cur = connect_to_db()
   
-  cur.execute("UPDATE lease SET status = false WHERE id_lease = (SELECT id_lease FROM lease WHERE driver = '%s' AND car = '%s' ORDER BY id_lease DESC LIMIT 1)", (data["driver"], data["car"]))
+  cur.execute("UPDATE lease SET status = false WHERE id_lease = (SELECT id_lease FROM lease WHERE driver = %s AND car = %s ORDER BY id_lease DESC LIMIT 1)", (data["driver"], data["car"]))
 
 @app.route('/lease_car', methods = ['POST'])
 @jwt_required()
