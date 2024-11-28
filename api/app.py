@@ -200,10 +200,10 @@ def cancel_lease():
   conn, cur = connect_to_db()
   
   # need to get the car name id  and driver name id 
-  cur.execute("select id_driver from driver where name = %s", (data["driver"]))
+  cur.execute("select id_driver from driver where name = %s", (data["driver"],))
   id_name = cur.fetchall()[0][0]
 
-  cur.execute("select id_car from car where name = %s", (data["car"]))
+  cur.execute("select id_car from car where name = %s", (data["car"],))
   id_car = cur.fetchall()[0][0]
 
   cur.execute("UPDATE lease SET status = false WHERE id_lease = (SELECT id_lease FROM lease WHERE id_driver = %s AND id_car = %s ORDER BY id_lease DESC LIMIT 1)", (id_name, id_car))
