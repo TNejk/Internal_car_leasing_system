@@ -355,7 +355,6 @@ def _usage_metric(id_car, conn):
             """
       cur.execute(query, (id_car, start_of_lease))
       leases = cur.fetchall()
-    print(leases)
     hours = 0.0
     num_of_leases = len(leases)
 
@@ -377,7 +376,7 @@ def _usage_metric(id_car, conn):
       return 5
 
   except psycopg2.Error as e:
-    return jsonify({'error': str(e)})
+    return jsonify({'error': str(leases)})
 
 
 # @app.route('/token_test', methods = ['POST'])
