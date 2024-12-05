@@ -142,7 +142,7 @@ def get_car_list():
 
     cur.execute(query, (location,) if location != 'none' else ())
     res = cur.fetchall()
-    return jsonify({"car_details": [row[0] for row in res]}), 200
+    return jsonify({"car_details": res}), 200
 
   finally:
     cur.close()
