@@ -347,35 +347,36 @@ def _usage_metric(id_car, conn):
       if not result:
         return 1
       start_of_lease = result[0]
+      return start_of_lease
 
-      query = """
-                SELECT start_of_lease, time_of_return 
-                FROM lease 
-                WHERE id_car = %s AND start_of_lease >= %s - INTERVAL '14 days';
-            """
-      cur.execute(query, (id_car, start_of_lease))
-      leases = cur.fetchall()
-    hours = 0.0
-    num_of_leases = len(leases)
-
-    for lease in leases:
-      time1 = datetime.strptime(str(lease[1]), "%Y-%m-%d %H:%M:%S.%f")
-      time2 = datetime.strptime(str(lease[0]), "%Y-%m-%d %H:%M:%S.%f")
-      difference = time1 - time2
-      hours += difference.total_seconds() / 3600
-
-    if num_of_leases <= 2 and hours <= 48.0:
-      return 1
-    elif 3 <= num_of_leases <= 4 and hours <= 72.0:
-      return 2
-    elif 5 <= num_of_leases <= 7 and hours <= 144.0:
-      return 3
-    elif 8 <= num_of_leases <= 11 and hours <= 288.0:
-      return 4
-    else:
-      return 5
-
-  except Exception as e:
+  #     query = """
+  #               SELECT start_of_lease, time_of_return
+  #               FROM lease
+  #               WHERE id_car = %s AND start_of_lease >= %s - INTERVAL '14 days';
+  #           """
+  #     cur.execute(query, (id_car, start_of_lease))
+  #     leases = cur.fetchall()
+  #   hours = 0.0
+  #   num_of_leases = len(leases)
+  #
+  #   for lease in leases:
+  #     time1 = datetime.strptime(str(lease[1]), "%Y-%m-%d %H:%M:%S.%f")
+  #     time2 = datetime.strptime(str(lease[0]), "%Y-%m-%d %H:%M:%S.%f")
+  #     difference = time1 - time2
+  #     hours += difference.total_seconds() / 3600
+  #
+  #   if num_of_leases <= 2 and hours <= 48.0:
+  #     return 1
+  #   elif 3 <= num_of_leases <= 4 and hours <= 72.0:
+  #     return 2
+  #   elif 5 <= num_of_leases <= 7 and hours <= 144.0:
+  #     return 3
+  #   elif 8 <= num_of_leases <= 11 and hours <= 288.0:
+  #     return 4
+  #   else:
+  #     return 5
+  #
+  except psycopg2.Error or Exception as e:
     return jsonify({'error': leases})
 
 
