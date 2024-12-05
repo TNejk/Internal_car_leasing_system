@@ -377,7 +377,7 @@ def _usage_metric(id_car, conn):
       return 5
 
   except psycopg2.Error as e:
-    return jsonify({'error': str(e), 'lease': leases}), 501
+    return jsonify({'error': str(e)}), 501
 
 
 # @app.route('/token_test', methods = ['POST'])
