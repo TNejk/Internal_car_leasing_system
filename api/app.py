@@ -327,7 +327,7 @@ def return_car():
       um = _usage_metric(id_car, conn)
       query = "UPDATE car SET health = %s, status = %s, usage_metric = %s WHERE id_car = %s;"
       cur.execute(query, (health, 'stand_by', um, id_car))
-      
+
     conn.commit()
     return f'stand_by, {health}, {um}, {tor}, {id_car}'
 
@@ -365,8 +365,8 @@ def _usage_metric(id_car, conn):
       if lease[1] is None:
         continue
       try:
-        time1 = datetime.fromisoformat(lease[1])  # Proper parsing with timezone
-        time2 = datetime.fromisoformat(lease[0])
+        time1 = datetime.fromisoformat(str(lease[1]))  # Proper parsing with timezone
+        time2 = datetime.fromisoformat(str(lease[0]))
       except ValueError as e:
         print(f"Error parsing lease times: {e}")
         continue
