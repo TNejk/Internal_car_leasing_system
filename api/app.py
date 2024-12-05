@@ -119,7 +119,7 @@ def login():
 def get_car_list():
   conn, cur = connect_to_db()
   if conn is None:
-    return jsonify({'error': cur, 'status': }), 501
+    return jsonify({'error': cur, 'status': 501}), 501
   try:
     location = request.args.get('location', 'none')
     if location != 'none':
@@ -155,7 +155,7 @@ def get_full_car_info():
   if conn is None:
     return jsonify({'error': cur}), 501
 
-  car = request.args.get('car', 'none')
+  car = request.get_json()["car_name"]
   if car == 'none':
     return jsonify({'error': 'Chýba parameter: car'}), 501
   query = ("SELECT * FROM car WHERE id_car = %s;")
