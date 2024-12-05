@@ -375,7 +375,7 @@ def _usage_metric(id_car, conn):
     else:
       return 5
 
-  except psycopg2.Error as e:
+  except Exception as e:
     return jsonify({'error': str(leases)})
 
 
