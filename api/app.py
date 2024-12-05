@@ -341,12 +341,11 @@ def return_car():
 def _usage_metric(id_car, conn):
   try:
     with conn.cursor() as cur:
-      # Fix query syntax
       query = "SELECT start_of_lease FROM lease WHERE id_car = %s ORDER BY id_lease DESC LIMIT 1;"
       cur.execute(query, (id_car,))
       result = cur.fetchone()
       if not result:
-        return 1  # Default metric if no leases exist
+        return 1
       start_of_lease = result[0]
 
       query = """
@@ -359,6 +358,7 @@ def _usage_metric(id_car, conn):
 
     hours = 0.0
     num_of_leases = len(leases)
+
     for lease in leases:
       time1 = datetime.strptime(str(lease[1]), "%Y-%m-%d %H:%M:%S.%f")
       time2 = datetime.strptime(str(lease[0]), "%Y-%m-%d %H:%M:%S.%f")
@@ -377,7 +377,7 @@ def _usage_metric(id_car, conn):
       return 5
 
   except psycopg2.Error as e:
-    return jsonify({'error': str(e)}), 501
+    return jsonify({'error': str(e), 'lease': leases}), 501
 
 
 # @app.route('/token_test', methods = ['POST'])
