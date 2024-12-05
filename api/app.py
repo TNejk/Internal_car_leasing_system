@@ -325,11 +325,11 @@ def return_car():
 
       # Update the car table
       um = _usage_metric(id_car, conn)
-      # query = "UPDATE car SET health = %s, status = %s, usage_metric = %s WHERE id_car = %s;"
-      # cur.execute(query, (health, 'stand_by', um, id_car))
-      return str(um)
-    # conn.commit()
-    #return f'stand_by, {health}, {um}, {tor}, {id_car}'
+      query = "UPDATE car SET health = %s, status = %s, usage_metric = %s WHERE id_car = %s;"
+      cur.execute(query, (health, 'stand_by', um, id_car))
+      
+    conn.commit()
+    return f'stand_by, {health}, {um}, {tor}, {id_car}'
 
   except psycopg2.Error as e:
     conn.rollback()
@@ -341,43 +341,52 @@ def return_car():
 def _usage_metric(id_car, conn):
   try:
     with conn.cursor() as cur:
+      # Get the latest lease start time
       query = "SELECT start_of_lease FROM lease WHERE id_car = %s ORDER BY id_lease DESC LIMIT 1;"
       cur.execute(query, (id_car,))
       result = cur.fetchone()
       if not result:
-        return 1
+        return 1  # Default metric if no leases exist
       start_of_lease = result[0]
-      return start_of_lease
 
-  #     query = """
-  #               SELECT start_of_lease, time_of_return
-  #               FROM lease
-  #               WHERE id_car = %s AND start_of_lease >= %s - INTERVAL '14 days';
-  #           """
-  #     cur.execute(query, (id_car, start_of_lease))
-  #     leases = cur.fetchall()
-  #   hours = 0.0
-  #   num_of_leases = len(leases)
-  #
-  #   for lease in leases:
-  #     time1 = datetime.strptime(str(lease[1]), "%Y-%m-%d %H:%M:%S.%f")
-  #     time2 = datetime.strptime(str(lease[0]), "%Y-%m-%d %H:%M:%S.%f")
-  #     difference = time1 - time2
-  #     hours += difference.total_seconds() / 3600
-  #
-  #   if num_of_leases <= 2 and hours <= 48.0:
-  #     return 1
-  #   elif 3 <= num_of_leases <= 4 and hours <= 72.0:
-  #     return 2
-  #   elif 5 <= num_of_leases <= 7 and hours <= 144.0:
-  #     return 3
-  #   elif 8 <= num_of_leases <= 11 and hours <= 288.0:
-  #     return 4
-  #   else:
-  #     return 5
-  #
+      # Fetch leases from the past 14 days
+      query = """
+                  SELECT start_of_lease, time_of_return 
+                  FROM lease 
+                  WHERE id_car = %s AND start_of_lease >= %s - INTERVAL '14 days';
+                  """
+      cur.execute(query, (id_car, start_of_lease))
+      leases = cur.fetchall()
+
+    hours = 0.0
+    num_of_leases = len(leases)
+    for lease in leases:
+      # Skip processing if time_of_return is None
+      if lease[1] is None:
+        continue
+      try:
+        time1 = datetime.fromisoformat(lease[1])  # Proper parsing with timezone
+        time2 = datetime.fromisoformat(lease[0])
+      except ValueError as e:
+        print(f"Error parsing lease times: {e}")
+        continue
+      difference = time1 - time2
+      hours += difference.total_seconds() / 3600
+
+    # Return metric based on lease count and hours
+    if num_of_leases <= 2 and hours <= 48.0:
+      return 1
+    elif 3 <= num_of_leases <= 4 and hours <= 72.0:
+      return 2
+    elif 5 <= num_of_leases <= 7 and hours <= 144.0:
+      return 3
+    elif 8 <= num_of_leases <= 11 and hours <= 288.0:
+      return 4
+    else:
+      return 5
+
   except psycopg2.Error or Exception as e:
-    return jsonify({'error': leases})
+    return jsonify({'error': str(e)}), 501
 
 
 # @app.route('/token_test', methods = ['POST'])
