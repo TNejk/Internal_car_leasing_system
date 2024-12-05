@@ -376,7 +376,7 @@ def _usage_metric(id_car, conn):
       return 5
 
   except Exception as e:
-    return jsonify({'error': str(leases)})
+    return jsonify({'error': leases})
 
 
 # @app.route('/token_test', methods = ['POST'])
