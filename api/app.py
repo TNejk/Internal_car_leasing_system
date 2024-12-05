@@ -374,13 +374,13 @@ def _usage_metric(id_car, conn):
       hours += difference.total_seconds() / 3600
 
     # Return metric based on lease count and hours
-    if num_of_leases <= 2 and hours <= 48.0:
+    if num_of_leases <= 2 or hours <= 48.0:
       return 1
-    elif 3 <= num_of_leases <= 4 and hours <= 72.0:
+    elif 3 <= num_of_leases <= 4 or hours <= 72.0:
       return 2
-    elif 5 <= num_of_leases <= 7 and hours <= 144.0:
+    elif 5 <= num_of_leases <= 7 or hours <= 144.0:
       return 3
-    elif 8 <= num_of_leases <= 11 and hours <= 288.0:
+    elif 8 <= num_of_leases <= 11 or hours <= 288.0:
       return 4
     else:
       return 5
