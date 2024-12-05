@@ -325,11 +325,11 @@ def return_car():
 
       # Update the car table
       um = _usage_metric(id_car, conn)
-      query = "UPDATE car SET health = %s, status = %s, usage_metric = %s WHERE id_car = %s;"
-      cur.execute(query, (health, 'stand_by', um, id_car))
-
-    conn.commit()
-    return f'stand_by, {health}, {um}, {tor}, {id_car}'
+      # query = "UPDATE car SET health = %s, status = %s, usage_metric = %s WHERE id_car = %s;"
+      # cur.execute(query, (health, 'stand_by', um, id_car))
+      return um
+    # conn.commit()
+    #return f'stand_by, {health}, {um}, {tor}, {id_car}'
 
   except psycopg2.Error as e:
     conn.rollback()
