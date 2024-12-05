@@ -148,7 +148,7 @@ def get_car_list():
     cur.close()
     conn.close()
 
-@app.route('/get_full_car_info', methods=['GET'])
+@app.route('/get_full_car_info', methods=['POST'])
 @jwt_required()
 def get_full_car_info():
   conn, cur = connect_to_db()
