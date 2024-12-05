@@ -124,7 +124,7 @@ def get_car_list():
     location = request.args.get('location', 'none')
     if location != 'none':
       query = """
-            SELECT CONCAT(id_car, ';', name, ';', status, ';', usage_metric, ';', location) AS car_details
+            SELECT id_car, name, status, usage_metric, location
             FROM car
             ORDER BY 
                 CASE 
