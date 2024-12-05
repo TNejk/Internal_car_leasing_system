@@ -185,6 +185,9 @@ def reports():
   }
 
 
+# ROUTE TO GET ALL THE USERNAMES IF YOU ARE A MANAGER
+
+
 
 @app.route('/allowed_dates', methods = ['GET'])
 @jwt_required()
@@ -200,7 +203,7 @@ def cancel_lease():
   conn, cur = connect_to_db()
   
   try:
-    # need to get the car name id  and driver name id 
+    # need to get the car_id  and driver_id 
     cur.execute("select id_driver from driver where email = %s", (data["driver"],))
     id_name = cur.fetchall()[0][0]
 
@@ -220,11 +223,14 @@ def cancel_lease():
 
   return {"cancelled": True}
 
+
+
 @app.route('/lease_car', methods = ['POST'])
 @jwt_required()
 def lease_car():
   data =  request.get_json()
 
+  # for whom the lease is 
   username = str(data["username"])
   role = str(data["role"])
   car_name  = str(data["car_name"])
@@ -251,6 +257,7 @@ def lease_car():
   car_data = cur.fetchall()
 
   # compare the user leasing and user thats recieving the lease,
+  # This may be useless as the user result itself makes a check if a given person exists
   if user[0][1] ==  username:
     # Priavte ride check
     if private == True:
