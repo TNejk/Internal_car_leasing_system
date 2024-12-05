@@ -135,7 +135,7 @@ def get_car_list():
         """
     else:
       query = """
-                  SELECT CONCAT(id_car, ';', name, ';', status, ';', usage_metric, ';', location) AS car_details
+                  SELECT id_car, name, status, usage_metric, location AS car_details
                   FROM car
                   ORDER BY usage_metric ASC;
               """
