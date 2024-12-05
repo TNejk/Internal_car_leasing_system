@@ -124,7 +124,7 @@ def get_car_list():
     location = request.args.get('location', 'none')
     if location != 'none':
       query = """
-            SELECT CONCAT(name, ';', status, ';', usage_metric, ';', location) AS car_details
+            SELECT CONCAT(car_id, ';', name, ';', status, ';', usage_metric, ';', location) AS car_details
             FROM car
             ORDER BY 
                 CASE 
@@ -135,7 +135,7 @@ def get_car_list():
         """
     else:
       query = """
-                  SELECT CONCAT(name, ';', status, ';', usage_metric, ';', location) AS car_details
+                  SELECT CONCAT(car_id, ';', name, ';', status, ';', usage_metric, ';', location) AS car_details
                   FROM car
                   ORDER BY usage_metric ASC;
               """
@@ -155,7 +155,7 @@ def get_full_car_info():
   if conn is None:
     return jsonify({'error': cur}), 501
 
-  car = request.get_json()["car_name"]
+  car = request.get_json()["car_id"]
   if car == 'none':
     return jsonify({'error': 'Chýba parameter: car'}), 501
   query = ("SELECT * FROM car WHERE id_car = %s;")
