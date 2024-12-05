@@ -78,11 +78,11 @@ def login():
   username=data['username']
   password=data['password']
   if not username or not password:
-    return jsonify({'error': 'Chýba meno alebo heslo!'}), 401
+    return jsonify({'error': 'Chábe meno alebo heslo!', 'type': 0}), 401
 
   conn, cur = connect_to_db()
   if conn is None:
-    return jsonify({'error': cur}), 501
+    return jsonify({'error': cur, 'type': 1}), 501
 
   salted = login_salt+password+login_salt
   hashed = hashlib.sha256(salted.encode()).hexdigest()
@@ -92,7 +92,7 @@ def login():
     res = cur.fetchone()
 
     if res is None:
-      return jsonify({'error': 'Meno alebo heslo sú nesprávne!'}), 401
+      return jsonify({'error': 'Nesprávne meno alebo heslo!', 'type': 0}), 401
     else:
       additional_claims = {'role': res[0]}
       access_token = create_access_token(identity=username, fresh=True, expires_delta=timedelta(minutes=30), additional_claims=additional_claims)
@@ -119,7 +119,7 @@ def login():
 def get_car_list():
   conn, cur = connect_to_db()
   if conn is None:
-    return jsonify({'error': cur}), 501
+    return jsonify({'error': cur, 'status': }), 501
   try:
     location = request.args.get('location', 'none')
     if location != 'none':
