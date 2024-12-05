@@ -355,7 +355,7 @@ def _usage_metric(id_car, conn):
             """
       cur.execute(query, (id_car, start_of_lease))
       leases = cur.fetchall()
-
+    return leases
     hours = 0.0
     num_of_leases = len(leases)
 
