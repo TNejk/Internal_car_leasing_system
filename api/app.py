@@ -327,7 +327,7 @@ def return_car():
       um = _usage_metric(id_car, conn)
       # query = "UPDATE car SET health = %s, status = %s, usage_metric = %s WHERE id_car = %s;"
       # cur.execute(query, (health, 'stand_by', um, id_car))
-      return um
+      return str(um)
     # conn.commit()
     #return f'stand_by, {health}, {um}, {tor}, {id_car}'
 
