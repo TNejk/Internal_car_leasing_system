@@ -98,7 +98,7 @@ def login():
       access_token = create_access_token(identity=username, fresh=True, expires_delta=timedelta(minutes=30), additional_claims=additional_claims)
       # refresh_token = create_refresh_token(identity=username, expires_delta=timedelta(days=1), additional_claims=additional_claims)
       # return jsonify(access_token=access_token, refresh_token=refresh_token), 200
-      return jsonify(access_token=access_token), 200
+      return jsonify(access_token=access_token, role=res[0]), 200
 
   finally:
     cur.close()
