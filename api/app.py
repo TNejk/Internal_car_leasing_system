@@ -153,14 +153,13 @@ def get_users():
         conn.close()
 
 
-@app.route('/get_car_list', methods=['POST'])
+@app.route('/get_car_list', methods=['GET'])
 @jwt_required()
 def get_car_list():
   conn, cur = connect_to_db()
   if conn is None:
     return jsonify({'error': cur, 'status': 501}), 501
   try:
-    data = request.get_json()
     location = request.args.get('location', 'none')
     if location != 'none':
       query = """
