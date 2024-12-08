@@ -242,7 +242,7 @@ def allowed_dates():
 # car location
 # 
 @app.route('/get_leases', methods = ['GET'])
-@jwt_required
+@jwt_required()
 def get_leases():
   conn, curr = connect_to_db()
   query  = """
