@@ -153,39 +153,86 @@ def get_users():
         conn.close()
 
 
+
 @app.route('/get_car_list', methods=['GET'])
 @jwt_required()
 def get_car_list():
-  conn, cur = connect_to_db()
-  if conn is None:
-    return jsonify({'error': cur, 'status': 501}), 501
-  try:
-    location = request.args.get('location', 'none')
-    if location != 'none':
-      query = """
-            SELECT id_car, name, status, url
-            FROM car
-            ORDER BY 
-                CASE 
-                    WHEN location = %s THEN 1 
-                    ELSE 2 
-                END,
-                usage_metric ASC;
-        """
-    else:
-      query = """
-                  SELECT id_car, name, status, url
-                  FROM car
-                  ORDER BY usage_metric ASC;
-              """
+    conn, cur = connect_to_db()
+    if conn is None:
+        return jsonify({'error': cur, 'status': 501}), 501
+    try:
+        location = request.args.get('location', 'none')
+        if location != 'none':
+            query = """
+                SELECT id_car, name, status, url
+                FROM car
+                ORDER BY 
+                    CASE 
+                        WHEN location = %s THEN 1 
+                        ELSE 2 
+                    END,
+                    CASE 
+                        WHEN status = 'reserved' THEN 1
+                        WHEN status = 'stand_by' THEN 2
+                        ELSE 3
+                    END,
+                    usage_metric ASC;
+            """
+            cur.execute(query, (location,))
+        else:
+            query = """
+                SELECT id_car, name, status, url
+                FROM car
+                ORDER BY 
+                    CASE 
+                        WHEN status = 'reserved' THEN 1
+                        WHEN status = 'stand_by' THEN 2
+                        ELSE 3
+                    END,
+                    usage_metric ASC;
+            """
+            cur.execute(query)
+        
+        res = cur.fetchall()
+        return jsonify({"car_details": res}), 200
 
-    cur.execute(query, (location,) if location != 'none' else ())
-    res = cur.fetchall()
-    return jsonify({"car_details": res}), 200
+    finally:
+        cur.close()
+        conn.close()
 
-  finally:
-    cur.close()
-    conn.close()
+# @app.route('/get_car_list', methods=['GET'])
+# @jwt_required()
+# def get_car_list():
+#   conn, cur = connect_to_db()
+#   if conn is None:
+#     return jsonify({'error': cur, 'status': 501}), 501
+#   try:
+#     location = request.args.get('location', 'none')
+#     if location != 'none':
+#       query = """
+#             SELECT id_car, name, status, url
+#             FROM car
+#             ORDER BY 
+#                 CASE 
+#                     WHEN location = %s THEN 1 
+#                     ELSE 2 
+#                 END,
+#                 usage_metric ASC;
+#         """
+#     else:
+#       query = """
+#                   SELECT id_car, name, status, url
+#                   FROM car
+#                   ORDER BY usage_metric ASC;
+#               """
+
+#     cur.execute(query, (location,) if location != 'none' else ())
+#     res = cur.fetchall()
+#     return jsonify({"car_details": res}), 200
+
+#   finally:
+#     cur.close()
+#     conn.close()
 
 @app.route('/get_full_car_info', methods=['POST'])
 @jwt_required()
