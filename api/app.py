@@ -122,14 +122,27 @@ def login():
 
 
 
-@app.route('/get_users', methods= ['GET'])
+@app.route('/get_users', methods=['GET'])
 @jwt_required()
 def get_users():
-  conn, cur = connect_to_db()
-  cur.execute('select(email, role) from driver;')
-  users = cur.fetchall()
+    conn, cur = connect_to_db()
+    try:
+        cur.execute('SELECT email, role FROM driver;')  
+        users = cur.fetchall()  
+        ed_users = []
+        for i in users:
+            ed_users.append({
+                "email": i[0],
+                "role": i[1]
+            })
 
-  return {'users': users}
+        return {'users': ed_users}
+    except Exception as e:
+
+        return {"error": str(e)}, 500
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route('/get_car_list', methods=['GET'])
