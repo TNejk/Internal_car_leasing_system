@@ -255,6 +255,7 @@ def get_leases():
         l.start_of_lease,
         l.end_of_lease,
         l.time_of_return
+        l.private
       FROM 
           lease l
       JOIN 
@@ -277,7 +278,8 @@ def get_leases():
         "url": i[4],
         "time_from": i[5],
         "time_to": i[6],
-        "time_of_return": i[7]
+        "time_of_return": i[7],
+        "private": i[8]
       })
     return {"active_leases": leases}, 200
   
