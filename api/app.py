@@ -251,6 +251,7 @@ def get_leases():
         d.role AS driver_role,
         c.name AS car_name,
         c.location AS car_location,
+        c.url AS car_url,
         l.start_of_lease,
         l.end_of_lease,
         l.time_of_return
@@ -273,9 +274,10 @@ def get_leases():
         "role": i[1],
         "car_name": i[2],
         "location": i[3],
-        "time_from": i[4],
-        "time_to": i[5],
-        "time_of_return": i[6],
+        "url": i[4],
+        "time_from": i[5],
+        "time_to": i[6],
+        "time_of_return": i[7]
       })
     return {"active_leases": leases}, 200
   
