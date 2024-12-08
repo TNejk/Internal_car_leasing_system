@@ -247,25 +247,37 @@ def get_leases():
   conn, curr = connect_to_db()
   query  = """
       SELECT 
-            d.email AS driver_email,
-            d.role AS driver_role,
-            c.name AS car_name,
-            c.location AS car_location,
-            l.start_of_lease,
-            l.end_of_lease,
-            l.time_of_return,
-            l.status AS lease_status
+        d.email AS driver_email,
+        d.role AS driver_role,
+        c.name AS car_name,
+        c.location AS car_location,
+        l.start_of_lease,
+        l.end_of_lease,
+        l.time_of_return
       FROM 
-            lease l
+          lease l
       JOIN 
-            driver d ON l.id_driver = d.id_driver
+          driver d ON l.id_driver = d.id_driver
       JOIN 
-            car c ON l.id_car = c.id_car;
+          car c ON l.id_car = c.id_car
+      WHERE 
+          l.status = TRUE; 
   """
   try:
     curr.execute(query)
     res = curr.fetchall()
-    return res, 200
+    users = []
+    for i in res:
+      users.append({
+        "email": i[0],
+        "role": i[1],
+        "car_name": i[2],
+        "location": i[3],
+        "time_from": i[4],
+        "time_to": i[5],
+        "time_of_return": i[6],
+      })
+    return users, 200
   
   except Exception as e:
     return jsonify(msg=  f"Error recieving leases: {e}"), 500
