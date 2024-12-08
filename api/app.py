@@ -114,6 +114,18 @@ def login():
 #     access_token = create_access_token(identity=current_user, expires_delta=timedelta(minutes=30), additional_claims=additional_claims)
 #     return jsonify(access_token=access_token), 200
 
+
+
+@app.route('/get_users', methods= ['GET'])
+@jwt_required()
+def get_users():
+  conn, cur = connect_to_db()
+  cur.execute('select(email, role) from driver;')
+  users = cur.fetchall()
+
+  return {'users': users}
+
+
 @app.route('/get_car_list', methods=['GET'])
 @jwt_required()
 def get_car_list():
@@ -121,6 +133,7 @@ def get_car_list():
   if conn is None:
     return jsonify({'error': cur, 'status': 501}), 501
   try:
+    data = request.get_json()
     location = request.args.get('location', 'none')
     if location != 'none':
       query = """
