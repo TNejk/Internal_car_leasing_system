@@ -266,9 +266,9 @@ def get_leases():
   try:
     curr.execute(query)
     res = curr.fetchall()
-    users = []
+    leases = []
     for i in res:
-      users.append({
+      leases.append({
         "email": i[0],
         "role": i[1],
         "car_name": i[2],
@@ -277,7 +277,7 @@ def get_leases():
         "time_to": i[5],
         "time_of_return": i[6],
       })
-    return users, 200
+    return {"active_leases": leases}, 200
   
   except Exception as e:
     return jsonify(msg=  f"Error recieving leases: {e}"), 500
