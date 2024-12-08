@@ -234,6 +234,42 @@ def allowed_dates():
   pass
 
 
+# Only get active leases!!! 
+# And leases that need aproval
+# Get the lease time_from, time_to
+# driver name 
+# car name
+# car location
+# 
+@app.route('get_leases', methods = ['GET'])
+@jwt_required
+def get_leases():
+  conn, curr = connect_to_db()
+  query  = """
+      SELECT 
+            d.email AS driver_email,
+            d.role AS driver_role,
+            c.name AS car_name,
+            c.location AS car_location,
+            l.start_of_lease,
+            l.end_of_lease,
+            l.time_of_return,
+            l.status AS lease_status
+      FROM 
+            lease l
+      JOIN 
+            driver d ON l.id_driver = d.id_driver
+      JOIN 
+            car c ON l.id_car = c.id_car;
+  """
+  try:
+    curr.execute(query)
+    res = curr.fetchall()
+    return res, 200
+  
+  except Exception as e:
+    return jsonify(msg=  f"Error recieving leases: {e}"), 500
+
 @app.route('/cancel_lease', methods = ['POST'])
 @jwt_required()
 def cancel_lease():
