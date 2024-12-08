@@ -4,11 +4,9 @@ import jwt
 import psycopg2
 from flask import Flask, request, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
+from flask_cors import CORS
 from functools import wraps
 from datetime import datetime, timedelta
-
-
-
 
 db_host = os.getenv('DB_HOST')
 db_port = os.getenv('DB_PORT')
@@ -20,6 +18,14 @@ login_salt = os.getenv('LOGIN_SALT')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = app_secret_key
+
+CORS(app, supports_credentials=True, resources={
+    r"/get_full_car_info": {
+        "origins": "http://127.0.0.1:5000",  # Change to your client app's origin
+        "allow_headers": ["Authorization", "Content-Type"],
+        "methods": ["GET", "POST", "OPTIONS"]
+    }
+})
 
 jwt_manager = JWTManager(app)
 
