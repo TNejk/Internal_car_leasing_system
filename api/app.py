@@ -122,6 +122,14 @@ def login():
 
 
 
+
+# {
+#     "users": [
+#         {
+#             "email": "gamo_icls@gamo.sk",
+#             "role": "admin"
+#         },]
+# }
 @app.route('/get_users', methods=['GET'])
 @jwt_required()
 def get_users():
@@ -145,7 +153,7 @@ def get_users():
         conn.close()
 
 
-@app.route('/get_car_list', methods=['GET'])
+@app.route('/get_car_list', methods=['POST'])
 @jwt_required()
 def get_car_list():
   conn, cur = connect_to_db()
