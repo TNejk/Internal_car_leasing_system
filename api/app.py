@@ -254,7 +254,7 @@ def get_leases():
         c.url AS car_url,
         l.start_of_lease,
         l.end_of_lease,
-        l.time_of_return
+        l.time_of_return,
         l.private
       FROM 
           lease l
