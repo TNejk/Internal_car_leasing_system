@@ -172,7 +172,7 @@ def get_car_list():
                         ELSE 2 
                     END,
                     CASE 
-                        WHEN status = 'reserved' THEN 1
+                        WHEN status = 'leased' THEN 1
                         WHEN status = 'stand_by' THEN 2
                         ELSE 3
                     END,
@@ -185,7 +185,7 @@ def get_car_list():
                 FROM car
                 ORDER BY 
                     CASE 
-                        WHEN status = 'reserved' THEN 1
+                        WHEN status = 'leased' THEN 1
                         WHEN status = 'stand_by' THEN 2
                         ELSE 3
                     END,
