@@ -147,6 +147,8 @@ def get_users():
         conn.close()
 
 
+#Order by reserved first, then by metric and filter by reserved cars by the provided email
+# Cars table does not have the email, you will have to get it from the leases table that combines the car and driver table together, 
 @app.route('/get_car_list', methods=['POST'])
 @jwt_required()
 def get_car_list():
@@ -164,33 +166,37 @@ def get_car_list():
         # Query with location filter
         if location:
             query = """
-                SELECT id_car, name, status, url
-                FROM car
-                WHERE status = 'reserved' AND reserved_by_email = %s OR status != 'reserved'
+                SELECT c.id_car, c.name, c.status, c.url
+                FROM car c
+                LEFT JOIN lease l ON c.id_car = l.id_car
+                LEFT JOIN driver d ON l.id_driver = d.id_driver
+                WHERE (c.status = 'reserved' AND d.email = %s) OR c.status != 'reserved'
                 ORDER BY 
                     CASE 
-                        WHEN status = 'reserved' AND reserved_by_email = %s THEN 1
-                        WHEN location = %s THEN 2 
+                        WHEN c.status = 'reserved' AND d.email = %s THEN 1
+                        WHEN c.location = %s THEN 2 
                         ELSE 3
                     END,
-                    usage_metric ASC;
+                    c.usage_metric ASC;
             """
             cur.execute(query, (email, email, location))
         
         # Query without location filter
         else:
             query = """
-                SELECT id_car, name, status, url
-                FROM car
-                WHERE status = 'reserved' AND reserved_by_email = %s OR status != 'reserved'
+                SELECT c.id_car, c.name, c.status, c.url
+                FROM car c
+                LEFT JOIN lease l ON c.id_car = l.id_car
+                LEFT JOIN driver d ON l.id_driver = d.id_driver
+                WHERE (c.status = 'reserved' AND d.email = %s) OR c.status != 'reserved'
                 ORDER BY 
                     CASE 
-                        WHEN status = 'reserved' AND reserved_by_email = %s THEN 1
-                        WHEN status = 'leased' THEN 2
-                        WHEN status = 'stand_by' THEN 3
+                        WHEN c.status = 'reserved' AND d.email = %s THEN 1
+                        WHEN c.status = 'leased' THEN 2
+                        WHEN c.status = 'stand_by' THEN 3
                         ELSE 4
                     END,
-                    usage_metric ASC;
+                    c.usage_metric ASC;
             """
             cur.execute(query, (email, email))
 
@@ -200,7 +206,6 @@ def get_car_list():
     finally:
         cur.close()
         conn.close()
-
 # @app.route('/get_car_list', methods=['GET'])
 # @jwt_required()
 # def get_car_list():
