@@ -4,7 +4,6 @@ import jwt
 import psycopg2
 from flask import Flask, request, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
-# from flask_cors import CORS, cross_origin
 from functools import wraps
 from datetime import datetime, timedelta
 
@@ -18,10 +17,6 @@ login_salt = os.getenv('LOGIN_SALT')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = app_secret_key
-
-# CORS(app, resources={r"/*": {"origins": "*"}},
-#      allow_headers=["Authorization", "Content-Type"],
-#      methods=["GET", "POST", "OPTIONS"])
 
 jwt_manager = JWTManager(app)
 
