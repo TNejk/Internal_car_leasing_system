@@ -260,12 +260,12 @@ def get_full_car_info():
     resu = cur.fetchall()
 
     # [(datetime(2024, 12, 15, 12, 0), datetime(2024, 12, 20, 12, 0))]
-    # 2024-12-05 08:48:07.471216+01
+    # res: "(\"2024-12-08 10:06:53.294548+01\",\"2024-12-08 11:06:53.294554+01\")"
     dates = []
     if resu:  
        for i in range(0, len(resu)):
          try:
-           dates.append((parse(resu[i]), parse(resu[i+1])))
+           dates.append((parse(resu[i][0]), parse(resu[i][1])))
          except Exception as e:
            return jsonify(msg= f"date error: {e}"), 500
 
