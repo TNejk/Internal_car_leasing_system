@@ -33,6 +33,12 @@ def connect_to_db():
   except psycopg2.Error as e:
     return None, str(e)
 
+@app.after_request
+def apply_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
+    return response
 
 # headers = {
 #     "Authorization": f"Bearer {jwt_token}",
@@ -285,9 +291,6 @@ def get_full_car_info():
     #      return jsonify(msg= f"Erorr date filtering: {e}"), 500
 
     response = jsonify({"car_details": res, "allowed_dates": []})
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
     return response, 200
 
 
