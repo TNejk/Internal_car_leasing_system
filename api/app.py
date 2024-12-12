@@ -7,6 +7,8 @@ from flask_jwt_extended import JWTManager, create_access_token, create_refresh_t
 from functools import wraps
 from datetime import datetime, timedelta, timezone
 from dateutil.parser import parse
+import pytz
+
 
 db_host = os.getenv('DB_HOST')
 db_port = os.getenv('DB_PORT')
@@ -172,7 +174,7 @@ def get_car_list():
 
       finally:
         cur.close()
-        conn.close()
+        conn.close()  
 
 
 
@@ -183,7 +185,7 @@ def get_full_car_info():
 
     # get a list of dates split by 30 miniyute intervals for each car
     # where first check if an active lease exists for that car and edit the list of dates removing times between the active leases
-    def get_dates_to_end_of_month(interval_minutes=30, tz=timezone(name='Europe/Bratislava')):
+    def get_dates_to_end_of_month(interval_minutes=30, tz=pytz.timezone('Europe/Bratislava')):
         """
         Generate a list of datetime objects from now until the end of the current month in specified intervals.
 
