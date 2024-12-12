@@ -1,4 +1,3 @@
-from ast import literal_eval
 import os
 import hashlib
 import jwt
@@ -262,22 +261,22 @@ def get_full_car_info():
 
     # [(datetime(2024, 12, 15, 12, 0), datetime(2024, 12, 20, 12, 0))]
     # res: "(\"2024-12-08 10:06:53.294548+01\",\"2024-12-08 11:06:53.294554+01\")"
-    dates = []
-    if resu:
-        for lease_period in resu:
-            try:
-                # Convert the strings into proper datetime objects
-                lease_start, lease_end = literal_eval(lease_period)  # Convert string to tuple
-                dates.append((parse(lease_start), parse(lease_end)))
-            except Exception as e:
-                return jsonify(msg=f"Date error: {e}"), 500
+    # dates = []
+    dates = filter_dates(resu)
+    # if resu:  
+    #    for i in range(0, len(resu)):
+    #      try:
+    #        dates.append((parse(resu[i][0]), parse(resu[i][1])))
+    #      except Exception as e:
+    #        return jsonify(msg= f"date error: {e}"), 500
 
-        try:
-            filtered_dates = filter_dates(dates)
-        except Exception as e:
-            return jsonify(msg=f"Error in date filtering: {e}"), 500
-
-        return jsonify({"car_details": res, "allowed_dates": filtered_dates}), 200
+    #    try:
+    #      #[(datetime_from, datetime_to)]
+    #      filter_dates(dates)
+    #    except Exception as e:
+    #      return jsonify(msg= f"Erorr date filtering: {e}"), 500
+      
+    return jsonify({"car_details": res, "allowed_dates": dates}), 200
 
 
 @app.route('/reports', methods = ['POST'])
