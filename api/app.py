@@ -147,46 +147,53 @@ def get_users():
         conn.close()
 
 
-
-@app.route('/get_car_list', methods=['GET'])
+@app.route('/get_car_list', methods=['POST'])
 @jwt_required()
 def get_car_list():
     conn, cur = connect_to_db()
+    data = request.get_json()
+    email = data.get("email")
+
     if conn is None:
         return jsonify({'error': cur, 'status': 501}), 501
+
     try:
-        location = request.args.get('location', 'none')
-        if location != 'none':
+        # Check if location filter is applied
+        location = request.args.get('location', None)
+
+        # Query with location filter
+        if location:
             query = """
                 SELECT id_car, name, status, url
                 FROM car
+                WHERE status = 'reserved' AND reserved_by_email = %s OR status != 'reserved'
                 ORDER BY 
                     CASE 
-                        WHEN location = %s THEN 1 
-                        ELSE 2 
-                    END,
-                    CASE 
-                        WHEN status = 'leased' THEN 1
-                        WHEN status = 'stand_by' THEN 2
+                        WHEN status = 'reserved' AND reserved_by_email = %s THEN 1
+                        WHEN location = %s THEN 2 
                         ELSE 3
                     END,
                     usage_metric ASC;
             """
-            cur.execute(query, (location,))
+            cur.execute(query, (email, email, location))
+        
+        # Query without location filter
         else:
             query = """
                 SELECT id_car, name, status, url
                 FROM car
+                WHERE status = 'reserved' AND reserved_by_email = %s OR status != 'reserved'
                 ORDER BY 
                     CASE 
-                        WHEN status = 'leased' THEN 1
-                        WHEN status = 'stand_by' THEN 2
-                        ELSE 3
+                        WHEN status = 'reserved' AND reserved_by_email = %s THEN 1
+                        WHEN status = 'leased' THEN 2
+                        WHEN status = 'stand_by' THEN 3
+                        ELSE 4
                     END,
                     usage_metric ASC;
             """
-            cur.execute(query)
-        
+            cur.execute(query, (email, email))
+
         res = cur.fetchall()
         return jsonify({"car_details": res}), 200
 
@@ -327,13 +334,15 @@ def get_leases():
         "time_from": i[5],
         "time_to": i[6],
         "time_of_return": i[7],
-        "private": i[8]
+        "private": i[8], 
+
       })
     return {"active_leases": leases}, 200
   
   except Exception as e:
     return jsonify(msg=  f"Error recieving leases: {e}"), 500
 
+# needs: email, car name, 
 @app.route('/cancel_lease', methods = ['POST'])
 @jwt_required()
 def cancel_lease():
