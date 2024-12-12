@@ -19,9 +19,7 @@ login_salt = os.getenv('LOGIN_SALT')
 app = Flask(__name__)
 app.config['SECRET_KEY'] = app_secret_key
 
-CORS(app, resources={r"/*": {"origins": "*"}},
-     allow_headers=["Authorization", "Content-Type"],
-     methods=["GET", "POST", "OPTIONS"])
+CORS(app)
 
 jwt_manager = JWTManager(app)
 
@@ -156,58 +154,49 @@ def get_users():
 def get_car_list():
     conn, cur = connect_to_db()
     data = request.get_json()
-    email = data.get("email")
-
+    email = data["email"]
     if conn is None:
         return jsonify({'error': cur, 'status': 501}), 501
-
     try:
-        # Check if location filter is applied
-        location = request.args.get('location', None)
-
-        # Query with location filter
-        if location:
+        location = request.args.get('location', 'none')
+        if location != 'none':
             query = """
-                SELECT c.id_car, c.name, c.status, c.url
-                FROM car c
-                LEFT JOIN lease l ON c.id_car = l.id_car
-                LEFT JOIN driver d ON l.id_driver = d.id_driver
-                WHERE (c.status = 'reserved' AND d.email = %s) OR c.status != 'reserved'
+                SELECT id_car, name, status, url
+                FROM car
                 ORDER BY 
                     CASE 
-                        WHEN c.status = 'reserved' AND d.email = %s THEN 1
-                        WHEN c.location = %s THEN 2 
+                        WHEN location = %s THEN 1 
+                        ELSE 2 
+                    END,
+                    CASE 
+                        WHEN status = 'leased' THEN 1
+                        WHEN status = 'stand_by' THEN 2
                         ELSE 3
                     END,
-                    c.usage_metric ASC;
+                    usage_metric ASC;
             """
-            cur.execute(query, (email, email, location))
-        
-        # Query without location filter
+            cur.execute(query, (location,))
         else:
             query = """
-                SELECT c.id_car, c.name, c.status, c.url
-                FROM car c
-                LEFT JOIN lease l ON c.id_car = l.id_car
-                LEFT JOIN driver d ON l.id_driver = d.id_driver
-                WHERE (c.status = 'reserved' AND d.email = %s) OR c.status != 'reserved'
+                SELECT id_car, name, status, url
+                FROM car
                 ORDER BY 
                     CASE 
-                        WHEN c.status = 'reserved' AND d.email = %s THEN 1
-                        WHEN c.status = 'leased' THEN 2
-                        WHEN c.status = 'stand_by' THEN 3
-                        ELSE 4
+                        WHEN status = 'leased' THEN 1
+                        WHEN status = 'stand_by' THEN 2
+                        ELSE 3
                     END,
-                    c.usage_metric ASC;
+                    usage_metric ASC;
             """
-            cur.execute(query, (email, email))
-
+            cur.execute(query)
+        
         res = cur.fetchall()
         return jsonify({"car_details": res}), 200
 
     finally:
         cur.close()
         conn.close()
+
 # @app.route('/get_car_list', methods=['GET'])
 # @jwt_required()
 # def get_car_list():
