@@ -4,7 +4,7 @@ import jwt
 import psycopg2
 from flask import Flask, request, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
-from flask_cors import CORS, cross_origin
+# from flask_cors import CORS, cross_origin
 from functools import wraps
 from datetime import datetime, timedelta
 
@@ -19,9 +19,9 @@ login_salt = os.getenv('LOGIN_SALT')
 app = Flask(__name__)
 app.config['SECRET_KEY'] = app_secret_key
 
-CORS(app, resources={r"/*": {"origins": "*"}},
-     allow_headers=["Authorization", "Content-Type"],
-     methods=["GET", "POST", "OPTIONS"])
+# CORS(app, resources={r"/*": {"origins": "*"}},
+#      allow_headers=["Authorization", "Content-Type"],
+#      methods=["GET", "POST", "OPTIONS"])
 
 jwt_manager = JWTManager(app)
 
@@ -133,15 +133,15 @@ def get_users():
 # Cars table does not have the email, you will have to get it from the leases table that combines the car and driver table together,
 @app.route('/get_car_list', methods=['GET', 'POST', 'OPTIONS'])
 @jwt_required()
-@cross_origin()
+# @cross_origin()
 def get_car_list():
-  if request.method == 'OPTIONS':
-    # Preflight request, return status 200 with CORS headers
-    response = jsonify({"message": "CORS preflight successful"})
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
-    return response, 200
+  # if request.method == 'OPTIONS':
+  #   # Preflight request, return status 200 with CORS headers
+  #   response = jsonify({"message": "CORS preflight successful"})
+  #   response.headers['Access-Control-Allow-Origin'] = '*'
+  #   response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+  #   response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
+  #   return response, 200
 
   if request.method == 'POST':
       # Handle the POST request
@@ -183,9 +183,9 @@ def get_car_list():
               cur.execute(query)
           res = cur.fetchall()
           response = jsonify({"car_details": res})
-          response.headers['Access-Control-Allow-Origin'] = '*'
-          response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-          response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
+          # response.headers['Access-Control-Allow-Origin'] = '*'
+          # response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+          # response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
           return response, 200
 
       finally:
