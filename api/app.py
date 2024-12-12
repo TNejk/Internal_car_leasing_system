@@ -198,7 +198,8 @@ def get_full_car_info():
       return response, 200
 
     conn, cur = connect_to_db()
-
+    data = request.get_json()
+    
     # get a list of dates split by 30 miniyute intervals for each car
     # where first check if an active lease exists for that car and edit the list of dates removing times between the active leases
     def get_dates_to_end_of_month(interval_minutes=30, tz=pytz.timezone('Europe/Bratislava')):
@@ -236,7 +237,7 @@ def get_full_car_info():
     if conn is None:
         return jsonify({'error': 'Database connection error: ' + cur}), 500
 
-    data = request.get_json()
+  
     car = data.get("car_id")
     if not car or car == 'none':
         return jsonify({'error': 'The "car_id" parameter is missing or invalid'}), 400
