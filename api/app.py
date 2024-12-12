@@ -263,7 +263,7 @@ def get_full_car_info():
     # 2024-12-05 08:48:07.471216+01
     dates = []
     if resu:  
-       for i in range(0, resu.__len__):
+       for i in range(0, len(resu)):
          try:
            dates.append((parse(resu[i]), parse(resu[i+1])))
          except Exception as e:
