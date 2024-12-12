@@ -5,28 +5,57 @@ import pytz
 
 
 
+"(\"2024-12-08 10:06:53.294548+01\",\"2024-12-08 11:06:53.294554+01\")"
 
 def get_dates_to_end_of_month(interval_minutes=30, tz=pytz.timezone('Europe/Bratislava')):
-        """
-        Generate a list of datetime objects from now until the end of the current month in specified intervals.
+    """
+    Generate a list of datetime objects from now until the end of the current month in specified intervals.
 
-        interval_minutes: The interval in minutes. Default is 30.
-        A list of datetime objects.
-        """
-        now = datetime.now(tz).replace(microsecond=0)
-        # Calculate the start of the next month
-        next_month = (now.month % 12) + 1
-        year = now.year + (1 if next_month == 1 else 0)
-        start_of_next_month = datetime(year, next_month, 1)
+    :param interval_minutes: The interval in minutes. Default is 30.
+    :param tz: The timezone to use. Default is 'Europe/Bratislava'.
+    :return: A list of datetime objects.
+    """
+    now = datetime.now(tz).replace(microsecond=0)
+    # Calculate the start of the next month
+    next_month = (now.month % 12) + 1
+    year = now.year + (1 if next_month == 1 else 0)
+    start_of_next_month = tz.localize(datetime(year, next_month, 1))
 
-        # Generate the list of dates
-        dates = []
-        current_time = now
-        while current_time < start_of_next_month:
-            dates.append(current_time)
-            current_time += timedelta(minutes=interval_minutes)
+    # Generate the list of dates
+    dates = []
+    current_time = now
+    while current_time < start_of_next_month:
+        dates.append(current_time)
+        current_time += timedelta(minutes=interval_minutes)
 
-        return dates
+    return dates
+
+# def get_dates_to_end_of_month(interval_minutes=30, tz=pytz.timezone('Europe/Bratislava')):
+#         """
+#         Generate a list of datetime objects from now until the end of the current month in specified intervals.
+
+#         interval_minutes: The interval in minutes. Default is 30.
+#         A list of datetime objects.
+#         """
+#         now = datetime.now(tz).replace(microsecond=0)
+#         # Calculate the start of the next month
+#         next_month = (now.month % 12) + 1
+#         year = now.year + (1 if next_month == 1 else 0)
+#         start_of_next_month = datetime(year, next_month, 1)
+
+#         # Generate the list of dates
+#         dates = []
+#         current_time = now
+#         while current_time < start_of_next_month:
+#             dates.append(current_time)
+#             current_time += timedelta(minutes=interval_minutes)
+
+#         return dates
+
+
+get_dates_to_end_of_month()
+
+
 
 def filter_dates(rm_dates):
         """

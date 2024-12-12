@@ -209,14 +209,15 @@ def get_full_car_info():
         """
         Generate a list of datetime objects from now until the end of the current month in specified intervals.
 
-        interval_minutes: The interval in minutes. Default is 30.
-        A list of datetime objects.
+        :param interval_minutes: The interval in minutes. Default is 30.
+        :param tz: The timezone to use. Default is 'Europe/Bratislava'.
+        :return: A list of datetime objects.
         """
         now = datetime.now(tz).replace(microsecond=0)
         # Calculate the start of the next month
         next_month = (now.month % 12) + 1
         year = now.year + (1 if next_month == 1 else 0)
-        start_of_next_month = datetime(year, next_month, 1)
+        start_of_next_month = tz.localize(datetime(year, next_month, 1))
 
         # Generate the list of dates
         dates = []
@@ -264,19 +265,18 @@ def get_full_car_info():
 
     # [(datetime(2024, 12, 15, 12, 0), datetime(2024, 12, 20, 12, 0))]
     # 2024-12-05 08:48:07.471216+01
-    # dates = []
-    # if resu:  
-    #   for i in range(0, resu.__len__):
-    #     try:
-    #       dates.append((parse(resu[i]), parse(resu[i+1])))
-    #     except Exception as e:
-    #       return jsonify(msg= f"date error: {e}"), 500
+    dates = []
+    if resu:  
+       for i in range(0, resu.__len__):
+         try:
+           dates.append((parse(resu[i]), parse(resu[i+1])))
+         except Exception as e:
+           return jsonify(msg= f"date error: {e}"), 500
 
-    #   try:
-    #     pass
-    #     #filter_dates(dates)
-    #   except Exception as e:
-    #     return jsonify(msg= f"Erorr date filtering: {e}"), 500
+       try:
+         filter_dates(dates)
+       except Exception as e:
+         return jsonify(msg= f"Erorr date filtering: {e}"), 500
       
     return jsonify({"car_details": res, "allowed_dates": resu}), 200
 
