@@ -4,7 +4,7 @@ import jwt
 import psycopg2
 from flask import Flask, request, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
-from flask_cors import CORS cross_origin
+from flask_cors import CORS, cross_origin
 from functools import wraps
 from datetime import datetime, timedelta, timezone
 from dateutil.parser import parse
@@ -42,7 +42,7 @@ def connect_to_db():
 # }
 # Callback function to check if a JWT exists in the database blocklist
 @jwt_manager.token_in_blocklist_loader
-def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool: # None if an error happnes or a borken poipo
+def check_if_token_revoked(jwt_header, jwt_payload: dict): # None if an error happnes or a borken poipo
     jwt = jwt_header
     jti = jwt_payload["jti"]
 
@@ -52,7 +52,7 @@ def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool: # None if an 
       result = cur.fetchone()
 
     except Exception as e:
-      return jsonify({'error': cur})
+      return jsonify({'error': e})
 
     conn.close()
     return result is not None
@@ -135,7 +135,7 @@ def get_users():
 # Cars table does not have the email, you will have to get it from the leases table that combines the car and driver table together,
 @app.route('/get_car_list', methods=['GET', 'OPTIONS'])
 @jwt_required()
-@cross_origin(origin='*', headers=['Authorization', 'Content-Type'])
+@cross_origin(origins='*', expose_headers=['Authorization', 'Content-Type'])
 def get_car_list():
   if request.method == 'OPTIONS':
     # Handle the preflight request by returning appropriate CORS headers
@@ -209,8 +209,8 @@ def get_full_car_info():
         """
         Generate a list of datetime objects from now until the end of the current month in specified intervals.
 
-        :param interval_minutes: The interval in minutes. Default is 30.
-        :return: A list of datetime objects.
+        interval_minutes: The interval in minutes. Default is 30.
+        A list of datetime objects.
         """
         now = datetime.now(tz).replace(microsecond=0)
         # Calculate the start of the next month
