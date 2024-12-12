@@ -257,7 +257,7 @@ def get_full_car_info():
     query = "SELECT(start_of_lease, end_of_lease) FROM lease WHERE id_car = %s AND status = %s;"
 
     cur.execute(query, (car, True, ))
-    res = cur.fetchall()
+    resu = cur.fetchall()
 
     # [(datetime(2024, 12, 15, 12, 0), datetime(2024, 12, 20, 12, 0))]
     # 2024-12-05 08:48:07.471216+01
