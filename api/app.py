@@ -19,6 +19,9 @@ login_salt = os.getenv('LOGIN_SALT')
 app = Flask(__name__)
 app.config['SECRET_KEY'] = app_secret_key
 
+CORS(app, resources={r"/*": {"origins": "*"}},
+     allow_headers=["Authorization", "Content-Type"],
+     methods=["GET", "POST", "OPTIONS"])
 
 jwt_manager = JWTManager(app)
 
@@ -128,8 +131,8 @@ def login():
 def get_users():
     conn, cur = connect_to_db()
     try:
-        cur.execute('SELECT email, role FROM driver;')  
-        users = cur.fetchall()  
+        cur.execute('SELECT email, role FROM driver;')
+        users = cur.fetchall()
         ed_users = []
         for i in users:
             ed_users.append({
@@ -147,10 +150,10 @@ def get_users():
 
 
 #Order by reserved first, then by metric and filter by reserved cars by the provided email
-# Cars table does not have the email, you will have to get it from the leases table that combines the car and driver table together, 
+# Cars table does not have the email, you will have to get it from the leases table that combines the car and driver table together,
 @app.route('/get_car_list', methods=['GET', 'OPTIONS'])
 @jwt_required()
-
+@cross_origin(origin='*', headers=['Authorization', 'Content-Type'])
 def get_car_list():
   if request.method == 'OPTIONS':
     # Preflight request, we just return an empty 200 response
