@@ -386,14 +386,17 @@ def get_leases():
 def cancel_lease():
   # make a sql statement that updates the table lease and sets it stauts to false where you will filter the result by the driver, car, and order by id_lease descending limit 1
   data = request.get_json()
+  email = data["email"]
+  car_name = data["car_name"]
+
   conn, cur = connect_to_db()
   
   try:
     # need to get the car_id  and driver_id 
-    cur.execute("select id_driver from driver where email = %s", (data["driver"],))
+    cur.execute("select id_driver from driver where email = %s", (email,))
     id_name = cur.fetchall()[0][0]
 
-    cur.execute("select id_car from car where name = %s", (data["car"],))
+    cur.execute("select id_car from car where name = %s", (car_name,))
     id_car = cur.fetchall()[0][0]
   except Exception as e:
     return jsonify(msg= f"Error cancelling lease!, {e}")
@@ -484,7 +487,10 @@ def return_car():
 
   id_lease = data["id_lease"]
   tor = data["time_of_return"]
-  health = data["health"]
+  try:
+    health = data["health"]
+  except:
+    health = "healthy"
   note = data["note"]
 
   conn, error = connect_to_db()
