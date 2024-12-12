@@ -257,10 +257,10 @@ def get_full_car_info():
     
     # Remove dates from allowed dates if an active lease exists so you wont lease a car on the same date 
     #date_list = get_dates_to_end_of_month()
-    #query = "SELECT(start_of_lease, end_of_lease) FROM lease WHERE id_car = %s AND status = %s;"
+    query = "SELECT(start_of_lease, end_of_lease) FROM lease WHERE id_car = %s AND status = %s;"
 
-    #cur.execute(query, (car, True, ))
-    #resu = cur.fetchall()
+    cur.execute(query, (car, True, ))
+    resu = cur.fetchall()
 
     # [(datetime(2024, 12, 15, 12, 0), datetime(2024, 12, 20, 12, 0))]
     # 2024-12-05 08:48:07.471216+01
@@ -278,7 +278,7 @@ def get_full_car_info():
     #   except Exception as e:
     #     return jsonify(msg= f"Erorr date filtering: {e}"), 500
       
-    return jsonify({"car_details": res, "allowed_dates": []}), 200
+    return jsonify({"car_details": res, "allowed_dates": resu}), 200
 
 
 @app.route('/reports', methods = ['POST'])
