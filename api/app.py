@@ -19,7 +19,9 @@ login_salt = os.getenv('LOGIN_SALT')
 app = Flask(__name__)
 app.config['SECRET_KEY'] = app_secret_key
 
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}},
+     allow_headers=["Authorization", "Content-Type"],
+     methods=["GET", "POST", "OPTIONS"])
 
 jwt_manager = JWTManager(app)
 
