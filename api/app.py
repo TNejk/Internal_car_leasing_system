@@ -188,7 +188,7 @@ def get_car_list():
 
 @app.route('/get_full_car_info', methods=['POST', 'OPTIONS'])
 @jwt_required()
-@cross_origin(origins='*', expose_headers=['Authorization', 'Content-Type'])
+@cross_origin(origins='*', allow_headers=['Authorization', 'Content-Type'])
 def get_full_car_info():
     if request.method == 'OPTIONS':
       # Handle the preflight request by returning appropriate CORS headers
