@@ -274,8 +274,6 @@ def get_full_car_info():
     #   except Exception as e:
     #     return jsonify(msg= f"Erorr date filtering: {e}"), 500
 
-    return jsonify({"car_details": res, "allowed_dates": resu}), 200
-
     response = jsonify({"car_details": res, "allowed_dates": dates})
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
