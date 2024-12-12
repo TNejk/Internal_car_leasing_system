@@ -19,7 +19,9 @@ login_salt = os.getenv('LOGIN_SALT')
 app = Flask(__name__)
 app.config['SECRET_KEY'] = app_secret_key
 
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}},
+     allow_headers=["Authorization", "Content-Type"],
+     methods=["GET", "POST", "OPTIONS"])
 
 jwt_manager = JWTManager(app)
 
@@ -149,51 +151,56 @@ def get_users():
 
 #Order by reserved first, then by metric and filter by reserved cars by the provided email
 # Cars table does not have the email, you will have to get it from the leases table that combines the car and driver table together, 
-@app.route('/get_car_list', methods=['GET'])
+@app.route('/get_car_list', methods=['GET', 'OPTIONS'])
 @jwt_required()
+@cross_origin(origin='*', headers=['Authorization', 'Content-Type'])
 def get_car_list():
-    conn, cur = connect_to_db()
-    if conn is None:
-        return jsonify({'error': cur, 'status': 501}), 501
-    try:
-        location = request.args.get('location', 'none')
-        if location != 'none':
-            query = """
-                SELECT id_car, name, status, url
-                FROM car
-                ORDER BY 
-                    CASE 
-                        WHEN location = %s THEN 1 
-                        ELSE 2 
-                    END,
-                    CASE 
-                        WHEN status = 'leased' THEN 1
-                        WHEN status = 'stand_by' THEN 2
-                        ELSE 3
-                    END,
-                    usage_metric ASC;
-            """
-            cur.execute(query, (location,))
-        else:
-            query = """
-                SELECT id_car, name, status, url
-                FROM car
-                ORDER BY 
-                    CASE 
-                        WHEN status = 'leased' THEN 1
-                        WHEN status = 'stand_by' THEN 2
-                        ELSE 3
-                    END,
-                    usage_metric ASC;
-            """
-            cur.execute(query)
-        
-        res = cur.fetchall()
-        return jsonify({"car_details": res}), 200
+  if request.method == 'OPTIONS':
+    # Preflight request, we just return an empty 200 response
+    return '', 200
 
-    finally:
-        cur.close()
-        conn.close()
+  conn, cur = connect_to_db()
+  if conn is None:
+      return jsonify({'error': cur, 'status': 501}), 501
+  try:
+      location = request.args.get('location', 'none')
+      if location != 'none':
+          query = """
+              SELECT id_car, name, status, url
+              FROM car
+              ORDER BY 
+                  CASE 
+                      WHEN location = %s THEN 1 
+                      ELSE 2 
+                  END,
+                  CASE 
+                      WHEN status = 'leased' THEN 1
+                      WHEN status = 'stand_by' THEN 2
+                      ELSE 3
+                  END,
+                  usage_metric ASC;
+          """
+          cur.execute(query, (location,))
+      else:
+          query = """
+              SELECT id_car, name, status, url
+              FROM car
+              ORDER BY 
+                  CASE 
+                      WHEN status = 'leased' THEN 1
+                      WHEN status = 'stand_by' THEN 2
+                      ELSE 3
+                  END,
+                  usage_metric ASC;
+          """
+          cur.execute(query)
+
+      res = cur.fetchall()
+      return jsonify({"car_details": res}), 200
+
+  finally:
+      cur.close()
+      conn.close()
 
 # @app.route('/get_car_list', methods=['GET'])
 # @jwt_required()
