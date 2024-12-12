@@ -263,10 +263,11 @@ def get_full_car_info():
       lease_dates = []
       for date_range in resu:
           # Strip off the extra characters (like quotes, parentheses)
-          date_range = date_range.strip("()").replace("\"", "")
+          return date_range[0]
+          #date_range = date_range.strip("()").replace("\"", "")
           
           # Split by comma to get start and end date
-          start_str, end_str = date_range.split(",")
+          #start_str, end_str = date_range.split(",")
           
           # Parse the strings into datetime objects
           start_datetime = datetime.fromisoformat(start_str.strip())
