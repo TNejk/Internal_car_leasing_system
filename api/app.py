@@ -21,10 +21,7 @@ login_salt = os.getenv('LOGIN_SALT')
 app = Flask(__name__)
 app.config['SECRET_KEY'] = app_secret_key
 
-CORS(app, resources={r"/*": {"origins": "*"}},
-                     supports_credentials=True,
-                     allow_headers=["Authorization", "Content-Type", "Access-Control-Allow-Origin"],
-                     methods=["GET", "POST", "OPTIONS"])
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 jwt_manager = JWTManager(app)
 
@@ -36,6 +33,12 @@ def connect_to_db():
   except psycopg2.Error as e:
     return None, str(e)
 
+@app.after_request
+def apply_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
+    return response
 
 # headers = {
 #     "Authorization": f"Bearer {jwt_token}",
@@ -188,7 +191,6 @@ def get_car_list():
 
 @app.route('/get_full_car_info', methods=['POST', 'OPTIONS'])
 @jwt_required()
-@cross_origin(origins='*', allow_headers=['Authorization', 'Content-Type'])
 def get_full_car_info():
     if request.method == 'OPTIONS':
       # Handle the preflight request by returning appropriate CORS headers
@@ -289,9 +291,6 @@ def get_full_car_info():
     #      return jsonify(msg= f"Erorr date filtering: {e}"), 500
 
     response = jsonify({"car_details": res, "allowed_dates": []})
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
     return response, 200
 
 
