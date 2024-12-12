@@ -126,7 +126,7 @@ def get_users():
 
 #Order by reserved first, then by metric and filter by reserved cars by the provided email
 # Cars table does not have the email, you will have to get it from the leases table that combines the car and driver table together,
-@app.route('/get_car_list', methods=['POST'])
+@app.route('/get_car_list', methods=['GET'])
 @jwt_required()
 def get_car_list():
   if request.method == 'POST':
