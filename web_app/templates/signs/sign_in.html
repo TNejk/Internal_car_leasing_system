@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base/base.html' %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/signs/sign_in.css') }}">
@@ -14,20 +14,20 @@
       <div class="sign-in-input">
         <label>
           <p>Email</p>
-          <input type="email" id="sign-in-email-input" name="email">
+          <input type="email" id="sign-in-email-input" name="email" required>
         </label>
         <label>
           <p>Heslo</p>
-          <input type="password" id="sign-in-password-input" name="password">
+          <input type="password" id="sign-in-password-input" name="password" required>
         </label>
       </div>
       <div class="signin-button">
         <input type="submit" id="signin-button" value="Prihlás sa">
       </div>
       <div class="sign-in-error">
-        {% if error %}
+        {% if data %}
         <h3>Nastala chyba!</h3>
-        <p>{{ error }}</p>
+        <p>{{ data }}</p>
         {% endif %}
       </div>
     </form>
