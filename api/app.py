@@ -133,18 +133,9 @@ def get_users():
 
 #Order by reserved first, then by metric and filter by reserved cars by the provided email
 # Cars table does not have the email, you will have to get it from the leases table that combines the car and driver table together,
-@app.route('/get_car_list', methods=['GET', 'OPTIONS'])
+@app.route('/get_car_list', methods=['GET'])
 @jwt_required()
-@cross_origin(origins='*', expose_headers=['Authorization', 'Content-Type'])
 def get_car_list():
-  if request.method == 'OPTIONS':
-    # Handle the preflight request by returning appropriate CORS headers
-    response = jsonify({"message": "CORS preflight successful"})
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
-    return response, 200
-
   if request.method == 'GET':
       conn, cur = connect_to_db()
       if conn is None:
@@ -183,11 +174,7 @@ def get_car_list():
               """
               cur.execute(query)
           res = cur.fetchall()
-          response = jsonify({"car_details": res})
-          response.headers['Access-Control-Allow-Origin'] = '*'
-          response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-          response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
-          return response, 200
+          return jsonify({'cars': res}), 200
 
       except Exception or psycopg2 as e:
         return jsonify({"error": str(e)}), 500
@@ -198,9 +185,18 @@ def get_car_list():
 
 
 
-@app.route('/get_full_car_info', methods=['POST'])
+@app.route('/get_full_car_info', methods=['POST', 'OPTIONS'])
 @jwt_required()
+@cross_origin(origins='*', expose_headers=['Authorization', 'Content-Type'])
 def get_full_car_info():
+    if request.method == 'OPTIONS':
+      # Handle the preflight request by returning appropriate CORS headers
+      response = jsonify({"message": "CORS preflight successful"})
+      response.headers['Access-Control-Allow-Origin'] = '*'
+      response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+      response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
+      return response, 200
+
     conn, cur = connect_to_db()
 
     # get a list of dates split by 30 miniyute intervals for each car
@@ -257,11 +253,11 @@ def get_full_car_info():
 
     
     # Remove dates from allowed dates if an active lease exists so you wont lease a car on the same date 
-    #date_list = get_dates_to_end_of_month()
+    date_list = get_dates_to_end_of_month()
     query = "SELECT(start_of_lease, end_of_lease) FROM lease WHERE id_car = %s AND status = %s;"
 
     cur.execute(query, (car, True, ))
-    resu = cur.fetchall()
+    res = cur.fetchall()
 
     # [(datetime(2024, 12, 15, 12, 0), datetime(2024, 12, 20, 12, 0))]
     # 2024-12-05 08:48:07.471216+01
