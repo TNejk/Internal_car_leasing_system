@@ -260,18 +260,21 @@ def get_full_car_info():
 
     # [(datetime(2024, 12, 15, 12, 0), datetime(2024, 12, 20, 12, 0))]
     # 2024-12-05 08:48:07.471216+01
-    dates = []
-    if res:  
-      for i in range(0, res.__len__):
-        try:
-          dates.append((parse(res[i]), parse(res[i+1])))
-        except Exception as e:
-          return jsonify(msg= f"date error: {e}"), 500
+    # dates = []
+    # if resu:
+    #   for i in range(0, resu.__len__):
+    #     try:
+    #       dates.append((parse(resu[i]), parse(resu[i+1])))
+    #     except Exception as e:
+    #       return jsonify(msg= f"date error: {e}"), 500
 
-      try:
-        filter_dates(dates)
-      except Exception as e:
-        return jsonify(msg= f"Erorr date filtering: {e}"), 500
+    #   try:
+    #     pass
+    #     #filter_dates(dates)
+    #   except Exception as e:
+    #     return jsonify(msg= f"Erorr date filtering: {e}"), 500
+
+    return jsonify({"car_details": res, "allowed_dates": resu}), 200
 
     response = jsonify({"car_details": res, "allowed_dates": dates})
     response.headers['Access-Control-Allow-Origin'] = '*'
