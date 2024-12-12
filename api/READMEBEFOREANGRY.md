@@ -9,3 +9,7 @@
   named jwt, otherwise itll fuck up your imports and still use the old lib instead of pyjwt. Only when you checked that you can install
   pyjwt ^^
   But when you're launching it inside a docker container, just don't include the jwt in the requerements.txt (req.txt) file, ony PyJWT
+
+- When you get the Error: pg_config executable not found. error while downloading psycopg2 library, you need to download these sources:\
+apt install postgresql libpq-dev\sudo apt install build-essential\sudo apt install python3-dev and try downloading psycopg2 again. 
+It should work now **muah**
