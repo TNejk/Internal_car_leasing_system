@@ -183,7 +183,7 @@ def get_full_car_info():
 
     # get a list of dates split by 30 miniyute intervals for each car
     # where first check if an active lease exists for that car and edit the list of dates removing times between the active leases
-    def get_dates_to_end_of_month(interval_minutes=30, tz=timezone('Europe/Bratislava')):
+    def get_dates_to_end_of_month(interval_minutes=30, tz=timezone(name='Europe/Bratislava')):
         """
         Generate a list of datetime objects from now until the end of the current month in specified intervals.
 
