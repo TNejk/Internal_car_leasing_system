@@ -19,13 +19,7 @@ login_salt = os.getenv('LOGIN_SALT')
 app = Flask(__name__)
 app.config['SECRET_KEY'] = app_secret_key
 
-CORS(app, supports_credentials=True, resources={
-    r"/get_full_car_info": {
-        "origins": "http://127.0.0.1:5000",  # Change to your client app's origin
-        "allow_headers": ["Authorization", "Content-Type"],
-        "methods": ["GET", "POST", "OPTIONS"]
-    }
-})
+CORS(app)
 
 jwt_manager = JWTManager(app)
 
@@ -237,17 +231,24 @@ def get_car_list():
 @app.route('/get_full_car_info', methods=['POST'])
 @jwt_required()
 def get_full_car_info():
-  conn, cur = connect_to_db()
-  if conn is None:
-    return jsonify({'error': cur}), 501
+    conn, cur = connect_to_db()
+    if conn is None:
+        return jsonify({'error': 'Database connection error: ' + cur}), 500
 
-  car = request.get_json()["car_id"]
-  if car == 'none':
-    return jsonify({'error': 'Chýba parameter: car'}), 501
-  query = ("SELECT * FROM car WHERE id_car = %s;")
-  cur.execute(query, (car,))
-  res = cur.fetchall()
-  return jsonify({"car_details": res}), 200
+    data = request.get_json()
+    car = data.get("car_id")
+    if not car or car == 'none':
+        return jsonify({'error': 'The "car_id" parameter is missing or invalid'}), 400
+
+    query = "SELECT * FROM car WHERE id_car = %s;"
+    cur.execute(query, (car,))
+    res = cur.fetchall()
+
+    if not res:
+        return jsonify({'error': 'No car found with the given ID'}), 404
+
+    return jsonify({"car_details": res}), 200
+
 
 @app.route('/reports', methods = ['POST'])
 #! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
