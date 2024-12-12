@@ -4,11 +4,11 @@ import jwt
 import psycopg2
 from flask import Flask, request, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
+from flask_cors import cross_origin
 from functools import wraps
 from datetime import datetime, timedelta, timezone
 from dateutil.parser import parse
 import pytz
-
 
 db_host = os.getenv('DB_HOST')
 db_port = os.getenv('DB_PORT')
@@ -20,6 +20,10 @@ login_salt = os.getenv('LOGIN_SALT')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = app_secret_key
+
+CORS(app, resources={r"/*": {"origins": "*"}},
+                     allow_headers=["Authorization", "Content-Type"],
+                     methods=["GET", "POST", "OPTIONS"])
 
 jwt_manager = JWTManager(app)
 
@@ -129,10 +133,19 @@ def get_users():
 
 #Order by reserved first, then by metric and filter by reserved cars by the provided email
 # Cars table does not have the email, you will have to get it from the leases table that combines the car and driver table together,
-@app.route('/get_car_list', methods=['GET'])
+@app.route('/get_car_list', methods=['GET', 'OPTIONS'])
 @jwt_required()
+@cross_origin(origin='*', headers=['Authorization', 'Content-Type'])
 def get_car_list():
-  if request.method == 'POST':
+  if request.method == 'OPTIONS':
+    # Handle the preflight request by returning appropriate CORS headers
+    response = jsonify({"message": "CORS preflight successful"})
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
+    return response, 200
+
+  if request.method == 'GET':
       conn, cur = connect_to_db()
       if conn is None:
           return jsonify({'error': cur, 'status': 501}), 501
@@ -170,7 +183,14 @@ def get_car_list():
               """
               cur.execute(query)
           res = cur.fetchall()
-          return jsonify({"car_details": res}), 200
+          response = jsonify({"car_details": res})
+          response.headers['Access-Control-Allow-Origin'] = '*'
+          response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+          response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
+          return response, 200
+
+      except Exception or psycopg2 as e:
+        return jsonify({"error": str(e)}), 500
 
       finally:
         cur.close()
