@@ -22,7 +22,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = app_secret_key
 
 CORS(app, resources={r"/*": {"origins": "*"}},
-                     allow_headers=["Authorization", "Content-Type"],
+                     allow_headers=["Authorization", "Content-Type", "Access-Control-Allow-Origin"],
                      methods=["GET", "POST", "OPTIONS"])
 
 jwt_manager = JWTManager(app)
@@ -291,8 +291,12 @@ def get_full_car_info():
     #      filter_dates(dates)
     #    except Exception as e:
     #      return jsonify(msg= f"Erorr date filtering: {e}"), 500
-      
-    return jsonify({"car_details": res, "allowed_dates": dates}), 200
+
+    response = jsonify({"car_details": res, "allowed_dates": dates})
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
+    return response, 200
 
 
 @app.route('/reports', methods = ['POST'])
