@@ -423,8 +423,8 @@ def lease_car():
   role = str(data["role"])
   car_name  = str(data["car_name"])
   private = data["is_private"]
-  timeof = datetime.now()
-  timeto = datetime.now() + timedelta(hours=1)
+  timeof = data["timeof"]
+  timeto = data["timeto"]
 
   con, cur = connect_to_db()
 
