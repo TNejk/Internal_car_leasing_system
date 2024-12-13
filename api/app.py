@@ -210,8 +210,10 @@ def get_car_list():
         cur.close()
         conn.close()  
 
-
-
+# Warning!!!
+# The allowed dates return here is kinda retarted, it would be better to just return a list of start > stop dates that the user would then generate locally
+# But i dont feel like doing it, so a MONSTER json has been created, enjoy :)
+#
 @app.route('/get_full_car_info', methods=['POST', 'OPTIONS'])
 @jwt_required()
 def get_full_car_info():
