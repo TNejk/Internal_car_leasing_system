@@ -2,6 +2,7 @@ import os
 import hashlib
 import jwt
 import psycopg2
+from flask_mail import Mail, Message
 from flask import Flask, request, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from flask_cors import CORS, cross_origin
@@ -18,8 +19,20 @@ db_name = os.getenv('POSTGRES_DB')
 app_secret_key = os.getenv('APP_SECRET_KEY')
 login_salt = os.getenv('LOGIN_SALT')
 
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = app_secret_key
+
+# app.config['MAIL_SERVER']= 'live.smtp.mailtrap.io'
+# app.config['MAIL_PORT'] = 587
+# app.config['MAIL_USERNAME'] = 'your_email@gmail.com'
+# app.config['MAIL_PASSWORD'] = 'your_password'
+# app.config['MAIL_USE_TLS'] = True
+# app.config['MAIL_USE_SSL'] = False
+
+# mail = Mail(app)
+
+
 
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
@@ -32,6 +45,16 @@ def connect_to_db():
     return db_con, cur
   except psycopg2.Error as e:
     return None, str(e)
+
+def send_email(msg: str) -> bool:
+  msg = Message(
+    'ICLS Rezervácia auta, ' + datetime.now(pytz.timezone('Europe/Bratislava')),
+    recipients=['recipient@example.com'],
+    body=msg
+  )
+  mail.send(msg)
+  return True
+
 
 @app.after_request
 def apply_cors_headers(response):
@@ -253,21 +276,26 @@ def get_full_car_info():
         return jsonify({'error': 'No car found with the given ID'}), 404
 
     
-    # Remove dates from allowed dates if an active lease exists so you wont lease a car on the same date 
+    #! Remove dates from allowed dates if an active lease exists so you wont lease a car on the same date 
     #date_list = get_dates_to_end_of_month()
     query = "SELECT start_of_lease, end_of_lease FROM lease WHERE id_car = %s AND status = %s;"
 
     cur.execute(query, (car, True, ))
     resu = cur.fetchall()
 
-    return jsonify(msg= resu)
+    # [
+    #     [
+    #         "Thu, 12 Dec 2024 16:01:22 GMT",
+    #         "Thu, 12 Dec 2024 17:01:22 GMT"
+    #     ]
+    # ]
     dates = []
     def parse_lease_dates(resu):
         lease_dates = []
-        for start_date, end_date in resu:
-            # Parse the strings into datetime objects
-            start_datetime = datetime.fromisoformat(start_date)
-            end_datetime = datetime.fromisoformat(end_date)
+        for i in resu:
+            # Parse the RFC 1123 strings into datetime objects
+            start_datetime = datetime.strptime(i[0], "%a, %d %b %Y %H:%M:%S %Z")
+            end_datetime = datetime.strptime(i[1], "%a, %d %b %Y %H:%M:%S %Z")
             lease_dates.append((start_datetime, end_datetime))
         return lease_dates
 
@@ -275,18 +303,6 @@ def get_full_car_info():
     lease_dates = parse_lease_dates(resu)
     dates = filter_dates(lease_dates)
     
-    # if resu:  
-    #    for i in range(0, len(resu)):
-    #      try:
-    #        dates.append((parse(resu[i][0]), parse(resu[i][1])))
-    #      except Exception as e:
-    #        return jsonify(msg= f"date error: {e}"), 500
-
-    #    try:
-    #      #[(datetime_from, datetime_to)]
-    #      filter_dates(dates)
-    #    except Exception as e:
-    #      return jsonify(msg= f"Erorr date filtering: {e}"), 500
 
     response = jsonify({"car_details": res, "allowed_dates": dates})
     return response, 200
