@@ -230,11 +230,11 @@ def get_full_car_info():
     # where first check if an active lease exists for that car and edit the list of dates removing times between the active leases
     def get_dates_to_end_of_month(interval_minutes=30, tz=pytz.timezone('Europe/Bratislava')):
         """
-        Generate a list of datetime objects from now until the end of the current month in specified intervals.
+        Generate a list of RFC 1123 formatted datetime strings from now until the end of the current month in specified intervals.
 
         :param interval_minutes: The interval in minutes. Default is 30.
         :param tz: The timezone to use. Default is 'Europe/Bratislava'.
-        :return: A list of datetime objects.
+        :return: A list of RFC 1123 formatted datetime strings.
         """
         now = datetime.now(tz).replace(microsecond=0)
         # Calculate the start of the next month
@@ -242,11 +242,13 @@ def get_full_car_info():
         year = now.year + (1 if next_month == 1 else 0)
         start_of_next_month = tz.localize(datetime(year, next_month, 1))
 
-        # Generate the list of dates
+        # Generate the list of formatted date strings
         dates = []
         current_time = now
         while current_time < start_of_next_month:
-            dates.append(current_time)
+            # Format the datetime as RFC 1123
+            formatted_date = current_time.strftime("%a, %d %b %Y %H:%M:%S GMT")
+            dates.append(formatted_date)
             current_time += timedelta(minutes=interval_minutes)
         return dates
 
@@ -293,7 +295,7 @@ def get_full_car_info():
     def parse_lease_dates(resu):
         lease_dates = []
         for i in resu:
-            # Parse the RFC 1123 strings into datetime objects
+            # Parse the RFC 1123 strings into datetime object
             start_datetime = datetime.strptime(i[0], "%a, %d %b %Y %H:%M:%S %Z")
             end_datetime = datetime.strptime(i[1], "%a, %d %b %Y %H:%M:%S %Z")
             lease_dates.append((start_datetime, end_datetime))
