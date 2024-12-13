@@ -236,7 +236,7 @@ def get_full_car_info():
         :param tz: The timezone to use. Default is 'Europe/Bratislava'.
         :return: A list of RFC 1123 formatted datetime strings.
         """
-        now = datetime.now(tz).replace(microsecond=0)
+        now = datetime.now(tz).replace(microsecond=0).strftime("%a, %d %b %Y %H:%M:%S GMT")
         # Calculate the start of the next month
         next_month = (now.month % 12) + 1
         year = now.year + (1 if next_month == 1 else 0)
