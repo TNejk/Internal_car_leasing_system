@@ -237,8 +237,12 @@ def get_full_car_info():
         :return: A list of RFC 1123 formatted datetime strings.
         """
         # We need to reformat a badly formated datetime object into a proper dt object
-        now = datetime.strptime(datetime.now(tz).replace(microsecond=0), "%a, %d %b %Y %H:%M:%S GMT")
+        #now = datetime.strptime(datetime.now(tz).replace(microsecond=0), "%a, %d %b %Y %H:%M:%S GMT")
         
+        now_str = datetime.now(tz).replace(microsecond=0).isoformat()
+        now = datetime.strptime(now_str, "%a, %d %b %Y %H:%M:%S GMT")
+
+
         # Calculate the start of the next month
         next_month = (now.month % 12) + 1
         year = now.year + (1 if next_month == 1 else 0)
