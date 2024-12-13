@@ -236,7 +236,9 @@ def get_full_car_info():
         :param tz: The timezone to use. Default is 'Europe/Bratislava'.
         :return: A list of RFC 1123 formatted datetime strings.
         """
-        now = datetime.now(tz).replace(microsecond=0).strftime("%a, %d %b %Y %H:%M:%S GMT")
+        # We need to reformat a badly formated datetime object into a proper dt object
+        now = datetime.strptime(datetime.now(tz).replace(microsecond=0), "%a, %d %b %Y %H:%M:%S GMT")
+        
         # Calculate the start of the next month
         next_month = (now.month % 12) + 1
         year = now.year + (1 if next_month == 1 else 0)
@@ -244,12 +246,11 @@ def get_full_car_info():
 
         # Generate the list of formatted date strings
         dates = []
-        current_time = now
-        while current_time < start_of_next_month:
+
+        while now < start_of_next_month:
             # Format the datetime as RFC 1123
-            formatted_date = datetime.strptime(current_time, "%a, %d %b %Y %H:%M:%S GMT")
-            dates.append(formatted_date)
-            current_time += timedelta(minutes=interval_minutes)
+            dates.append(now)
+            now += timedelta(minutes=interval_minutes)
 
         return dates
 
