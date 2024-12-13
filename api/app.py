@@ -274,18 +274,18 @@ def get_full_car_info():
     lease_dates = parse_lease_dates(resu)
     dates = filter_dates(lease_dates)
     
-    if resu:  
-       for i in range(0, len(resu)):
-         try:
-           dates.append((parse(resu[i][0]), parse(resu[i][1])))
-         except Exception as e:
-           return jsonify(msg= f"date error: {e}"), 500
+    # if resu:  
+    #    for i in range(0, len(resu)):
+    #      try:
+    #        dates.append((parse(resu[i][0]), parse(resu[i][1])))
+    #      except Exception as e:
+    #        return jsonify(msg= f"date error: {e}"), 500
 
-       try:
-         #[(datetime_from, datetime_to)]
-         filter_dates(dates)
-       except Exception as e:
-         return jsonify(msg= f"Erorr date filtering: {e}"), 500
+    #    try:
+    #      #[(datetime_from, datetime_to)]
+    #      filter_dates(dates)
+    #    except Exception as e:
+    #      return jsonify(msg= f"Erorr date filtering: {e}"), 500
 
     response = jsonify({"car_details": res, "allowed_dates": dates})
     return response, 200
