@@ -454,6 +454,9 @@ def lease_car():
   role = str(data["role"])
   car_name  = str(data["car_name"])
   private = data["is_private"]
+
+  # Needed date format
+  # 2011-08-09 00:00:00+09
   timeof = data["timeof"]
   timeto = data["timeto"]
 
