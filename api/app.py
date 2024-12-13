@@ -315,7 +315,7 @@ def get_full_car_info():
             # Parse the RFC 1123 strings into datetime object
             start_datetime = i[0]
             end_datetime = i[1]
-            lease_dates.append((start_datetime, end_datetime))
+            lease_dates.append([start_datetime, end_datetime])
         return lease_dates
 
     # Parse the dates
