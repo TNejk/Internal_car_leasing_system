@@ -247,8 +247,7 @@ def get_full_car_info():
         current_time = now
         while current_time < start_of_next_month:
             # Format the datetime as RFC 1123
-
-            formatted_date = current_time.strptime("%a, %d %b %Y %H:%M:%S GMT")
+            formatted_date = datetime.strptime(current_time, "%a, %d %b %Y %H:%M:%S GMT")
             dates.append(formatted_date)
             current_time += timedelta(minutes=interval_minutes)
 
