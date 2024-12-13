@@ -288,7 +288,7 @@ def get_full_car_info():
        except Exception as e:
          return jsonify(msg= f"Erorr date filtering: {e}"), 500
 
-    response = jsonify({"car_details": res, "allowed_dates": []})
+    response = jsonify({"car_details": res, "allowed_dates": dates})
     return response, 200
 
 
