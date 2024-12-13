@@ -239,8 +239,10 @@ def get_full_car_info():
         # We need to reformat a badly formated datetime object into a proper dt object
         #now = datetime.strptime(datetime.now(tz).replace(microsecond=0), "%a, %d %b %Y %H:%M:%S GMT")
         
-        now_str = datetime.now(tz).replace(microsecond=0).isoformat()
+
+        now_str = datetime.now(tz).strftime("%a, %d %b %Y %H:%M:%S GMT")
         now = datetime.strptime(now_str, "%a, %d %b %Y %H:%M:%S GMT")
+        
 
 
         # Calculate the start of the next month
