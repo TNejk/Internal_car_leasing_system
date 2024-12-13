@@ -320,10 +320,10 @@ def get_full_car_info():
 
     # Parse the dates
     lease_dates = parse_lease_dates(resu)
-    dates = filter_dates(lease_dates)
+    #dates = filter_dates(lease_dates)
     
 
-    response = jsonify({"car_details": res, "allowed_dates": dates})
+    response = jsonify({"car_details": res, "notallowed_dates": lease_dates})
     return response, 200
 
 
