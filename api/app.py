@@ -229,7 +229,7 @@ def get_full_car_info():
     # get a list of dates split by 30 miniyute intervals for each car
     # where first check if an active lease exists for that car and edit the list of dates removing times between the active leases
 
-    def get_dates_to_end_of_month(interval_minutes=30, tz=pytz.timezone('Europe/Bratislava')) -> list:
+    def get_dates_to_end_of_month(interval_minutes=60, tz=pytz.timezone('Europe/Bratislava')) -> list:
         """
         Generate a list of RFC 1123 formatted datetime strings from now until the end of the current month in specified intervals.
 
