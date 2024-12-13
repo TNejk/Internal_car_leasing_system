@@ -260,6 +260,7 @@ def get_full_car_info():
     cur.execute(query, (car, True, ))
     resu = cur.fetchall()
 
+    return jsonify(msg= resu)
     dates = []
     def parse_lease_dates(resu):
         lease_dates = []
