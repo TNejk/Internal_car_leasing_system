@@ -228,6 +228,7 @@ def get_full_car_info():
     
     # get a list of dates split by 30 miniyute intervals for each car
     # where first check if an active lease exists for that car and edit the list of dates removing times between the active leases
+
     def get_dates_to_end_of_month(interval_minutes=30, tz=pytz.timezone('Europe/Bratislava')) -> list:
         """
         Generate a list of RFC 1123 formatted datetime strings from now until the end of the current month in specified intervals.
@@ -236,14 +237,8 @@ def get_full_car_info():
         :param tz: The timezone to use. Default is 'Europe/Bratislava'.
         :return: A list of RFC 1123 formatted datetime strings.
         """
-        # We need to reformat a badly formated datetime object into a proper dt object
-        #now = datetime.strptime(datetime.now(tz).replace(microsecond=0), "%a, %d %b %Y %H:%M:%S GMT")
-        
-
-        now_str = datetime.now(tz).strftime("%a, %d %b %Y %H:%M:%S GMT")
-        now = datetime.strptime(now_str, "%a, %d %b %Y %H:%M:%S GMT")
-        
-
+        # Get the current time with timezone information
+        now = datetime.now(tz).replace(microsecond=0)
 
         # Calculate the start of the next month
         next_month = (now.month % 12) + 1
@@ -255,7 +250,8 @@ def get_full_car_info():
 
         while now < start_of_next_month:
             # Format the datetime as RFC 1123
-            dates.append(now)
+            formatted_date = now.strftime("%a, %d %b %Y %H:%M:%S GMT")
+            dates.append(formatted_date)
             now += timedelta(minutes=interval_minutes)
 
         return dates
@@ -267,13 +263,18 @@ def get_full_car_info():
         :param rm_dates: A list of tuples with start and end datetime objects, e.g., [(datetime_from, datetime_to)].
         :return: A filtered list of datetime objects.
         """
-        #tz = pytz.timezone('Europe/Bratislava')
-        data_list = get_dates_to_end_of_month()
-        if not rm_dates:
-          return data_list
+        tz = pytz.timezone('Europe/Bratislava')
+        # Convert the string dates back to datetime objects
+        data_list = [datetime.strptime(date, "%a, %d %b %Y %H:%M:%S GMT").replace(tzinfo=tz) 
+                    for date in get_dates_to_end_of_month()]
         
-        for i in rm_dates:
-            data_list = [date for date in data_list if not (i[0] <= date <= i[1])]
+        if not rm_dates:
+            return data_list
+
+        # Filter out dates that fall within the specified ranges
+        for start, end in rm_dates:
+            data_list = [date for date in data_list if not (start <= date <= end)]
+        
         return data_list
 
     if conn is None:
