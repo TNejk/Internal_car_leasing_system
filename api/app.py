@@ -254,7 +254,7 @@ def get_full_car_info():
 
     
     # Remove dates from allowed dates if an active lease exists so you wont lease a car on the same date 
-    date_list = get_dates_to_end_of_month()
+    #date_list = get_dates_to_end_of_month()
     query = "SELECT(start_of_lease, end_of_lease) FROM lease WHERE id_car = %s AND status = %s;"
 
     cur.execute(query, (car, True, ))
@@ -265,8 +265,8 @@ def get_full_car_info():
       lease_dates = []
       for date_range in resu:
           # Parse the strings into datetime objects
-          start_datetime = datetime.fromisoformat(date_range[0])
-          end_datetime = datetime.fromisoformat(date_range[1])
+          start_datetime = datetime.fromisoformat(date_range[0][0])
+          end_datetime = datetime.fromisoformat(date_range[0][1])
           
           lease_dates.append((start_datetime, end_datetime))
       return lease_dates
