@@ -366,30 +366,59 @@ def allowed_dates():
 # car name
 # car location
 # 
-@app.route('/get_leases', methods = ['GET'])
+@app.route('/get_leases', methods = ['POST'])
 @jwt_required()
 def get_leases():
   conn, curr = connect_to_db()
-  query  = """
-      SELECT 
-        d.email AS driver_email,
-        d.role AS driver_role,
-        c.name AS car_name,
-        c.location AS car_location,
-        c.url AS car_url,
-        l.start_of_lease,
-        l.end_of_lease,
-        l.time_of_return,
-        l.private
-      FROM 
-          lease l
-      JOIN 
-          driver d ON l.id_driver = d.id_driver
-      JOIN 
-          car c ON l.id_car = c.id_car
-      WHERE 
-          l.status = TRUE; 
-  """
+  data = request.get_json()
+  email = data["email"]
+  role = data["role"]
+
+  # IF YOU ARE A USER RETURN ONLY FOR YOUR EMAIL
+  if role == "user":
+    query  = """
+        SELECT 
+          d.email AS driver_email,
+          d.role AS driver_role,
+          c.name AS car_name,
+          c.location AS car_location,
+          c.url AS car_url,
+          l.start_of_lease,
+          l.end_of_lease,
+          l.time_of_return,
+          l.private
+        FROM 
+            lease l
+        JOIN 
+            driver d ON l.id_driver = d.id_driver
+        JOIN 
+            car c ON l.id_car = c.id_car
+        WHERE 
+            l.status = TRUE AND d.email = %s; 
+    """
+  else: 
+    query  = """
+        SELECT 
+          d.email AS driver_email,
+          d.role AS driver_role,
+          c.name AS car_name,
+          c.location AS car_location,
+          c.url AS car_url,
+          l.start_of_lease,
+          l.end_of_lease,
+          l.time_of_return,
+          l.private
+        FROM 
+            lease l
+        JOIN 
+            driver d ON l.id_driver = d.id_driver
+        JOIN 
+            car c ON l.id_car = c.id_car
+        WHERE 
+            l.status = TRUE; 
+    """
+
+
   try:
     curr.execute(query)
     res = curr.fetchall()
