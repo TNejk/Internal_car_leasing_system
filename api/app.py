@@ -396,6 +396,7 @@ def get_leases():
         WHERE 
             l.status = TRUE AND d.email = %s; 
     """
+    curr.execute(query, (email,))
   else: 
     query  = """
         SELECT 
@@ -416,11 +417,12 @@ def get_leases():
             car c ON l.id_car = c.id_car
         WHERE 
             l.status = TRUE; 
-    """
+    """    
+    curr.execute(query)
 
 
   try:
-    curr.execute(query)
+
     res = curr.fetchall()
     leases = []
     for i in res:
