@@ -583,6 +583,8 @@ def return_car():
 
       # Update the car table
       um = _usage_metric(id_car, conn)
+      
+      # no longer needed to reset status!!!
       query = "UPDATE car SET health = %s, status = %s, usage_metric = %s WHERE id_car = %s;"
       cur.execute(query, (health, 'stand_by', um, id_car))
 
