@@ -484,6 +484,8 @@ def lease_car():
 
   # for whom the lease is 
   username = str(data["username"])
+  recipient = data["recipient"]
+
   role = str(data["role"])
   car_name  = str(data["car_name"])
   private = data["is_private"]
@@ -503,7 +505,7 @@ def lease_car():
     return jsonify(msg = f"Car is not available!, {car_status}")
 
 
-  # USER CHECKER
+  # USER ROLE CHECKER
   cur.execute("select * from driver where email = %s and role = %s", (username, role,))
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
   user = cur.fetchall()
@@ -514,6 +516,7 @@ def lease_car():
   # compare the user leasing and user thats recieving the lease,
   # This may be useless as the user result itself makes a check if a given person exists
   if user[0][1] ==  username:
+
     # Priavte ride check
     if private == True:
       if user[0][3] == role:
@@ -533,9 +536,21 @@ def lease_car():
   # If the user leasing is a manager allow him to order lease for other users
   elif user[0][3]  == role:
     try:
-      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status) values (%s, %s, %s, %s, %s)", (car_data[0][0], user[0][0], timeof, timeto, True))
-      # cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
+      # If the manager is leasing a car for someone else check if the recipeint exists and lease for his name
+      if recipient != username:
+          try:
+            cur.execute("select id_driver from driver where email = %s and role = %s", (username, role,))
+            recipient = cur.fetchall()
+            cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status) values (%s, %s, %s, %s, %s)", (car_data[0][0], recipient[0][0], timeof, timeto, True))
+          except:
+            return jsonify(msg= f"Error leasing car for recipient: {recipient[0][0]}"), 500
+            
+      else:
+        cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status) values (%s, %s, %s, %s, %s)", (car_data[0][0], user[0][0], timeof, timeto, True))
+      
       con.commit()
+      #cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status) values (%s, %s, %s, %s, %s)", (car_data[0][0], user[0][0], timeof, timeto, True))
+      # cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {e}")
     con.close()
