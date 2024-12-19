@@ -309,12 +309,20 @@ def get_full_car_info():
     #     ]
     # ]
     dates = []
+
+    bratislava_tz = pytz.timezone('Europe/Bratislava')
+    def convert_to_bratislava_timezone(dt_obj):
+      # Ensure the datetime is in UTC before converting
+      utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
+      bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
+      return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
+
     def parse_lease_dates(resu):
         lease_dates = []
         for i in resu:
             # Parse the RFC 1123 strings into datetime object
-            start_datetime = i[0]
-            end_datetime = i[1]
+            start_datetime = convert_to_bratislava_timezone(i[0])
+            end_datetime = convert_to_bratislava_timezone(i[1])
             lease_dates.append([start_datetime, end_datetime])
         return lease_dates
 
