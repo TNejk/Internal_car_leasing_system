@@ -383,6 +383,7 @@ def get_leases():
           c.name AS car_name,
           c.location AS car_location,
           c.url AS car_url,
+          l.id_lease,
           l.start_of_lease,
           l.end_of_lease,
           l.time_of_return,
@@ -405,6 +406,7 @@ def get_leases():
           c.name AS car_name,
           c.location AS car_location,
           c.url AS car_url,
+          l.id_lease,
           l.start_of_lease,
           l.end_of_lease,
           l.time_of_return,
@@ -432,10 +434,11 @@ def get_leases():
         "car_name": i[2],
         "location": i[3],
         "url": i[4],
-        "time_from": i[5],
-        "time_to": i[6],
-        "time_of_return": i[7],
-        "private": i[8], 
+        "lease_id": i[5],
+        "time_from": i[6],
+        "time_to": i[7],
+        "time_of_return": i[8],
+        "private": i[9], 
 
       })
     return {"active_leases": leases}, 200
@@ -560,7 +563,7 @@ def lease_car():
 
 
 @app.route('/return_car', methods = ['POST'])
-#! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
+@jwt_required() 
 def return_car():
   data = request.get_json()
   if not data:
