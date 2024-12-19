@@ -540,7 +540,7 @@ def lease_car():
     try:
       # If the manager is leasing a car for someone else check if the recipeint exists and lease for his email
       try:
-        cur.execute("select id_driver from driver where email = %s and role = %s", (recipient, role,))
+        cur.execute("select id_driver from driver where email = %s", (recipient,)) # NO need to check for role here!!!
         recipient = cur.fetchall()
         if private == False:
           cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s,  %s, %s, %s)", (car_data[0][0], recipient[0][0], timeof, timeto, True, False))
