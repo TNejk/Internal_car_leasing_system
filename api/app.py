@@ -373,7 +373,8 @@ def get_leases():
   data = request.get_json()
   email = data["email"]
   role = data["role"]
-
+  
+  bratislava_tz = pytz.timezone('Europe/Bratislava')
   # IF YOU ARE A USER RETURN ONLY FOR YOUR EMAIL
   if role == "user":
     query  = """
@@ -422,6 +423,12 @@ def get_leases():
     """    
     curr.execute(query)
 
+  def convert_to_bratislava_timezone(utc_time_str):
+    # Parse the string into a datetime object
+    utc_time = datetime.strptime(utc_time_str, "%Y-%m-%d %H:%M:%S")
+    utc_time = pytz.utc.localize(utc_time)  # Localize the UTC time
+    bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
+    return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
 
   try:
 
@@ -435,8 +442,8 @@ def get_leases():
         "location": i[3],
         "url": i[4],
         "lease_id": i[5],
-        "time_from": i[6],
-        "time_to": i[7],
+        "time_from": convert_to_bratislava_timezone(i[6]),
+        "time_to": convert_to_bratislava_timezone(i[7]),
         "time_of_return": i[8],
         "private": i[9], 
 
