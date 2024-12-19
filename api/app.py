@@ -692,13 +692,10 @@ def _usage_metric(id_car, conn):
     return jsonify({'error': str(e)}), 501
 
 
-# @app.route('/token_test', methods = ['POST'])
-# @jwt_required()
-# def token_test():
-#   claims = get_jwt()
-#   role = claims.get('role', 'Nenašla sa žiadna rola')
-#   return jsonify({'identity': get_jwt_identity(),
-#                   'additional_claims': role}), 200
+@app.route('/check_token', methods = ['POST'])
+@jwt_required()
+def token_test():
+  return jsonify({'msg': 'success'}), 200
 
 if __name__ == "__main__":
   app.run()
