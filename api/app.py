@@ -423,12 +423,11 @@ def get_leases():
     """    
     curr.execute(query)
 
-  def convert_to_bratislava_timezone(utc_time_str):
-    # Parse the string into a datetime object
-    utc_time = datetime.strptime(utc_time_str, "%Y-%m-%d %H:%M:%S")
-    utc_time = pytz.utc.localize(utc_time)  # Localize the UTC time
-    bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
-    return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
+  def convert_to_bratislava_timezone(dt_obj):
+      # Ensure the datetime is in UTC before converting
+      utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
+      bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
+      return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
 
   try:
 
