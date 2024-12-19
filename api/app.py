@@ -500,16 +500,12 @@ def lease_car():
 
   con, cur = connect_to_db()
 
-  # You dont need to check if you can reserve a car in a timeframe as the car would allready be in reserved status mode
-  # STATUS CHECKER
-  cur.execute("select status from car where name = %s", (car_name,))
-  car_status = cur.fetchall()[0][0]
-  if car_status != "stand_by":
-    return jsonify(msg = f"Car is not available!, {car_status}")
-
+  cur.execute("select id_car from car where name = %s", (car_name,))
+  car_id = cur.fetchall()[0][0]
+  
 
   query = "SELECT start_of_lease, end_of_lease FROM lease WHERE id_car = %s AND status = %s;"
-  cur.execute(query, (car_name, True, ))
+  cur.execute(query, (car_id, True, ))
   resu = cur.fetchall()
 
   # Make sure 'timeof' and 'timeto' are properly defined as strings.
