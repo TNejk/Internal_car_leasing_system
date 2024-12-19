@@ -233,11 +233,11 @@ def get_full_car_info():
 
     def get_dates_to_end_of_month(interval_minutes=60, tz=pytz.timezone('Europe/Bratislava')) -> list:
         """
-        Generate a list of RFC 1123 formatted datetime strings from now until the end of the current month in specified intervals.
-
-        :param interval_minutes: The interval in minutes. Default is 30.
+        Generate a list of datetime strings from now until the end of the current month in specified intervals.
+        
+        :param interval_minutes: The interval in minutes. Default is 60.
         :param tz: The timezone to use. Default is 'Europe/Bratislava'.
-        :return: A list of RFC 1123 formatted datetime strings.
+        :return: A list of formatted datetime strings (yyyy-MM-dd HH:mm:ss).
         """
         # Get the current time with timezone information
         now = datetime.now(tz).replace(microsecond=0)
@@ -251,8 +251,8 @@ def get_full_car_info():
         dates = []
 
         while now < start_of_next_month:
-            # Format the datetime as RFC 1123
-            formatted_date = now.strftime("%a, %d %b %Y %H:%M:%S GMT")
+            # Format the datetime in the new format (yyyy-MM-dd HH:mm:ss)
+            formatted_date = now.strftime("%Y-%m-%d %H:%M:%S")
             dates.append(formatted_date)
             now += timedelta(minutes=interval_minutes)
 
