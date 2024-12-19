@@ -556,7 +556,7 @@ def lease_car():
     return {"status": True, "private": private}
 
   # If the user leasing is a manager allow him to order lease for other users
-  elif user[0][3]  == role:
+  elif user[0][3]  == "manager":
     try:
       # If the manager is leasing a car for someone else check if the recipeint exists and lease for his email
       try:
