@@ -504,29 +504,29 @@ def lease_car():
   car_id = cur.fetchall()[0][0]
   
 
-  query = "SELECT start_of_lease, end_of_lease FROM lease WHERE id_car = %s AND status = %s;"
-  cur.execute(query, (car_id, True, ))
-  resu = cur.fetchall()
+  # query = "SELECT start_of_lease, end_of_lease FROM lease WHERE id_car = %s AND status = %s;"
+  # cur.execute(query, (car_id, True, ))
+  # resu = cur.fetchall()
 
-  # Make sure 'timeof' and 'timeto' are properly defined as strings.
-  timeof = datetime.strptime(timeof, "%Y-%m-%d %H:%M:%S%z")
-  timeto = datetime.strptime(timeto, "%Y-%m-%d %H:%M:%S%z")
+  # # Make sure 'timeof' and 'timeto' are properly defined as strings.
+  # timeof = datetime.strptime(timeof, "%Y-%m-%d %H:%M:%S%z")
+  # timeto = datetime.strptime(timeto, "%Y-%m-%d %H:%M:%S%z")
 
-  for i in resu:
-      # Parse the strings from the database into datetime objects, adjusting for time zones.
-      start_of_lease = datetime.strptime(i[0], "%a, %d %b %Y %H:%M:%S %Z")
-      end_of_lease = datetime.strptime(i[1], "%a, %d %b %Y %H:%M:%S %Z")
+  # for i in resu:
+  #     # Parse the strings from the database into datetime objects, adjusting for time zones.
+  #     start_of_lease = datetime.strptime(i[0], "%a, %d %b %Y %H:%M:%S %Z")
+  #     end_of_lease = datetime.strptime(i[1], "%a, %d %b %Y %H:%M:%S %Z")
       
-      # You can convert to UTC or ensure both 'timeof' and 'timeto' are in the same timezone
-      # For example, converting start and end of lease to UTC:
-      start_of_lease = start_of_lease.astimezone(pytz.timezone('Europe/Bratislava'))
-      end_of_lease = end_of_lease.astimezone(pytz.timezone('Europe/Bratislava'))
+  #     # You can convert to UTC or ensure both 'timeof' and 'timeto' are in the same timezone
+  #     # For example, converting start and end of lease to UTC:
+  #     start_of_lease = start_of_lease.astimezone(pytz.timezone('Europe/Bratislava'))
+  #     end_of_lease = end_of_lease.astimezone(pytz.timezone('Europe/Bratislava'))
       
-      # Compare time ranges
-      if timeof >= start_of_lease and timeto <= end_of_lease:
-          return {"status": False, "private": private}  # Ensure 'private' is defined
-      else:
-          pass
+  #     # Compare time ranges
+  #     if timeof >= start_of_lease and timeto <= end_of_lease:
+  #         return {"status": False, "private": private}  # Ensure 'private' is defined
+  #     else:
+  #         pass
   
   # USER ROLE CHECKER
   cur.execute("select * from driver where email = %s and role = %s", (username, role,))
