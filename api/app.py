@@ -574,7 +574,7 @@ def return_car():
   try:
     health = data["health"]
   except:
-    health = "healthy"
+    health = "good"
   note = data["note"]
 
   conn, error = connect_to_db()
