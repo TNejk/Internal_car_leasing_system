@@ -398,7 +398,7 @@ def get_leases():
             l.status = TRUE AND d.email = %s; 
     """
     curr.execute(query, (email,))
-  else: 
+  elif role == "manager": 
     query  = """
         SELECT 
           d.email AS driver_email,
