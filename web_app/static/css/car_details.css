@@ -1,0 +1,47 @@
+#car-details {
+  display: flex;
+}
+
+#car-details-left {
+  flex: 1;
+  margin: 5px;
+}
+
+#car-details-right {
+  flex: 1;
+  margin: 5px
+}
+
+#car-details-info {
+  font-size: 20px;
+}
+
+#car-image {
+  max-width: 500px;
+  max-height: 500px;
+}
+
+#calendar {
+  font-size: 14px;
+
+}
+
+/*.fc-scrollgrid-section.fc-scrollgrid-section-body {*/
+/*  display: none;*/
+/*}*/
+
+.days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-top: 5px;
+}
+
+button {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}

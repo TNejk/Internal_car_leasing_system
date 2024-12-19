@@ -1,10 +1,11 @@
-import sys, json, os, hashlib
+import sys, os
 sys.path.append('controllers')
 sys.path.append('workers')
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from require_role import require_role
 from request_all_car_data import request_all_car_data
 from sign_in_api import sign_in_api
+from check_token import check_token
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 SALT = os.getenv('SALT')
@@ -24,21 +25,7 @@ def sign_in():
   else:
     username = request.form['email']
     password = request.form['password']
-    response = sign_in_api(username, password)
-
-    if response is None:
-      return render_template('signs/sign_out.html', data='Niekde sa stala chyba!')
-    if response == 0:
-      return render_template('signs/sign_in.html', data='Chýba meno alebo heslo!')
-    elif response == 1:
-      return render_template('signs/sign_in.html', data='Nesprávne meno alebo heslo!')
-    salted = SALT + SALT + SALT + SALT + SALT + SALT + SALT + SALT + SALT + password + SALT + SALT + SALT + SALT + SALT
-    hashed = hashlib.sha256(salted.encode()).hexdigest()
-    session['username'] = username
-    session['password'] = hashed
-    session['token'] = response['access_token']
-    session['role'] = response['role']
-    session.permanent = True
+    sign_in_api(username, password, SALT)
 
     return redirect('/dashboard')
 
@@ -58,6 +45,7 @@ def sign_up():
 
 @app.route(f'/dashboard', methods=['GET'])
 @require_role('user','manager')
+@check_token()
 def dashboard():
   bell = url_for('static', filename='sources/images/bell.svg')
   user = url_for('static', filename='sources/images/user.svg')

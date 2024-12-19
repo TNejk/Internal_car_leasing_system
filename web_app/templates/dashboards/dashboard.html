@@ -2,6 +2,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/car_details.css') }}">
 <title>ICLS - Gamo</title>
 {% endblock %}
 
@@ -11,25 +12,24 @@
   <input type="text" placeholder="Vyhľadaj auto">
   <div class="icons">
     <span class="icon"><a href="dashboard"><img src="{{ icons[0] }}" style="width: 24px;height: 24px;"></a></span>
-    <span class="icon"><a href="dashboard.html"><img src="{{ icons[1] }}" style="width: 24px;height: 24px;"></a></span>
-    <span class="icon"><a href="dashboard.html"><img src="{{ icons[2] }}" style="width: 24px;height: 24px;"></a></span>
+    <span class="icon"><a href="dashboard"><img src="{{ icons[1] }}" style="width: 24px;height: 24px;"></a></span>
+    <span class="icon"><a href="dashboard"><img src="{{ icons[2] }}" style="width: 24px;height: 24px;"></a></span>
   </div>
 </header>
 <div class="container">
-  <!-- Sidebar with car list -->
   <div class="sidebar">
     <div class="car-list">
       {% if cars|length == 0 %}
         <p>Neexistuje žiadne auto!</p>
       {% else %}
-        {% for car in cars %}   <!--   0 = id, 1 = name, 2 = state, 3 = url */-->
-          <div class="car-item" onclick='showDetails("{{ car[0] }}", "{{ token }}")'>
+        {% for car in cars %}
+          <div class="car-item" onclick='fetchCarData("{{ car[0] }}", "{{ token }}")'>
             <img src="{{ car[3] }}" alt="{{ car[1] }} image">
             <p><strong>{{ car[1] }}</strong><br>
               {% if car[2] == 'stand_by' %}
-                Obsadené
-              {% else %}
                 Voľné
+              {% else %}
+                Obsadené
               {% endif %}
             </p>
           </div>
@@ -38,49 +38,35 @@
     </div>
   </div>
 
-  <!-- Main content with car details -->
+
   <div class="main-content">
     <div id="default-message">Vyber si auto</div>
+
     <div id="car-details" style="display: none;">
-      <h3 id="car-name"></h3>
-      <p id="car-type"></p>
-      <p id="car-status"></p>
-      <p id="car-health"></p>
-      <p id="car-frequency"></p>
-      <p id="car-location"></p>
-      <img id="car-image" src="" alt="">
-      <div class="calendar">
-        <p>Novemeber 2024</p>
-        <div class="days">
-          <!-- Calendar days -->
-          <span>1</span><span>2</span><span>3</span><span>4</span>
-          <span>5</span><span>6</span><span>7</span><span>8</span>
-          <span>9</span><span>10</span><span>11</span><span>12</span>
-          <span>13</span><span>14</span><span>15</span><span>16</span>
-          <span>17</span><span>18</span><span>19</span><span>20</span>
-          <span>21</span><span>22</span><span>23</span><span>24</span>
-          <span>25</span><span>26</span><span>27</span><span>28</span>
-          <span>29</span><span>30</span>
+
+      <div id="car-details-left">
+        <div id="calendar"></div>
+      </div>
+
+      <div id="car-details-right">
+        <img id="car-image" src="" alt="">
+        <div id="car-details-info">
+          <h3 id="car-name"></h3>
+          <p id="car-type"></p>
+          <p id="car-status"></p>
+          <p id="car-health"></p>
+          <p id="car-frequency"></p>
+          <p id="car-location"></p>
         </div>
       </div>
-      <label for="from-time">Čas od:</label>
-      <select id="from-time">
-        <option value="08:00">08:00</option>
-        <option value="09:00">09:00</option>
-        <!-- Additional times -->
-      </select>
-      <label for="to-time">Čas do:</label>
-      <select id="to-time">
-        <option value="17:00">17:00</option>
-        <option value="18:00">18:00</option>
-        <!-- Additional times -->
-      </select>
-      <button>Rezervuj</button>
+
+
     </div>
   </div>
 </div>
 
 <script src="{{ url_for('static', filename='js/dashboard.js' )}}"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 {% endblock %}
 
 {% block script %}
