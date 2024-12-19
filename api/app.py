@@ -607,7 +607,7 @@ def return_car():
       cur.execute(query, (health, 'stand_by', um, id_car))
 
     conn.commit()
-    return f'stand_by, {health}, {um}, {tor}, {id_car}'
+    return jsonify({'status': "returned"}), 200
 
   except psycopg2.Error as e:
     conn.rollback()
