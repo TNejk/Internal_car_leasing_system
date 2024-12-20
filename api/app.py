@@ -467,13 +467,18 @@ def cancel_lease():
   # make a sql statement that updates the table lease and sets it stauts to false where you will filter the result by the driver, car, and order by id_lease descending limit 1
   data = request.get_json()
   email = data["email"]
+
+  if data["recipient"] == "":
+     recipient = email
+  else:
+    recipient = data["recipient"]
   car_name = data["car_name"]
 
   conn, cur = connect_to_db()
   
   try:
     # need to get the car_id  and driver_id 
-    cur.execute("select id_driver from driver where email = %s", (email,))
+    cur.execute("select id_driver from driver where email = %s", (recipient,))
     id_name = cur.fetchall()[0][0]
 
     cur.execute("select id_car from car where name = %s", (car_name,))
@@ -517,6 +522,8 @@ def lease_car():
   cur.execute("select id_car from car where name = %s", (car_name,))
   car_id = cur.fetchall()[0][0]
   
+  #I/flutter ( 4931): {"msg":"Users do not match, nor is the requester a manager."}
+  #I/flutter ( 4931): type 'Null' is not a subtype of type 'FutureOr<bool>
 
   # query = "SELECT start_of_lease, end_of_lease FROM lease WHERE id_car = %s AND status = %s;"
   # cur.execute(query, (car_id, True, ))
