@@ -473,7 +473,7 @@ def cancel_lease():
      recipient = data["recipient"]
   else:
     recipient = email
-    
+
   car_name = data["car_name"]
 
   conn, cur = connect_to_db()
@@ -485,6 +485,7 @@ def cancel_lease():
 
     cur.execute("select id_car from car where name = %s", (car_name,))
     id_car = cur.fetchall()[0][0]
+    return jsonify(msg= f"{id_name}, {id_car}")
   except Exception as e:
     return jsonify(msg= f"Error cancelling lease!, {e}")
   
