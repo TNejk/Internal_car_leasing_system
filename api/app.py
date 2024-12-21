@@ -485,12 +485,11 @@ def cancel_lease():
 
     cur.execute("select id_car from car where name = %s", (car_name,))
     id_car = cur.fetchall()[0][0]
-    return jsonify(msg= f"{id_name}, {id_car}")
   except Exception as e:
     return jsonify(msg= f"Error cancelling lease!, {e}")
   
   try:
-    cur.execute("UPDATE lease SET status = false WHERE id_lease = (SELECT id_lease FROM lease WHERE id_driver = %s AND id_car = %s ORDER BY id_lease DESC LIMIT 1)", (id_name, id_car))
+    cur.execute("UPDATE lease SET status = false WHERE id_lease = (SELECT id_lease FROM lease WHERE id_driver = %s AND id_car = %s  AND status = true ORDER BY id_lease DESC LIMIT 1)", (id_name, id_car))
     cur.execute("update car set status = %s where id_car = %s", ("stand_by", id_car))
   except Exception as e:
     return jsonify(msg= f"Error cancelling lease!, {e}")
