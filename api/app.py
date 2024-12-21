@@ -468,10 +468,12 @@ def cancel_lease():
   data = request.get_json()
   email = data["email"]
 
-  if data["recipient"] == "":
-     recipient = email
+  recipient = ""
+  if data["recipient"]:
+     recipient = data["recipient"]
   else:
-    recipient = data["recipient"]
+    recipient = email
+    
   car_name = data["car_name"]
 
   conn, cur = connect_to_db()
