@@ -521,35 +521,17 @@ def lease_car():
 
   con, cur = connect_to_db()
 
+
+  # FIrst check if a lease in a given timeframe doesnt allready exist
+
+  # check by the car_id and time from and time to if just one result comes up throw an error back to the user
+  # možno vráť aj odkedy dokedy je čas zabratý ked nedokažem to robit cez UI
+  # return {"status": "taken", "time_of": "11/23 2022", "time_to": "11/23 2026",}, 501
+
+
   cur.execute("select id_car from car where name = %s", (car_name,))
   car_id = cur.fetchall()[0][0]
   
-  #I/flutter ( 4931): {"msg":"Users do not match, nor is the requester a manager."}
-  #I/flutter ( 4931): type 'Null' is not a subtype of type 'FutureOr<bool>
-
-  # query = "SELECT start_of_lease, end_of_lease FROM lease WHERE id_car = %s AND status = %s;"
-  # cur.execute(query, (car_id, True, ))
-  # resu = cur.fetchall()
-
-  # # Make sure 'timeof' and 'timeto' are properly defined as strings.
-  # timeof = datetime.strptime(timeof, "%Y-%m-%d %H:%M:%S%z")
-  # timeto = datetime.strptime(timeto, "%Y-%m-%d %H:%M:%S%z")
-
-  # for i in resu:
-  #     # Parse the strings from the database into datetime objects, adjusting for time zones.
-  #     start_of_lease = datetime.strptime(i[0], "%a, %d %b %Y %H:%M:%S %Z")
-  #     end_of_lease = datetime.strptime(i[1], "%a, %d %b %Y %H:%M:%S %Z")
-      
-  #     # You can convert to UTC or ensure both 'timeof' and 'timeto' are in the same timezone
-  #     # For example, converting start and end of lease to UTC:
-  #     start_of_lease = start_of_lease.astimezone(pytz.timezone('Europe/Bratislava'))
-  #     end_of_lease = end_of_lease.astimezone(pytz.timezone('Europe/Bratislava'))
-      
-  #     # Compare time ranges
-  #     if timeof >= start_of_lease and timeto <= end_of_lease:
-  #         return {"status": False, "private": private}  # Ensure 'private' is defined
-  #     else:
-  #         pass
   
   # USER ROLE CHECKER
   cur.execute("select * from driver where email = %s and role = %s", (username, role,))
