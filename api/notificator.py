@@ -29,7 +29,7 @@ while True:
     now = datetime.now(tz).replace(microsecond=0)
 
     lease_query = """
-        SELECT *
+        SELECT id_driver, id_car
         FROM lease
         WHERE end_of_lease < %s AND status = true
         LIMIT 1;
@@ -41,7 +41,7 @@ while True:
     # if its over the limit get user email
     for i in active_leases:
         email_query = "SELECT email FROM driver WHERE id_driver = %s"
-        cur.execute(email_query, (i['id_driver'],))
+        cur.execute(email_query, (i[0],))
         email = cur.fetchone()
 
         # send notif to the email topic and the
