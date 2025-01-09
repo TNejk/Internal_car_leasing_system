@@ -2,9 +2,18 @@
 import datetime
 from firebase_admin import messaging
 import psycopg2
+import firebase_admin
+from firebase_admin import credentials
+import os
+
+db_host = os.getenv('DB_HOST')
+db_port = os.getenv('DB_PORT')
+db_user = os.getenv('POSTGRES_USER')
+db_pass = os.getenv('POSTGRES_PASS')
+db_name = os.getenv('POSTGRES_DB')
 
 # Login to firebase    # FIREBASE
-cred = credentials.Certificate("aklsdjlaksjal-firebase-adminsdk-x9g9j-8d6f043791.json")
+cred = credentials.Certificate("icls-56e37-firebase-adminsdk-2d4e2-be93ca6a35.json")
 firebase_admin.initialize_app(cred)
 
 db_con = psycopg2.connect(dbname=db_name, user=db_user, host=db_host, port=db_port, password=db_pass)
@@ -29,7 +38,7 @@ for i in active_leases:
     email = cur.fetchone()
 
     # send notif to the email topic and the
-    str_mess = "Skončil sa limit na vrátenie auta, prosím odovzdajťe auto cez aplikáciu!"
+    str_mess = "Skončil sa limit na vrátenie auta, prosím odovzdajte auto v aplikácií!"
     message = messaging.Message(
                         notification=messaging.Notification(
                         title="Nezabudni vrátiť auto!",
