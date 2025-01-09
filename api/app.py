@@ -367,7 +367,7 @@ def reports():
 def allowed_dates():
     # Get the last allowed time for a car to be leased, so it can be put into the apps limiter
     con, curr = connect_to_db()
-    query = """SELECT time_to_lease
+    query = """SELECT end_of_lease 
             FROM lease
             WHERE status = true
             ORDER BY time_to DESC
