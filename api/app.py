@@ -362,7 +362,7 @@ def reports():
 
 
 # returns a wierd string but i can work with it 
-@app.route('/starting_date', methods = ['GET'])
+@app.route('/starting_date', methods = ['POST'])
 @jwt_required()
 def allowed_dates():
     try: 
