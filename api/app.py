@@ -397,7 +397,7 @@ def allowed_dates():
     curr.execute(query, (id_car,))
     res = curr.fetchone()
     
-    return {"starting_date": convert_to_bratislava_timezone(res)[0]}, 200
+    return {"starting_date": convert_to_bratislava_timezone(res[0])}, 200
     
 
 
