@@ -367,9 +367,10 @@ def reports():
 @app.route('/starting_date', methods = ['POST'])
 @jwt_required()
 def allowed_dates():
-
+    bratislava_tz = pytz.timezone('Europe/Bratislava')
     def convert_to_bratislava_timezone(dt_obj):
       # Ensure the datetime is in UTC before converting
+      if dt_obj == None: return "null"
       utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
       bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
       return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
@@ -396,7 +397,7 @@ def allowed_dates():
     curr.execute(query, (id_car,))
     res = curr.fetchone()
     
-    return {"starting_date": convert_to_bratislava_timezone(res)}, 200
+    return {"starting_date": convert_to_bratislava_timezone(res)[0]}, 200
     
 
 
