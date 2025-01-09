@@ -396,9 +396,10 @@ def allowed_dates():
             """
     curr.execute(query, (id_car,))
     res = curr.fetchone()
-    
-    return {"starting_date": convert_to_bratislava_timezone(res[0])}, 200
-    
+    if res:
+      return {"starting_date": convert_to_bratislava_timezone(res[0])}, 200
+    else:
+      return {"starting_date": "null"}
 
 
 # Only get active leases!!! 
