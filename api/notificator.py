@@ -10,6 +10,7 @@ import time
 import pytz
 from pytz import timezone as tz
 
+
 db_host = os.getenv('DB_HOST')
 db_port = os.getenv('DB_PORT')
 db_user = os.getenv('POSTGRES_USER')
@@ -22,7 +23,6 @@ firebase_admin.initialize_app(cred)
 
 db_con = psycopg2.connect(dbname=db_name, user=db_user, host=db_host, port=db_port, password=db_pass)
 cur = db_con.cursor()
-
 
 while True:
     tz = pytz.timezone('Europe/Bratislava')
@@ -68,4 +68,4 @@ while True:
         )
         print(f"{datetime.now(tz).replace(microsecond=0)}## Message sent. ")
 
-    time.sleep(30)
+    time.sleep(1800)
