@@ -66,5 +66,6 @@ while True:
             ),
             topic = "manager"
         )
+        print(f"{datetime.now(tz).replace(microsecond=0)}## Message sent. ")
 
     time.sleep(30)
