@@ -28,20 +28,20 @@ while True:
     tz = pytz.timezone('Europe/Bratislava')
     now = datetime.now(tz).replace(microsecond=0)
 
-    lease_query = """SELECT *
+    lease_query = """
+        SELECT *
         FROM leases
-        WHERE (
-            (end_of_lease < %s)
-        ) AND WHERE status = true
-        LIMIT 1; """
+        WHERE end_of_lease < %s AND status = true
+        LIMIT 1;
+    """
 
-    cur.execute(lease_query, (now))
+    cur.execute(lease_query, (now,))
     active_leases = cur.fetchall()
 
     # if its over the limit get user email
     for i in active_leases:
         email_query = "SELECT email FROM USER WHERE id_user = %s"
-        cur.execute(email_query, (i))
+        cur.execute(email_query, (i['id_user'],))
         email = cur.fetchone()
 
         # send notif to the email topic and the
