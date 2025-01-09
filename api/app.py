@@ -11,6 +11,8 @@ from datetime import datetime, timedelta, timezone
 from dateutil.parser import parse
 import pytz
 
+bratislava_tz = pytz.timezone('Europe/Bratislava')
+
 db_host = os.getenv('DB_HOST')
 db_port = os.getenv('DB_PORT')
 db_user = os.getenv('POSTGRES_USER')
@@ -365,6 +367,13 @@ def reports():
 @app.route('/starting_date', methods = ['POST'])
 @jwt_required()
 def allowed_dates():
+
+    def convert_to_bratislava_timezone(dt_obj):
+      # Ensure the datetime is in UTC before converting
+      utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
+      bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
+      return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
+    
     try: 
        name = request.get_json()["name"]
     except: 
@@ -387,7 +396,7 @@ def allowed_dates():
     curr.execute(query, (id_car,))
     res = curr.fetchone()
     
-    return {"starting_date": res}, 200
+    return {"starting_date": convert_to_bratislava_timezone(res)}, 200
     
 
 
