@@ -361,10 +361,23 @@ def reports():
 
 
 
-@app.route('/allowed_dates', methods = ['GET'])
+
+@app.route('/starting_date', methods = ['GET'])
 @jwt_required()
 def allowed_dates():
-  pass
+    # Get the last allowed time for a car to be leased, so it can be put into the apps limiter
+    con, curr = connect_to_db()
+    query = """SELECT time_to
+            FROM lease
+            WHERE status = true
+            ORDER BY time_to DESC
+            LIMIT 1
+            """
+    curr.execute(query)
+    res = curr.fetchone()
+    
+    return {"starting_date": res}, 200
+    
 
 
 # Only get active leases!!! 
