@@ -7,6 +7,9 @@ from firebase_admin import credentials
 import os
 import time
 
+import pytz
+from pytz import timezone as tz
+
 db_host = os.getenv('DB_HOST')
 db_port = os.getenv('DB_PORT')
 db_user = os.getenv('POSTGRES_USER')
@@ -21,7 +24,7 @@ db_con = psycopg2.connect(dbname=db_name, user=db_user, host=db_host, port=db_po
 cur = db_con.cursor()
 
 
-while False:
+while True:
     pytz.timezone('Europe/Bratislava')
     now = datetime.now(tz).replace(microsecond=0)
     lease_query = """SELECT *
@@ -63,4 +66,4 @@ while False:
             topic = "manager"
         )
 
-    time.sleep(1700)
+    time.sleep(30)
