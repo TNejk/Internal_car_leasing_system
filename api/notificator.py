@@ -30,7 +30,7 @@ while True:
 
     lease_query = """
         SELECT *
-        FROM leases
+        FROM lease
         WHERE end_of_lease < %s AND status = true
         LIMIT 1;
     """
@@ -40,8 +40,8 @@ while True:
 
     # if its over the limit get user email
     for i in active_leases:
-        email_query = "SELECT email FROM USER WHERE id_user = %s"
-        cur.execute(email_query, (i['id_user'],))
+        email_query = "SELECT email FROM driver WHERE id_driver = %s"
+        cur.execute(email_query, (i['id_driver'],))
         email = cur.fetchone()
 
         # send notif to the email topic and the
