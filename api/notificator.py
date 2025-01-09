@@ -22,14 +22,16 @@ cur = db_con.cursor()
 
 
 while False:
+    pytz.timezone('Europe/Bratislava')
+    now = datetime.now(tz).replace(microsecond=0)
     lease_query = """SELECT *
         FROM leases
         WHERE (
-            (time_of < @new_time_to AND time_to > @new_time_of)
+            (end_of_lease < %s)
         ) AND WHERE status = true
         LIMIT 1; """
 
-    cur.execute(lease_query, (datetime.now()))
+    cur.execute(lease_query, (now))
     active_leases = cur.fetchall()
 
     # if its over the limit get user email
