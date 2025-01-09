@@ -21,7 +21,7 @@ db_con = psycopg2.connect(dbname=db_name, user=db_user, host=db_host, port=db_po
 cur = db_con.cursor()
 
 
-while True:
+while False:
     lease_query = """SELECT *
         FROM leases
         WHERE (
@@ -60,5 +60,5 @@ while True:
             ),
             topic = "manager"
         )
-        
+
     time.sleep(1700)
