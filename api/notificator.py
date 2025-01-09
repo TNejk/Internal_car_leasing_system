@@ -1,5 +1,5 @@
 
-import datetime
+from datetime import datetime
 from firebase_admin import messaging
 import psycopg2
 import firebase_admin
