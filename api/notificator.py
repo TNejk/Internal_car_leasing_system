@@ -13,7 +13,7 @@ db_pass = os.getenv('POSTGRES_PASS')
 db_name = os.getenv('POSTGRES_DB')
 
 # Login to firebase    # FIREBASE
-cred = credentials.Certificate("api/icls-56e37-firebase-adminsdk-2d4e2-be93ca6a35.json")
+cred = credentials.Certificate("icls-56e37-firebase-adminsdk-2d4e2-be93ca6a35.json")
 firebase_admin.initialize_app(cred)
 
 db_con = psycopg2.connect(dbname=db_name, user=db_user, host=db_host, port=db_port, password=db_pass)
