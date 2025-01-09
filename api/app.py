@@ -212,6 +212,24 @@ def get_car_list():
         cur.close()
         conn.close()  
 
+
+
+@app.route("/get_reports", methods=["POST"])
+@jwt_required()
+def modify_token():
+    jti = get_jwt()["jti"]
+    now = datetime.now()
+    conn, cur = connect_to_db()
+    try:
+      cur.execute("insert into revoked_jwt(jti, added_at) values (%s, %s)", (jti, now))
+      conn.commit()
+    except Exception as e:
+      return jsonify(msg= f"Error rewoking JWT!:  {e}")
+
+    conn.close()
+    return jsonify(msg="JWT revoked")
+
+
 # Warning!!!
 # The allowed dates return here is kinda retarted, it would be better to just return a list of start > stop dates that the user would then generate locally
 # But i dont feel like doing it, so a MONSTER json has been created, enjoy :)
