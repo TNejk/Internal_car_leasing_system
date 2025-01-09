@@ -370,7 +370,7 @@ def allowed_dates():
     query = """SELECT end_of_lease 
             FROM lease
             WHERE status = true
-            ORDER BY time_to DESC
+            ORDER BY end_of_lease DESC
             LIMIT 1
             """
     curr.execute(query)
