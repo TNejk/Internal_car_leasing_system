@@ -25,8 +25,9 @@ cur = db_con.cursor()
 
 
 while True:
-    pytz.timezone('Europe/Bratislava')
+    tz = pytz.timezone('Europe/Bratislava')
     now = datetime.now(tz).replace(microsecond=0)
+
     lease_query = """SELECT *
         FROM leases
         WHERE (
