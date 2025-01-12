@@ -553,7 +553,8 @@ def cancel_lease():
   return {"cancelled": True}
 
 
-
+# Add a notofication call after leasing, to the manager
+# fix private rides
 @app.route('/lease_car', methods = ['POST'])
 @jwt_required()
 def lease_car():
@@ -654,6 +655,20 @@ def return_car():
     health = "good"
   note = data["note"]
 
+  # ADDED LOCATION!!!
+  location = "" 
+  match data["location"]:
+    case "Bratislava":
+      location = "BA"
+    case "Banská Bystrica":
+      location = "BB"
+    case "Kosice":
+      location = "KA"
+    case "Private":
+      location = "NULL"
+    case _:
+      location = "ERROR"
+
   conn, error = connect_to_db()
   if conn is None:
     return jsonify({'error': error}), 501
@@ -680,8 +695,8 @@ def return_car():
       um = _usage_metric(id_car, conn)
       
       # no longer needed to reset status!!!
-      query = "UPDATE car SET health = %s, status = %s, usage_metric = %s WHERE id_car = %s;"
-      cur.execute(query, (health, 'stand_by', um, id_car))
+      query = "UPDATE car SET health = %s, status = %s, usage_metric = %s, location = %s WHERE id_car = %s;"
+      cur.execute(query, (health, 'stand_by', um, location, id_car ))
 
     conn.commit()
     return jsonify({'status': "returned"}), 200
@@ -743,7 +758,7 @@ def _usage_metric(id_car, conn):
   except psycopg2.Error or Exception as e:
     return jsonify({'error': str(e)}), 501
 
-
+#PGRV 
 @app.route('/check_token', methods = ['POST'])
 @jwt_required()
 def token_test():
