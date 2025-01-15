@@ -647,7 +647,7 @@ def return_car():
     case "Banská Bystrica":
       location = "BB"
     case "Kosice":
-      location = "KA"
+      location = "KE"
     case "Private":
       location = "FF"
     case _:
