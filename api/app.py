@@ -213,13 +213,6 @@ def get_car_list():
         conn.close()  
 
 
-
-@app.route("/get_reports", methods=["POST"])
-@jwt_required()
-def modify_token():
-    return 500
-
-
 # Warning!!!
 # The allowed dates return here is kinda retarted, it would be better to just return a list of start > stop dates that the user would then generate locally
 # But i dont feel like doing it, so a MONSTER json has been created, enjoy :)
