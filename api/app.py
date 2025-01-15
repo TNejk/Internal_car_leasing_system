@@ -641,6 +641,18 @@ def return_car():
   # ADDED LOCATION!!!
   location = data["location"]
 
+  match location:
+    case "Bratislava":
+      location = "BA"
+    case "Banská Bystrica":
+      location = "BB"
+    case "Kosice":
+      location = "KA"
+    case "Private":
+      location = "FF"
+    case _:
+      location = "ER"
+
   conn, error = connect_to_db()
   if conn is None:
     return jsonify({'error': error}), 501
