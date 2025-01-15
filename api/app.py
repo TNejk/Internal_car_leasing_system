@@ -647,17 +647,18 @@ def return_car():
 
   # ADDED LOCATION!!!
   location = "" 
-  match data["location"]:
-    case "Bratislava":
-      location = "BA"
-    case "Banská Bystrica":
-      location = "BB"
-    case "Kosice":
-      location = "KA"
-    case "Private":
-      location = "NULL"
-    case _:
-      location = "ERROR"
+  if data["location"]:
+    match data["location"]:
+      case "Bratislava":
+        location = "BA"
+      case "Banská Bystrica":
+        location = "BB"
+      case "Kosice":
+        location = "KA"
+      case "Private":
+        location = "NULL"
+      case _:
+        location = "ERROR"
 
   conn, error = connect_to_db()
   if conn is None:
