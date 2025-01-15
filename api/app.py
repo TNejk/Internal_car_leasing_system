@@ -641,7 +641,8 @@ def return_car():
   # ADDED LOCATION!!!
   location = data["location"]
 
-
+    
+  return f"Location: '{location}', Length: {len(location)}"
   conn, error = connect_to_db()
   if conn is None:
     return jsonify({'error': error}), 501
@@ -666,7 +667,8 @@ def return_car():
 
       # Update the car table
       um = _usage_metric(id_car, conn)
-      
+
+    
       # no longer needed to reset status!!!
       query = "UPDATE car SET health = %s, status = %s, usage_metric = %s, location = %s WHERE id_car = %s;"
       cur.execute(query, (health, 'stand_by', um, location, id_car ))
