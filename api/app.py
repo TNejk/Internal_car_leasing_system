@@ -637,7 +637,7 @@ def lease_car():
               title="Upozornenie o leasingu auta!",
               body=f"""Zamestnanec: {recipient} si rezervoval auto: {car_name}! \n Rezervácia trvá od {timeof} do {timeto} !"""
           ),
-              topic=username
+              topic=username.replace("@", "_")
           )
     messaging.send(message)
     # TODO: ADD A CSV WRITER FUNCTION HERE ALSO
@@ -665,7 +665,7 @@ def lease_car():
                 title="Upozornenie o leasingu auta!",
                 body=f"""Zamestnanec: {recipient} si rezervoval auto: {car_name}! \n Rezervácia trvá od {timeof} do {timeto} !"""
             ),
-                topic=username
+                topic=username.replace("@", "_")
             )
       messaging.send(message)
     except Exception as e:
