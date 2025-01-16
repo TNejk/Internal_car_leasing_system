@@ -110,6 +110,7 @@ while True:
     """
     cur.execute(reminder_query, (now,))
     active_leases = cur.fetchall()
+    print("ran again")
     if len(active_leases) > 0:
         send_reminder(active_leases= active_leases, cur=cur)
 
