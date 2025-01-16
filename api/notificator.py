@@ -60,23 +60,6 @@ def send_late_return_notif(active_leases, cur):
 
         print(f"{datetime.now(tz).replace(microsecond=0)}  ## Later return message sent. ")
 
-def send_reminder(active_leases, cur):
-    for i in active_leases:
-        email_query = "SELECT email FROM driver WHERE id_driver = %s"
-        cur.execute(email_query, (i[0],))
-        email = cur.fetchone()
-
-        cur.execute("select car_name from car where id_car = %s", (i[1],))
-        car_name = cur.fetchone()
-        message = messaging.Message(
-                            notification=messaging.Notification(
-                            title=f"Nezabudni odovzdať požičané auto: {car_name}",
-                            body="inak bue zle :()"
-                        ),
-                            topic=email[0].replace("@", "_")
-                        )
-        messaging.send(message)
-        print(f"{datetime.now(tz).replace(microsecond=0)}  ## Reminder message sent. ")
 
 
 def sleep_replacement(seconds):
@@ -112,7 +95,23 @@ while True:
     active_leases = cur.fetchall()
     print("ran again")
     print(active_leases)
+    
     if len(active_leases) > 0:
-        send_reminder(active_leases= active_leases, cur=cur)
+        for i in active_leases:
+            email_query = "SELECT email FROM driver WHERE id_driver = %s"
+            cur.execute(email_query, (i[0],))
+            email = cur.fetchone()
+
+            cur.execute("select name from car where id_car = %s", (i[1],))
+            car_name = cur.fetchone()
+            message = messaging.Message(
+                                notification=messaging.Notification(
+                                title=f"Nezabudni odovzdať požičané auto: {car_name}",
+                                body="inak bue zle :()"
+                            ),
+                                topic=email[0].replace("@", "_")
+                            )
+            messaging.send(message)
+            print(f"{datetime.now(tz).replace(microsecond=0)}  ## Reminder message sent. ")
 
     sleep_replacement(60)
