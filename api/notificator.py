@@ -90,7 +90,7 @@ while True:
 
     cur.execute(lease_query, (now,))
     active_leases = cur.fetchall()
-    if active_leases > 0:
+    if len(active_leases) >0:
         send_late_return_notif(active_leases=active_leases, cur=cur)
 
     reminder_query = """
@@ -102,7 +102,7 @@ while True:
     """
     cur.execute(reminder_query, (now,))
     active_leases = cur.fetchall()
-    if active_leases >0:
+    if len(active_leases) > 0:
         send_reminder(active_leases= active_leases, cur=cur)
 
     time.sleep(30)
