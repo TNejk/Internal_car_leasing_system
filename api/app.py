@@ -10,6 +10,7 @@ from functools import wraps
 from datetime import datetime, timedelta, timezone
 from dateutil.parser import parse
 import pytz
+import openpyxl
 
 bratislava_tz = pytz.timezone('Europe/Bratislava')
 
@@ -619,6 +620,11 @@ def lease_car():
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {e}")
     con.close()
+
+    # Save it to a report page
+     # FIrst check if the current date is in another month apart from the last created excel report
+     # if it is create a new sheet with the same structure but differnet name, else edit the older one
+     
     return {"status": True, "private": private}
   else:
     return jsonify(msg= "Users do not match, nor is the requester a manager.")
