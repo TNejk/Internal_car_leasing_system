@@ -24,20 +24,11 @@ db_con = psycopg2.connect(dbname=db_name, user=db_user, host=db_host, port=db_po
 cur = db_con.cursor()
 print("Notificator started.")
 
-while True:
-    tz = pytz.timezone('Europe/Bratislava')
-    now = datetime.now(tz).replace(microsecond=0)
+# add a chcecker for when there is 20 minutes till car return 
+# so they wont forget to return i
+# only after that send notifications to both
 
-    lease_query = """
-        SELECT id_driver, id_car
-        FROM lease
-        WHERE end_of_lease < %s AND status = true
-        LIMIT 1;
-    """
-
-    cur.execute(lease_query, (now,))
-    active_leases = cur.fetchall()
-
+def send_late_return_notif(active_leases, cur):
     # if its over the limit get user email
     for i in active_leases:
         email_query = "SELECT email FROM driver WHERE id_driver = %s"
@@ -58,22 +49,60 @@ while True:
                         )
         messaging.send(message)
 
+        manager_message = messaging.Message(
+            notification=messaging.Notification(
+                title="Zamestnanec {} neskoro odovzdal auto {}.",
+                body="Okamžitá poprava strelnou zbraňou je odporúčaná."
+            ),
+            topic = "late_returns"
+        )
+        messaging.send(manager_message)
+
+        print(f"{datetime.now(tz).replace(microsecond=0)}  ## Message sent. ")
+
+def send_reminder():
+    for i in active_leases:
+        email_query = "SELECT email FROM driver WHERE id_driver = %s"
+        cur.execute(email_query, (i[0],))
+        email = cur.fetchone()
+
+        cur.execute("select car_name from car where id_car = %s", (i[1]))
+        car_name = cur.fetchone()
         message = messaging.Message(
                             notification=messaging.Notification(
-                            title="Prekrocenie limitu na odovzdanie auta",
-                            body=str_mess
+                            title=f"Nezabudni odovzdať požičané auto: {car_name}",
+                            body="inak bue zle :()"
                         ),
-                            topic="manager"
+                            topic=email[0].replace("@", "_")
                         )
         messaging.send(message)
 
-        message = messaging.Message(
-            notification=messaging.Notification(
-                title="Zamestnanec {} neskoro odovzdal auto {}.",
-                body="Zamestnanec {} neskoro odovzdal auto {} o {} minút."
-            ),
-            topic = "manager"
-        )
-        print(f"{datetime.now(tz).replace(microsecond=0)}  ## Message sent. ")
+while True:
+    tz = pytz.timezone('Europe/Bratislava')
+    now = datetime.now(tz).replace(microsecond=0) 
+    # Late returns
+    lease_query = """
+        SELECT id_driver, id_car
+        FROM lease
+        WHERE end_of_lease < %s AND status = true
+        LIMIT 1;
+    """
 
-    time.sleep(20)
+    cur.execute(lease_query, (now,))
+    active_leases = cur.fetchall()
+    if active_leases > 0:
+        send_late_return_notif(active_leases=active_leases, cur=cur)
+
+    reminder_query = """
+        SELECT id_driver, id_car
+        FROM lease
+        WHERE EXTRACT(EPOCH FROM (end_of_lease - %s)) / 60 < 20 
+        AND status = true
+        LIMIT 1;
+    """
+    cur.execute(reminder_query, (now,))
+    active_leases = cur.fetchall()
+    if active_leases >0:
+        send_reminder(active_leases= active_leases, cur=cur)
+
+    time.sleep(30)
