@@ -659,7 +659,7 @@ def lease_car():
      # you dont have fields like note and date of return, those will neeed to be updated after car return is called
     try:
       latest_file = get_latest_file("/reports")
-      with open(latest_file, "a") as report_file:
+      with open(latest_file, "a+") as report_file:
         report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
     except Exception as e:
@@ -667,7 +667,7 @@ def lease_car():
       f = open(path, "x")
       f.close()
 
-      with open(path, "a") as new_report:
+      with open(path, "a+") as new_report:
         new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
         report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
