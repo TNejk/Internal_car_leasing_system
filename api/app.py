@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, timezone
 from dateutil.parser import parse
 import pytz
 import openpyxl
+import glob
 
 bratislava_tz = pytz.timezone('Europe/Bratislava')
 
@@ -58,6 +59,30 @@ def send_email(msg: str) -> bool:
   mail.send(msg)
   return True
 
+def get_latest_file(folder_path):
+    """
+    Returns the path to the latest created file in a specified folder.
+
+    Parameters:
+        folder_path (str): The path to the folder.
+
+    Returns:
+        str: The full path of the latest created file, or None if the folder is empty.
+    """
+    try:
+        # Get a list of all files in the folder with their full paths
+        files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+        
+        if not files:
+            return None  # Return None if the folder is empty
+        
+        # Get the latest created file by creation time
+        latest_file = max(files, key=os.path.getctime)
+        
+        return latest_file
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
 
 @app.after_request
 def apply_cors_headers(response):
@@ -559,6 +584,12 @@ def lease_car():
 
   con, cur = connect_to_db()
 
+  def get_sk_date():
+      # Ensure the datetime is in UTC before converting
+      dt_obj = datetime.now()
+      utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
+      bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
+      return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
 
   # FIrst check if a lease in a given timeframe doesnt allready exist
 
@@ -621,10 +652,21 @@ def lease_car():
       return jsonify(msg= f"Error occured when leasing. {e}")
     con.close()
 
+
     # Save it to a report page
      # FIrst check if the current date is in another month apart from the last created excel report
      # if it is create a new sheet with the same structure but differnet name, else edit the older one
-     
+     # you dont have fields like note and date of return, those will neeed to be updated after car return is called
+    try:
+      latest_file = get_latest_file("/reports")
+      with open(latest_file, "a") as report_file:
+        report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+
+    except Exception as e:
+      with open(f"{get_sk_date}, icls report") as new_report:
+        new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
+        report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+
     return {"status": True, "private": private}
   else:
     return jsonify(msg= "Users do not match, nor is the requester a manager.")
@@ -638,6 +680,7 @@ def return_car():
     return jsonify({'error': 'No data'}), 501
 
   id_lease = data["id_lease"]
+  # TODO: ADD A VARIABLE FOR TIME_TO SO YOU CAN CALCULATE BEING LATE and write it to a csv
   tor = data["time_of_return"]
   try:
     health = data["health"]
