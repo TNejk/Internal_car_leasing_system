@@ -58,7 +58,7 @@ def send_late_return_notif(active_leases, cur):
         )
         messaging.send(manager_message)
 
-        print(f"{datetime.now(tz).replace(microsecond=0)}  ## Message sent. ")
+        print(f"{datetime.now(tz).replace(microsecond=0)}  ## Later return message sent. ")
 
 def send_reminder(active_leases, cur):
     for i in active_leases:
@@ -76,6 +76,7 @@ def send_reminder(active_leases, cur):
                             topic=email[0].replace("@", "_")
                         )
         messaging.send(message)
+        print(f"{datetime.now(tz).replace(microsecond=0)}  ## Reminder message sent. ")
 
 
 def sleep_replacement(seconds):
@@ -83,21 +84,22 @@ def sleep_replacement(seconds):
     while time.time() - start_time < seconds:
         pass  # Keep looping until the time difference reaches the desired seconds
 
+tz = pytz.timezone('Europe/Bratislava')
 while True:
-    tz = pytz.timezone('Europe/Bratislava')
+
     now = datetime.now(tz).replace(microsecond=0) 
     # Late returns
-    lease_query = """
-        SELECT id_driver, id_car
-        FROM lease
-        WHERE end_of_lease < %s AND status = true
-        LIMIT 1;
-    """
+    # lease_query = """
+    #     SELECT id_driver, id_car
+    #     FROM lease
+    #     WHERE end_of_lease < %s AND status = true
+    #     LIMIT 1;
+    # """
 
-    cur.execute(lease_query, (now,))
-    active_leases = cur.fetchall()
-    if len(active_leases) >0:
-        send_late_return_notif(active_leases=active_leases, cur=cur)
+    # cur.execute(lease_query, (now,))
+    # active_leases = cur.fetchall()
+    # if len(active_leases) >0:
+    #     send_late_return_notif(active_leases=active_leases, cur=cur)
 
     reminder_query = """
         SELECT id_driver, id_car
