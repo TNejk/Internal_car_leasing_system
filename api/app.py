@@ -12,6 +12,9 @@ from dateutil.parser import parse
 import pytz
 import openpyxl
 import glob
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import messaging
 
 bratislava_tz = pytz.timezone('Europe/Bratislava')
 
@@ -23,6 +26,8 @@ db_name = os.getenv('POSTGRES_DB')
 app_secret_key = os.getenv('APP_SECRET_KEY')
 login_salt = os.getenv('LOGIN_SALT')
 
+cred = credentials.Certificate("icls-56e37-firebase-adminsdk-2d4e2-be93ca6a35.json")
+firebase_admin.initialize_app(cred)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = app_secret_key
@@ -627,13 +632,19 @@ def lease_car():
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {e}")
     con.close()
-
+    message = messaging.Message(
+              notification=messaging.Notification(
+              title="Upozornenie o leasingu auta!",
+              body=f"""Zamestnanec: {recipient} si rezervoval auto: {car_name}! \n Rezervácia trvá od {timeof} do {timeto} !"""
+          ),
+              topic=username
+          )
+    messaging.send(message)
     # TODO: ADD A CSV WRITER FUNCTION HERE ALSO
     return {"status": True, "private": private}
 
   # If the user leasing is a manager allow him to order lease for other users
   elif user[0][3]  == "manager":
-    # TODO: THIS TRY EXCEPT IS REDUNDANT, REMNOVE IT
     try:
       # If the manager is leasing a car for someone else check if the recipeint exists and lease for his email
       try:
@@ -648,8 +659,15 @@ def lease_car():
         return jsonify(msg= f"Error leasing car for recipient: {recipient[0][0]}"), 500
             
       con.commit()
-      #cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status) values (%s, %s, %s, %s, %s)", (car_data[0][0], user[0][0], timeof, timeto, True))
-      # cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
+      # Upozorni manazerou iba ak si leasne auto normalny smrtelnik 
+      message = messaging.Message(
+                notification=messaging.Notification(
+                title="Upozornenie o leasingu auta!",
+                body=f"""Zamestnanec: {recipient} si rezervoval auto: {car_name}! \n Rezervácia trvá od {timeof} do {timeto} !"""
+            ),
+                topic=username
+            )
+      messaging.send(message)
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {e}")
     con.close()
@@ -665,8 +683,6 @@ def lease_car():
         report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
         report_file.close()
 
-      return {"status": True, "private": private}
-    
     except Exception as e:
     # CWD IS /app
       path = f"{os.getcwd()}/reports/{get_sk_date()} ICLS report.csv"
@@ -677,6 +693,8 @@ def lease_car():
         new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
         new_report.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
         new_report.close()
+
+
 
       return {"status": True, "private": private}
       

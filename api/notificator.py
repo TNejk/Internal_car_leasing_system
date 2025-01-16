@@ -54,6 +54,8 @@ while True:
             cur.execute(email_query, (i[0],))
             email = cur.fetchone()
 
+            cur.execute("select name from car where id_car = %s", (i[1],))
+            car_name = cur.fetchone()
             # send notif to the email topic and the
             str_mess = "Skončil sa limit na vrátenie auta, prosím odovzdajte auto v aplikácií!"
 
@@ -70,7 +72,7 @@ while True:
 
             manager_message = messaging.Message(
                 notification=messaging.Notification(
-                    title="Zamestnanec {} neskoro odovzdal auto {}.",
+                    title=f"Zamestnanec {email[0]} nestihol odovzdať auto včas {car_name}.",
                     body="Okamžitá poprava strelnou zbraňou je odporúčaná."
                 ),
                 topic = "late_returns"
