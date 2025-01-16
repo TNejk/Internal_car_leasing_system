@@ -66,7 +66,7 @@ def send_reminder(active_leases, cur):
         cur.execute(email_query, (i[0],))
         email = cur.fetchone()
 
-        cur.execute("select car_name from car where id_car = %s", (i[1]))
+        cur.execute("select car_name from car where id_car = %s", (i[1],))
         car_name = cur.fetchone()
         message = messaging.Message(
                             notification=messaging.Notification(
