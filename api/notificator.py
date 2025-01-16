@@ -28,40 +28,6 @@ print("Notificator started.")
 # so they wont forget to return i
 # only after that send notifications to both
 
-def send_late_return_notif(active_leases, cur):
-    # if its over the limit get user email
-    for i in active_leases:
-        email_query = "SELECT email FROM driver WHERE id_driver = %s"
-        cur.execute(email_query, (i[0],))
-        email = cur.fetchone()
-
-        # send notif to the email topic and the
-        str_mess = "Skončil sa limit na vrátenie auta, prosím odovzdajte auto v aplikácií!"
-
-        #TODO: PRED POSLANIM SA MUSIM ZBAVIT @ V EMAILE KEDZE TO NENI PLATNY TOPIC, NAHRAD HO _
-        #! email.replace("@", "_")
-        message = messaging.Message(
-                            notification=messaging.Notification(
-                            title="Prekrocenie limitu na odovzdanie auta",
-                            body=str_mess
-                        ),
-                            topic=email[0].replace("@", "_")
-                        )
-        messaging.send(message)
-
-        manager_message = messaging.Message(
-            notification=messaging.Notification(
-                title="Zamestnanec {} neskoro odovzdal auto {}.",
-                body="Okamžitá poprava strelnou zbraňou je odporúčaná."
-            ),
-            topic = "late_returns"
-        )
-        messaging.send(manager_message)
-
-        print(f"{datetime.now(tz).replace(microsecond=0)}  ## Later return message sent. ")
-
-
-
 def sleep_replacement(seconds):
     start_time = time.time()  # Record the current time
     while time.time() - start_time < seconds:
@@ -72,17 +38,46 @@ while True:
 
     now = datetime.now(tz).replace(microsecond=0) 
     # Late returns
-    # lease_query = """
-    #     SELECT id_driver, id_car
-    #     FROM lease
-    #     WHERE end_of_lease < %s AND status = true
-    #     LIMIT 1;
-    # """
+    lease_query = """
+        SELECT id_driver, id_car
+        FROM lease
+        WHERE end_of_lease < %s AND status = true
+        LIMIT 1;
+    """
 
-    # cur.execute(lease_query, (now,))
-    # active_leases = cur.fetchall()
-    # if len(active_leases) >0:
-    #     send_late_return_notif(active_leases=active_leases, cur=cur)
+    cur.execute(lease_query, (now,))
+    active_leases = cur.fetchall()
+    if len(active_leases) >0:
+        # if its over the limit get user email
+        for i in active_leases:
+            email_query = "SELECT email FROM driver WHERE id_driver = %s"
+            cur.execute(email_query, (i[0],))
+            email = cur.fetchone()
+
+            # send notif to the email topic and the
+            str_mess = "Skončil sa limit na vrátenie auta, prosím odovzdajte auto v aplikácií!"
+
+            #TODO: PRED POSLANIM SA MUSIM ZBAVIT @ V EMAILE KEDZE TO NENI PLATNY TOPIC, NAHRAD HO _
+            #! email.replace("@", "_")
+            message = messaging.Message(
+                                notification=messaging.Notification(
+                                title="Prekrocenie limitu na odovzdanie auta",
+                                body=str_mess
+                            ),
+                                topic=email[0].replace("@", "_")
+                            )
+            messaging.send(message)
+
+            manager_message = messaging.Message(
+                notification=messaging.Notification(
+                    title="Zamestnanec {} neskoro odovzdal auto {}.",
+                    body="Okamžitá poprava strelnou zbraňou je odporúčaná."
+                ),
+                topic = "late_returns"
+            )
+            messaging.send(manager_message)
+
+            print(f"{datetime.now(tz).replace(microsecond=0)}  ## Later return message sent to {email}. ")
 
     reminder_query = """
         SELECT id_driver, id_car
@@ -95,7 +90,7 @@ while True:
     active_leases = cur.fetchall()
     print("ran again")
     print(active_leases)
-    
+
     if len(active_leases) > 0:
         for i in active_leases:
             email_query = "SELECT email FROM driver WHERE id_driver = %s"
@@ -112,6 +107,6 @@ while True:
                                 topic=email[0].replace("@", "_")
                             )
             messaging.send(message)
-            print(f"{datetime.now(tz).replace(microsecond=0)}  ## Reminder message sent. ")
+            print(f"{datetime.now(tz).replace(microsecond=0)}  ## Reminder message sent to {email}. ")
 
     sleep_replacement(60)
