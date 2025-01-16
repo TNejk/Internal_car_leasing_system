@@ -663,14 +663,16 @@ def lease_car():
       latest_file = get_latest_file("./reports")
       with open(latest_file, "a+") as report_file:
         report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
-
+      return {"status": True, "private": private}
+    
     except Exception as e:
       path = f"{get_sk_date()} ICLS report.csv"
       with open(path, "a+") as new_report:
         new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
         new_report.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
-    return {"status": True, "private": private}
+        return {"status": True, "private": private}
+      
   else:
     return jsonify(msg= "Users do not match, nor is the requester a manager.")
 
