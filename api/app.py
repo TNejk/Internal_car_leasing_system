@@ -686,15 +686,16 @@ def lease_car():
     except Exception as e:
     # CWD IS /app
       path = f"{os.getcwd()}/reports/{get_sk_date()} ICLS report.csv"
-      sf = open(path, "x")
-      sf.close()
 
       with open(path, "a+") as new_report:
         new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
         new_report.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
         new_report.close()
 
-
+    with open(path, "a+") as new_report:
+        new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
+        new_report.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+        new_report.close()
 
     return {"status": True, "private": private}
       
