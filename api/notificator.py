@@ -60,7 +60,7 @@ def send_late_return_notif(active_leases, cur):
 
         print(f"{datetime.now(tz).replace(microsecond=0)}  ## Message sent. ")
 
-def send_reminder():
+def send_reminder(active_leases, cur):
     for i in active_leases:
         email_query = "SELECT email FROM driver WHERE id_driver = %s"
         cur.execute(email_query, (i[0],))
