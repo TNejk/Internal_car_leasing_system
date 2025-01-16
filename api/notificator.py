@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from firebase_admin import messaging
 import psycopg2
@@ -23,6 +22,7 @@ firebase_admin.initialize_app(cred)
 
 db_con = psycopg2.connect(dbname=db_name, user=db_user, host=db_host, port=db_port, password=db_pass)
 cur = db_con.cursor()
+print("Notificator started.")
 
 while True:
     tz = pytz.timezone('Europe/Bratislava')
@@ -56,7 +56,7 @@ while True:
                         ),
                             topic=email[0].replace("@", "_")
                         )
-        
+        print("Notification sent")
         messaging.send(message)
 
         message = messaging.Message(
