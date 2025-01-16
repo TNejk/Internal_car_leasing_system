@@ -660,7 +660,7 @@ def lease_car():
      # if it is create a new sheet with the same structure but differnet name, else edit the older one
      # you dont have fields like note and date of return, those will neeed to be updated after car return is called
     try:
-      latest_file = get_latest_file(f"{os.getcwd()}/reports")
+      latest_file = get_latest_file(f"{os.getcwd()}/api/reports")
       with open(latest_file, "a+") as report_file:
         report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
         report_file.close()
@@ -668,7 +668,7 @@ def lease_car():
       return {"status": True, "private": private}
     
     except Exception as e:
-      path = f"{os.getcwd()}/{get_sk_date()} ICLS report.csv"
+      path = f"{os.getcwd()}/api/{get_sk_date()} ICLS report.csv"
       sf = open(path, "x")
       sf.close()
 
