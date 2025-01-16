@@ -658,12 +658,12 @@ def lease_car():
      # if it is create a new sheet with the same structure but differnet name, else edit the older one
      # you dont have fields like note and date of return, those will neeed to be updated after car return is called
     try:
-      latest_file = get_latest_file("api/reports")
+      latest_file = get_latest_file("/api/reports")
       with open(latest_file, "a+") as report_file:
         report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
     except Exception as e:
-      path = f"api/reports/{get_sk_date()} ICLS report.csv"
+      path = f"/api/reports/{get_sk_date()} ICLS report.csv"
       with open(path, "a+") as new_report:
         new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
         report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
