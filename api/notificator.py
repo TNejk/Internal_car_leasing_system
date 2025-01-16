@@ -77,6 +77,12 @@ def send_reminder(active_leases, cur):
                         )
         messaging.send(message)
 
+
+def sleep_replacement(seconds):
+    start_time = time.time()  # Record the current time
+    while time.time() - start_time < seconds:
+        pass  # Keep looping until the time difference reaches the desired seconds
+
 while True:
     tz = pytz.timezone('Europe/Bratislava')
     now = datetime.now(tz).replace(microsecond=0) 
@@ -105,4 +111,4 @@ while True:
     if len(active_leases) > 0:
         send_reminder(active_leases= active_leases, cur=cur)
 
-    time.sleep(30)
+    sleep_replacement(60)
