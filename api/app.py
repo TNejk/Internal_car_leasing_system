@@ -663,7 +663,10 @@ def lease_car():
         report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
     except Exception as e:
-      path = f"/reports/{get_sk_date()}, ICLS report"
+      path = f"/reports/{get_sk_date()}, ICLS report.csv"
+      f = open(path, "x")
+      f.close()
+      
       with open(path, "a") as new_report:
         new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
         report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
