@@ -627,6 +627,8 @@ def lease_car():
     except Exception as e:
       return jsonify(msg= f"Error occured when leasing. {e}")
     con.close()
+
+    # TODO: ADD A CSV WRITER FUNCTION HERE ALSO
     return {"status": True, "private": private}
 
   # If the user leasing is a manager allow him to order lease for other users
@@ -658,7 +660,7 @@ def lease_car():
      # if it is create a new sheet with the same structure but differnet name, else edit the older one
      # you dont have fields like note and date of return, those will neeed to be updated after car return is called
     try:
-      latest_file = get_latest_file("/api/reports")
+      latest_file = get_latest_file("./reports")
       with open(latest_file, "a+") as report_file:
         report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
@@ -666,7 +668,7 @@ def lease_car():
       path = f"{get_sk_date()} ICLS report.csv"
       with open(path, "a+") as new_report:
         new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
-        report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+        new_report.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
     return {"status": True, "private": private}
   else:
