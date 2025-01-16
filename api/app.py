@@ -635,9 +635,9 @@ def lease_car():
     message = messaging.Message(
               notification=messaging.Notification(
               title="Upozornenie o leasingu auta!",
-              body=f"""Zamestnanec: {recipient} si rezervoval auto: {car_name}! \n Rezervácia trvá od {timeof} do {timeto} !"""
+              body=f"""Zamestnanec: {recipient} si rezervoval auto: {car_name}! \n Rezervácia trvá: \n od {timeof} \n do {timeto} !"""
           ),
-              topic=username.replace("@", "_")
+              topic="manager"
           )
     messaging.send(message)
     # TODO: ADD A CSV WRITER FUNCTION HERE ALSO
@@ -663,9 +663,9 @@ def lease_car():
       message = messaging.Message(
                 notification=messaging.Notification(
                 title="Upozornenie o leasingu auta!",
-                body=f"""Zamestnanec: {recipient} si rezervoval auto: {car_name}! \n Rezervácia trvá od {timeof} do {timeto} !"""
+                body=f"""Zamestnanec: {recipient} si rezervoval auto: {car_name}! \n Rezervácia trvá: \n od {timeof} \n do {timeto} !"""
             ),
-                topic=username.replace("@", "_")
+                topic="manager"
             )
       messaging.send(message)
     except Exception as e:
