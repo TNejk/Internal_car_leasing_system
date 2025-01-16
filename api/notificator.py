@@ -56,7 +56,15 @@ while True:
                         ),
                             topic=email[0].replace("@", "_")
                         )
-        print("Notification sent")
+        messaging.send(message)
+
+        message = messaging.Message(
+                            notification=messaging.Notification(
+                            title="Prekrocenie limitu na odovzdanie auta",
+                            body=str_mess
+                        ),
+                            topic="manager"
+                        )
         messaging.send(message)
 
         message = messaging.Message(
@@ -66,6 +74,6 @@ while True:
             ),
             topic = "manager"
         )
-        print(f"{datetime.now(tz).replace(microsecond=0)}## Message sent. ")
+        print(f"{datetime.now(tz).replace(microsecond=0)}  ## Message sent. ")
 
     time.sleep(1800)
