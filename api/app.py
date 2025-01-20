@@ -690,13 +690,13 @@ def lease_car():
 
     
 
-    path = f"{os.getcwd()}/reports/{get_sk_date()} ICLS report.csv"
+    path = f"{os.getcwd()}/reports/ICLS report.csv"
 
     file = open(path, "a+")
     file.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
     file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
     file.close()
-    
+
     return {"status": True, "private": private}
       
   else:
