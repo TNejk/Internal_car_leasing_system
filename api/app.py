@@ -393,7 +393,16 @@ def reports():
 
 # ROUTE TO GET ALL THE USERNAMES IF YOU ARE A MANAGER
 
+# returns a wierd string but i can work with it 
+@app.route('/file', methods = ['GET'])
+@jwt_required()
+def atempetdates():
+    path = f"{os.getcwd()}/reports/ ICLS report.csv"
 
+    with open(path, "a+") as new_report:
+        new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
+        
+    return {"stauts": True}
 
 # returns a wierd string but i can work with it 
 @app.route('/starting_date', methods = ['POST'])
@@ -565,6 +574,9 @@ def cancel_lease():
   conn.close()
 
   return {"cancelled": True}
+
+
+
 
 
 # Add a notofication call after leasing, to the manager
