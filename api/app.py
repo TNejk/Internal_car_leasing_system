@@ -719,8 +719,10 @@ def lease_car():
     #     report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
     #write_to_csv(recipient, car_name, timeof, timeto)
+    path = f"{os.getcwd()}/reports/ICLS_report.csv"
 
-    print("written to csv")
+    with open(path, "+a") as new_report:
+      new_report.write("\nI am working!")
 
     return {"status": True, "private": private}
       
