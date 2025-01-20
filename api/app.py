@@ -672,6 +672,11 @@ def lease_car():
           )
     messaging.send(message)
     # TODO: ADD A CSV WRITER FUNCTION HERE ALSO
+    path = f"{os.getcwd()}/reports/ICLS_report.csv"
+
+    with open(path, "+a") as new_report:
+      new_report.write("\nI am working!")
+    
     return {"status": True, "private": private}
 
   # If the user leasing is a manager allow him to order lease for other users
