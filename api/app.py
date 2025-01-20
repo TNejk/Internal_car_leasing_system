@@ -576,8 +576,14 @@ def atempetdates():
     #   with open(latest_file, "a+") as report:
     #     report.write("Posadasdasdasdasdasdznámka")
     # else:
-    with open(path, "+a") as new_report:
-      new_report.write("NWE RPTORT NEW RPTORT")
+    er = "sdsd"
+    if er == "sdsd":
+      with open(path, "+a") as new_report:
+        new_report.write("NWE RPTORT NEW RPTORT")
+    else:
+      with open(path, "+a") as new_report:
+        new_report.write("TOOT JE DRUHA VEC")
+        
     return {"stauts": True}
 
 
