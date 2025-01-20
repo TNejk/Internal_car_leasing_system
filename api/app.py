@@ -678,19 +678,17 @@ def lease_car():
      # FIrst check if the current date is in another month apart from the last created excel report
      # if it is create a new sheet with the same structure but differnet name, else edit the older one
      # you dont have fields like note and date of return, those will neeed to be updated after car return is called
-    latest_file = get_latest_file(f"{os.getcwd()}/reports")
+    # latest_file = get_latest_file(f"{os.getcwd()}/reports")
 
     # TODO: Here check if the dates are in another month by checking the datetime objects month value
     # If so then create a new file.
     # If not edit the existing one.
 
-    if latest_file:
-      with open(latest_file, "a+") as report_file:
-        report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+    # if latest_file:
+    #   with open(latest_file, "a+") as report_file:
+    #     report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
-    
-
-    path = f"{os.getcwd()}/reports/ICLS report.csv"
+    path = f"{os.getcwd()}/reports/ ICLS report.csv"
 
     file = open(path, "a+")
     file.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
