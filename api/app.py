@@ -565,15 +565,7 @@ def cancel_lease():
   return {"cancelled": True}
 
 
-@app.route('/file', methods = ['GET'])
-@jwt_required()
-def atempetdates():
-    path = f"{os.getcwd()}/reports/ ICLS report.csv"
 
-    with open(path, "a+") as new_report:
-        new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
-        
-    return {"stauts": True}
 
 
 # Add a notofication call after leasing, to the manager
@@ -598,6 +590,14 @@ def lease_car():
 
   con, cur = connect_to_db()
 
+  def write_to_csv(recipient, car_name, timeof, timeto):
+      path = f"{os.getcwd()}/reports/ ICLS report.csv"
+
+      file = open(path, "a+")
+      file.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
+      file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+      file.close()
+    
   def get_sk_date():
       # Ensure the datetime is in UTC before converting
       dt_obj = datetime.now()
@@ -686,7 +686,7 @@ def lease_car():
      # FIrst check if the current date is in another month apart from the last created excel report
      # if it is create a new sheet with the same structure but differnet name, else edit the older one
      # you dont have fields like note and date of return, those will neeed to be updated after car return is called
-    # latest_file = get_latest_file(f"{os.getcwd()}/reports")
+    #latest_file = get_latest_file(f"{os.getcwd()}/reports")
 
     # TODO: Here check if the dates are in another month by checking the datetime objects month value
     # If so then create a new file.
@@ -696,13 +696,8 @@ def lease_car():
     #   with open(latest_file, "a+") as report_file:
     #     report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
-    path = f"{os.getcwd()}/reports/ICLS report.csv"
-
-    file = open(path, "a+")
-    file.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
-    file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
-    file.close()
-
+    write_to_csv(recipient, car_name, timeof, timeto)
+    
     return {"status": True, "private": private}
       
   else:
