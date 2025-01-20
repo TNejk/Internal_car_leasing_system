@@ -696,8 +696,8 @@ def lease_car():
     #   with open(latest_file, "a+") as report_file:
     #     report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
-    write_to_csv(recipient, car_name, timeof, timeto)
-    
+    #write_to_csv(recipient, car_name, timeof, timeto)
+
     return {"status": True, "private": private}
       
   else:

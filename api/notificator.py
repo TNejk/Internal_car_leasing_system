@@ -39,7 +39,7 @@ while True:
     now = datetime.now(tz).replace(microsecond=0) 
     # Late returns
     lease_query = """
-        SELECT id_driver, id_car
+        SELECT id_driver, id_car, time_of_lease, time_to_lease
         FROM lease
         WHERE end_of_lease < %s AND status = true
         LIMIT 1;
@@ -79,6 +79,13 @@ while True:
             )
             messaging.send(manager_message)
 
+            path = f"{os.getcwd()}/reports/ ICLS report.csv"
+
+            file = open(path, "a+")
+            file.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
+            file.write(f"{email},{car_name},{i[2]},{i[3]},{"REPLACE"},{"REPLACE"}")
+            file.close()
+            
             print(f"{datetime.now(tz).replace(microsecond=0)}  ## Later return message sent to {email}. ")
 
     reminder_query = """
