@@ -54,12 +54,13 @@ while True:
     active_leases = cur.fetchall()
     
     path = f"{os.getcwd()}/reports/ ICLS report.csv"
+    file = open(path, "a+")
+     
     for i in active_leases:
-        file = open(path, "a+")
         file.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
         file.write(f"{i[0]},{i[1]},{i[2]},{i[3]},{"REPLACE"},{"REPLACE"}")
-        file.close()
-
+    
+    file.close()
 
     now = datetime.now(tz).replace(microsecond=0) 
     # Late returns
