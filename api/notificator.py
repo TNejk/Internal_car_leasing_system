@@ -36,6 +36,31 @@ def sleep_replacement(seconds):
 tz = pytz.timezone('Europe/Bratislava')
 while True:
 
+    excel_query = """
+        SELECT 
+            d.email AS email, 
+            c.name AS car_name, 
+            l.start_of_lease, 
+            l.end_of_lease
+        FROM lease l
+        INNER JOIN driver d ON l.id_driver = d.id_driver
+        INNER JOIN car c ON l.id_car = c.id_car
+        WHERE l.status = true
+        LIMIT 1;
+    """
+
+
+    cur.execute(excel_query)
+    active_leases = cur.fetchall()
+    
+    path = f"{os.getcwd()}/reports/ ICLS report.csv"
+    for i in active_leases:
+        file = open(path, "a+")
+        file.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
+        file.write(f"{i[0]},{i[1]},{i[2]},{i[3]},{"REPLACE"},{"REPLACE"}")
+        file.close()
+
+
     now = datetime.now(tz).replace(microsecond=0) 
     # Late returns
     lease_query = """
@@ -78,14 +103,6 @@ while True:
                 topic = "late_returns"
             )
             messaging.send(manager_message)
-
-            path = f"{os.getcwd()}/reports/ ICLS report.csv"
-
-            file = open(path, "a+")
-            file.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
-            file.write(f"{email},{car_name},{i[2]},{i[3]},{"REPLACE"},{"REPLACE"}")
-            file.close()
-
             print(f"{datetime.now(tz).replace(microsecond=0)}  ## Later return message sent to {email}. ")
 
     reminder_query = """
