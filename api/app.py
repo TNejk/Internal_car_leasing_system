@@ -591,7 +591,7 @@ def lease_car():
   con, cur = connect_to_db()
 
   def write_to_csv(recipient, car_name, timeof, timeto):
-      path = f"{os.getcwd()}/reports/ ICLS report.csv"
+      path = f"{os.getcwd()}/reports/AHAHHAHAHAHHA.csv"
 
       file = open(path, "a+")
       file.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
@@ -696,7 +696,7 @@ def lease_car():
     #   with open(latest_file, "a+") as report_file:
     #     report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
-    #write_to_csv(recipient, car_name, timeof, timeto)
+    write_to_csv(recipient, car_name, timeof, timeto)
 
     return {"status": True, "private": private}
       
