@@ -41,7 +41,8 @@ while True:
             d.email AS email, 
             c.name AS car_name, 
             l.start_of_lease, 
-            l.end_of_lease
+            l.end_of_lease,
+            l.id_lease
         FROM lease l
         INNER JOIN driver d ON l.id_driver = d.id_driver
         INNER JOIN car c ON l.id_car = c.id_car
@@ -49,18 +50,22 @@ while True:
         LIMIT 1;
     """
 
-
+    # THIS DOES WORK, BUT IT DUPLICATES DATA
+    # AND IT ALSO DOESNT FORMAT IT CORRECTLY
+    # ALOS DOSENT CHECK FOR ALLREADY EXISTING FILES THAT IT COULD READ TO
     cur.execute(excel_query)
     active_leases = cur.fetchall()
     
     path = f"{os.getcwd()}/reports/ICLS report.csv"
-    file = open(path, "a+")
-
-    for i in active_leases:
-        file.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
-        file.write(f"{i[0]},{i[1]},{i[2]},{i[3]},{"REPLACE"},{"REPLACE"}")
+    # file = open(path, "a+")
+    # file.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
+    # for i in active_leases:
+    #     id_lease = i[4]
+    #     # Look for CSV column id_lease and check if that lease had allready been checked
+    #     # if they have been checked then dont write them
+    #     file.write(f"{i[0]},{i[1]},{i[2]},{i[3]},{"REPLACE"},{"REPLACE"}", "\n")
     
-    file.close()
+    # file.close()
 
     now = datetime.now(tz).replace(microsecond=0) 
     # Late returns
