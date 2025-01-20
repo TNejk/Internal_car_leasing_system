@@ -568,16 +568,16 @@ def cancel_lease():
 @app.route('/file', methods = ['GET'])
 @jwt_required()
 def atempetdates():
-    latest_file = get_latest_file(f"{os.getcwd()}/reports")
+    #latest_file = get_latest_file(f"{os.getcwd()}/reports")
 
     path = f"{os.getcwd()}/reports/ICLS_report.csv"
     
-    if latest_file:
-      with open(latest_file, "a+") as report:
-        report.write("Posadasdasdasdasdasdznámka")
-    else:
-       with open(path, "+a") as new_report:
-          new_report.write("NWE RPTORT NEW RPTORT")
+    # if latest_file:
+    #   with open(latest_file, "a+") as report:
+    #     report.write("Posadasdasdasdasdasdznámka")
+    # else:
+    with open(path, "+a") as new_report:
+      new_report.write("NWE RPTORT NEW RPTORT")
     return {"stauts": True}
 
 
