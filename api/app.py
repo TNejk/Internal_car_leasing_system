@@ -391,18 +391,7 @@ def reports():
   }
 
 
-# ROUTE TO GET ALL THE USERNAMES IF YOU ARE A MANAGER
 
-# returns a wierd string but i can work with it 
-@app.route('/file', methods = ['GET'])
-@jwt_required()
-def atempetdates():
-    path = f"{os.getcwd()}/reports/ ICLS report.csv"
-
-    with open(path, "a+") as new_report:
-        new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
-        
-    return {"stauts": True}
 
 # returns a wierd string but i can work with it 
 @app.route('/starting_date', methods = ['POST'])
@@ -689,19 +678,23 @@ def lease_car():
      # FIrst check if the current date is in another month apart from the last created excel report
      # if it is create a new sheet with the same structure but differnet name, else edit the older one
      # you dont have fields like note and date of return, those will neeed to be updated after car return is called
-    try:
-      latest_file = get_latest_file(f"{os.getcwd()}/reports")
+    latest_file = get_latest_file(f"{os.getcwd()}/reports")
+
+    # TODO: Here check if the dates are in another month by checking the datetime objects month value
+    # If so then create a new file.
+    # If not edit the existing one.
+
+    if latest_file:
       with open(latest_file, "a+") as report_file:
         report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
         report_file.close()
-
-    except Exception as e:
-    # CWD IS /app
+    
+    else:
       path = f"{os.getcwd()}/reports/{get_sk_date()} ICLS report.csv"
 
       with open(path, "a+") as new_report:
-        new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
-        new_report.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+          new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
+          new_report.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
 
 
