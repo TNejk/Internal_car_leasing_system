@@ -698,6 +698,8 @@ def lease_car():
 
     write_to_csv(recipient, car_name, timeof, timeto)
 
+    print("written to csv")
+    
     return {"status": True, "private": private}
       
   else:
