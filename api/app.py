@@ -565,7 +565,20 @@ def cancel_lease():
   return {"cancelled": True}
 
 
+@app.route('/file', methods = ['GET'])
+@jwt_required()
+def atempetdates():
+    latest_file = get_latest_file(f"{os.getcwd()}/reports")
 
+    path = f"{os.getcwd()}/reports/ICLS_report.csv"
+    
+    if latest_file:
+      with open(latest_file, "a+") as report:
+        report.write("Posadasdasdasdasdasdznámka")
+    else:
+       with open(path, "+a") as new_report:
+          new_report.write("NWE RPTORT NEW RPTORT")
+    return {"stauts": True}
 
 
 # Add a notofication call after leasing, to the manager
@@ -696,10 +709,10 @@ def lease_car():
     #   with open(latest_file, "a+") as report_file:
     #     report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
-    write_to_csv(recipient, car_name, timeof, timeto)
+    #write_to_csv(recipient, car_name, timeof, timeto)
 
     print("written to csv")
-    
+
     return {"status": True, "private": private}
       
   else:
