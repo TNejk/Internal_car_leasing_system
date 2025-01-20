@@ -687,16 +687,14 @@ def lease_car():
     if latest_file:
       with open(latest_file, "a+") as report_file:
         report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
-        report_file.close()
+
     
-    else:
-      path = f"{os.getcwd()}/reports/{get_sk_date()} ICLS report.csv"
 
-      with open(path, "a+") as new_report:
-          new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
-          new_report.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+    path = f"{os.getcwd()}/reports/{get_sk_date()} ICLS report.csv"
 
-
+    with open(path, "a+") as new_report:
+        new_report.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
+        new_report.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
     return {"status": True, "private": private}
       
