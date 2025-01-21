@@ -668,9 +668,10 @@ def lease_car():
   #   "timeto": "2025-02-10 11:14:00+01"
 
   cur.execute("""
-    SELECT id_lease FROM lease 
+    SELECT id_lease start_of_lease, end_of_lease FROM lease 
     WHERE status = true 
       AND (start_of_lease < %s AND end_of_lease > %s 
+           OR start_of_lease < %s AND end_of_lease > %s 
            OR start_of_lease >= %s AND start_of_lease < %s
            OR start_of_lease = %s AND end_of_lease = %s
               )
@@ -679,7 +680,7 @@ def lease_car():
   #return {"sd": timeof, "sda": timeto}, 200
   conflicting_leases = cur.fetchall()
   if len(conflicting_leases) > 1:
-     return {"status": False, "private": False, "msg": f"{conflicting_leases[0]}"}
+     return {"status": False, "private": False, "msg": f"Starting date:{conflicting_leases[1]}\nEnding date: {conflicting_leases[2]}"}
   
   # USER ROLE CHECKER
   cur.execute("select id_car from car where name = %s", (car_name,))
