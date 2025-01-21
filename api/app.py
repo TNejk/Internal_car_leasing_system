@@ -670,15 +670,18 @@ def lease_car():
   cur.execute("select id_car from car where name = %s", (car_name,))
   car_id = cur.fetchall()[0][0]
 
+  cur.execute("select * from driver where email = %s and role = %s", (username, role,))
+  user = cur.fetchall()
+  
   cur.execute("""
     SELECT id_lease start_of_lease, end_of_lease FROM lease 
-    WHERE status = true AND car id_car = %s
+    WHERE status = true AND car id_car = %s AND id_driver = %s 
       AND (start_of_lease < %s AND end_of_lease > %s 
            OR start_of_lease < %s AND end_of_lease > %s 
            OR start_of_lease >= %s AND start_of_lease < %s
            OR start_of_lease = %s AND end_of_lease = %s
               )
-    """, (car_id, timeof, timeto, timeto, timeof, timeof, timeto, timeof, timeto))
+    """, (car_id, user[0] ,timeof, timeto, timeto, timeof, timeof, timeto, timeof, timeto))
   
   #return {"sd": timeof, "sda": timeto}, 200
   conflicting_leases = cur.fetchall()
@@ -688,8 +691,7 @@ def lease_car():
 
 
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
-  cur.execute("select * from driver where email = %s and role = %s", (username, role,))
-  user = cur.fetchall()
+
 
   cur.execute("select * from car where name = %s", (car_name,))
   car_data = cur.fetchall()
