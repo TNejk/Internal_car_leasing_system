@@ -684,7 +684,7 @@ def lease_car():
            OR start_of_lease >= %s AND start_of_lease < %s
            OR start_of_lease = %s AND end_of_lease = %s
               )
-    """, (car_id, user[0] ,timeof, timeto, timeto, timeof, timeof, timeto, timeof, timeto))
+    """, (car_id,timeof, timeto, timeto, timeof, timeof, timeto, timeof, timeto))
   
   #return {"sd": timeof, "sda": timeto}, 200
   conflicting_leases = cur.fetchall()
