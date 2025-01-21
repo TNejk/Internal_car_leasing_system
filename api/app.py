@@ -624,7 +624,8 @@ def lease_car():
     # Use year and month to check if a new excel spreadsheet needs to be created
     # '2025-01-21 15:37:00ICLS_report.csv'  '2025-01-21 15:37:26_ICLS_report.csv'
     try:
-      # 2025-01-21 15:31:23_ICLS_report.csv 
+      #'2025-01-21 17:51:44exc_ICLS_report.csv' -> 2025-01-21 18:53:46
+
       split_date = latest_file.split("-")
       year = split_date[0]
       month = split_date[1]
@@ -636,13 +637,13 @@ def lease_car():
       
       if cur_year == year and month == cur_month:
         with open(latest_file, "a+") as report_file:
-            report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+            report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"LATEST_FILE"}")
 
       else:
           path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
           with open(path, "a+") as new_file: 
             new_file.write(f"email,auto,cas_od,cas_do,meskanie,note\n")
-            new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}\n")
+            new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"ELSE_LATEST"}\n")
 
     except Exception as e:
       #? Triggered only if ./reports is empty or a naming issue
