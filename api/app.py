@@ -658,8 +658,10 @@ def lease_car():
       with open(path, "a+") as new_file: 
         new_file.write(f"email,auto,cas_od,cas_do,meskanie,note\n")
         new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}\n")
-    
-
+  
+  # user is a list within a list [[]] to access it use double [0][1,2,3,4]
+  cur.execute("select * from car where name = %s", (car_name,))
+  car_data = cur.fetchall()
   # Check if a lease conflicts time wise with another
   # This doesnt work for some reason
   # probalby beacue the sql is fucked up
@@ -673,6 +675,7 @@ def lease_car():
   cur.execute("select * from driver where email = %s and role = %s", (username, role,))
   user = cur.fetchall()
   
+  # Check for the leased car if it has available date range to lease from
   cur.execute("""
     SELECT id_lease start_of_lease, end_of_lease FROM lease 
     WHERE status = true AND car id_car = %s  
@@ -688,14 +691,6 @@ def lease_car():
   if len(conflicting_leases) > 0:
      return {"status": False, "private": False, "msg": f"{conflicting_leases}"}
   
-
-
-  # user is a list within a list [[]] to access it use double [0][1,2,3,4]
-
-
-  cur.execute("select * from car where name = %s", (car_name,))
-  car_data = cur.fetchall()
-
   # compare the user leasing and user thats recieving the lease,
   if recipient ==  username:
     
@@ -711,7 +706,7 @@ def lease_car():
       #cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
       con.commit()
     except Exception as e:
-      return {"status": False, "private": False, "msg": f"Error has occured! #113"}, 500
+      return {"status": False, "private": False, "msg": f"Error has occured! 113"}, 500
     
     con.close()
     message = messaging.Message(
@@ -740,7 +735,7 @@ def lease_car():
           cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s,  %s, %s, %s)", (car_data[0][0], recipient[0][0], timeof, timeto, True, True))
 
       except:
-        return {"status": False, "private": False, "msg": f"Error has occured! #111"}, 500
+        return {"status": False, "private": False, "msg": f"Error has occured! 111"}, 500
             
       con.commit()
       # Upozorni manazerou iba ak si leasne auto normalny smrtelnik 
@@ -753,7 +748,7 @@ def lease_car():
             )
       messaging.send(message)
     except Exception as e:
-      return {"status": False, "private": False, "msg": f"Error has occured! #112"}, 500
+      return {"status": False, "private": False, "msg": f"Error has occured! 112"}, 500
     con.close()
 
     #!!!  
