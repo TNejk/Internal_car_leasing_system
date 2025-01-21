@@ -671,7 +671,6 @@ def lease_car():
     SELECT id_lease FROM lease 
     WHERE status = true 
       AND (start_of_lease < %s AND end_of_lease > %s 
-           OR start_of_lease < %s AND end_of_lease > %s 
            OR start_of_lease >= %s AND start_of_lease < %s
            OR start_of_lease == %s AND end_of_lease == %s
               )
