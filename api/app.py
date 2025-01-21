@@ -675,7 +675,7 @@ def lease_car():
   
   cur.execute("""
     SELECT id_lease start_of_lease, end_of_lease FROM lease 
-    WHERE status = true AND car id_car = %s AND id_driver = %s 
+    WHERE status = true AND car id_car = %s  
       AND (start_of_lease < %s AND end_of_lease > %s 
            OR start_of_lease < %s AND end_of_lease > %s 
            OR start_of_lease >= %s AND start_of_lease < %s
