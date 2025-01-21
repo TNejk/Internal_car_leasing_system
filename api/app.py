@@ -629,7 +629,6 @@ def lease_car():
       year = split_date[0]
       month = split_date[1]
 
-      
       # "%Y-%m-%d %H:%M:%S"
       current_date = get_sk_date().split("-")
       cur_year = current_date[0]
