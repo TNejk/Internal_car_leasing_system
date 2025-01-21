@@ -661,7 +661,10 @@ def lease_car():
     
 
   # Check if a lease conflicts time wise with another
+  # This doesnt work for some reason
+  # probalby beacue the sql is fucked up
   cur.execute("select id_lease from lease where status = true and start_of_lease > %s and end_of_lease < %s", (timeof, timeto, ))
+  return {"sd": timeof, "sda": timeto}, 200
   conflicting_leases = cur.fetchall()
   if len(conflicting_leases) > 1:
      return {"status": False, "private": False, "msg": f"{conflicting_leases[0]}"}
