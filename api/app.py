@@ -672,7 +672,7 @@ def lease_car():
     WHERE status = true 
       AND (start_of_lease < %s AND end_of_lease > %s 
            OR start_of_lease >= %s AND start_of_lease < %s
-           OR start_of_lease == %s AND end_of_lease == %s
+           OR start_of_lease = %s AND end_of_lease = %s
               )
     """, (timeof, timeto, timeto, timeof, timeof, timeto, timeof, timeto))
   
