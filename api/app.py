@@ -89,6 +89,13 @@ def get_latest_file(folder_path):
         print(f"An error occurred: {e}")
         return None
 
+def get_sk_date():
+    # Ensure the datetime is in UTC before converting
+    dt_obj = datetime.now()
+    utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
+    bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
+    return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
+
 @app.after_request
 def apply_cors_headers(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
@@ -652,21 +659,18 @@ def lease_car():
         new_file.write(f"email,auto,cas_od,cas_do,meskanie,note\n")
         new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}\n")
     
-  def get_sk_date():
-      # Ensure the datetime is in UTC before converting
-      dt_obj = datetime.now()
-      utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
-      bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
-      return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
-
-
-  cur.execute("select id_car from car where name = %s", (car_name,))
-  car_id = cur.fetchall()[0][0]
-  
+  # Check if a lease conflicts time wise with another
+  cur.execute("select id_lease from lease where status = true and start_of_lease > %s and end_of_lease < %s", (timeof, timeto, ))
+  conflicting_leases = cur.fetchall()
+  if len(conflicting_leases) > 1:
+     return {"status": False, "private": False, "msg": f"{conflicting_leases[0]}"}
   
   # USER ROLE CHECKER
-  cur.execute("select * from driver where email = %s and role = %s", (username, role,))
+  cur.execute("select id_car from car where name = %s", (car_name,))
+  car_id = cur.fetchall()[0][0]
+
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
+  cur.execute("select * from driver where email = %s and role = %s", (username, role,))
   user = cur.fetchall()
 
   cur.execute("select * from car where name = %s", (car_name,))
