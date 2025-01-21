@@ -680,7 +680,7 @@ def lease_car():
   #return {"sd": timeof, "sda": timeto}, 200
   conflicting_leases = cur.fetchall()
   if len(conflicting_leases) > 1:
-     return {"status": False, "private": False, "msg": f"Starting date:{conflicting_leases[1]}\nEnding date: {conflicting_leases[2]}"}
+     return {"status": False, "private": False, "msg": f"Starting date:{conflicting_leases[0][1]}\nEnding date: {conflicting_leases[0][2]}"}
   
   # USER ROLE CHECKER
   cur.execute("select id_car from car where name = %s", (car_name,))
