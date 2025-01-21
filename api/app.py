@@ -659,6 +659,7 @@ def lease_car():
         new_file.write(f"email,auto,cas_od,cas_do,meskanie,note\n")
         new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}\n")
     
+
   # Check if a lease conflicts time wise with another
   cur.execute("select id_lease from lease where status = true and start_of_lease > %s and end_of_lease < %s", (timeof, timeto, ))
   conflicting_leases = cur.fetchall()
@@ -683,7 +684,7 @@ def lease_car():
     if private == True:
       if user[0][3] == role:
         pass
-      else: return jsonify("Users cannot order private rides!")
+      else: return {"status": False, "private": False, "msg": f"User cannot order private rides"}, 500
 
     try:
       # id, userid, carid, timeof, timeto, tiemreturn, status, note, status is either 1 or zero to indicate boolean values
@@ -691,7 +692,8 @@ def lease_car():
       #cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
       con.commit()
     except Exception as e:
-      return jsonify(msg= f"Error occured when leasing. {e}")
+      return {"status": False, "private": False, "msg": f"Error has occured! #113"}, 500
+    
     con.close()
     message = messaging.Message(
               notification=messaging.Notification(
@@ -719,7 +721,7 @@ def lease_car():
           cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s,  %s, %s, %s)", (car_data[0][0], recipient[0][0], timeof, timeto, True, True))
 
       except:
-        return jsonify(msg= f"Error leasing car for recipient: {recipient[0][0]}"), 500
+        return {"status": False, "private": False, "msg": f"Error has occured! #111"}, 500
             
       con.commit()
       # Upozorni manazerou iba ak si leasne auto normalny smrtelnik 
@@ -732,7 +734,7 @@ def lease_car():
             )
       messaging.send(message)
     except Exception as e:
-      return jsonify(msg= f"Error occured when leasing. {e}")
+      return {"status": False, "private": False, "msg": f"Error has occured! #112"}, 500
     con.close()
 
     #!!!  
@@ -740,7 +742,7 @@ def lease_car():
     return {"status": True, "private": private}
       
   else:
-    return jsonify(msg= "Users do not match, nor is the requester a manager.")
+    return {"status": False, "private": False, "msg": f"Users do not match, nor is the requester a manager."}, 500
 
 
 @app.route('/return_car', methods = ['POST'])
