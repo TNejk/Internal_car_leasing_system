@@ -617,9 +617,11 @@ def lease_car():
 
     # Use year and month to check if a new excel spreadsheet needs to be created
     try:
-      split_date = latest_file.split("/")
-      month = split_date[-2]
-      year = split_date[-3]
+      # 2025-01-21 15:31:23_ICLS_report.csv 
+      split_date = latest_file.split("-")
+      year = split_date[0]
+      month = split_date[1]
+
       
       # "%Y-%m-%d %H:%M:%S"
       current_date = get_sk_date().split("-")
@@ -633,15 +635,15 @@ def lease_car():
       else:
           path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
           with open(path, "a+") as new_file: 
-            new_file.write(f"email,auto,cas_od,cas_do,meskanie,note")
-            new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+            new_file.write(f"email,auto,cas_od,cas_do,meskanie,note\n")
+            new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}\n")
 
     except Exception as e:
       print(f"{e}, \nMost likely a bad file name in the reports folder.")
       path = f"{os.getcwd()}/reports/{get_sk_date()}ICLS_report.csv"
       with open(path, "a+") as new_file: 
-        new_file.write(f"email,auto,cas_od,cas_do,meskanie,note")
-        new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+        new_file.write(f"email,auto,cas_od,cas_do,meskanie,note\n")
+        new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}\n")
     
   def get_sk_date():
       # Ensure the datetime is in UTC before converting
