@@ -663,11 +663,18 @@ def lease_car():
   # Check if a lease conflicts time wise with another
   # This doesnt work for some reason
   # probalby beacue the sql is fucked up
-  # 2025-01-01 16:10:00+01        | 2025-01-10 15:15:00+01 
-  #     "sd": "2011-08-09 00:00:00+09",
-  #     "sda": "2011-12-09 00:00:00+09"
+  # SQL FORMAT:  2025-01-01 16:10:00+01        | 2025-01-10 15:15:00+01 
+  #   "timeof": "2025-01-21 20:10:00+01",
+  #   "timeto": "2025-02-10 11:14:00+01"
 
-  cur.execute("select id_lease from lease where status = true and start_of_lease < %s and end_of_lease > %s", (timeof, timeto, ))
+  cur.execute("""
+    SELECT id_lease FROM lease 
+    WHERE status = true 
+      AND (start_of_lease < %s AND end_of_lease > %s 
+           OR start_of_lease < %s AND end_of_lease > %s 
+           OR start_of_lease >= %s AND start_of_lease < %s)
+    """, (timeof, timeto, timeto, timeof, timeof, timeto))
+  
   #return {"sd": timeof, "sda": timeto}, 200
   conflicting_leases = cur.fetchall()
   if len(conflicting_leases) > 1:
