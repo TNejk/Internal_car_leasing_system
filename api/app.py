@@ -627,15 +627,15 @@ def lease_car():
       #'2025-01-21 17:51:44exc_ICLS_report.csv' -> 2025-01-21 18:53:46
 
       split_date = latest_file.split("-")
-      year = split_date[0]
-      month = split_date[1]
+      spl_year = split_date[0]
+      spl_month = split_date[1]
 
       # "%Y-%m-%d %H:%M:%S"
       current_date = get_sk_date().split("-")
       cur_year = current_date[0]
       cur_month = current_date[1]
       
-      if cur_year == year and month == cur_month:
+      if cur_year == spl_year and spl_month == cur_month:
         with open(latest_file, "a+") as report_file:
             report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"LATEST_FILE"}")
 
@@ -643,7 +643,7 @@ def lease_car():
           path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
           with open(path, "a+") as new_file: 
             new_file.write(f"email,auto,cas_od,cas_do,meskanie,note\n")
-            new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"ELSE_LATEST"}\n")
+            new_file.write(f"{recipient},{car_name},{timeof},{timeto},{split_date},{current_date}\n")
 
     except Exception as e:
       #? Triggered only if ./reports is empty or a naming issue
