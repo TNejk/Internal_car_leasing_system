@@ -709,25 +709,37 @@ def lease_car():
     con.close()
 
 
-    # Save it to a report page
-     # FIrst check if the current date is in another month apart from the last created excel report
-     # if it is create a new sheet with the same structure but differnet name, else edit the older one
-     # you dont have fields like note and date of return, those will neeed to be updated after car return is called
-    #latest_file = get_latest_file(f"{os.getcwd()}/reports")
+    latest_file = get_latest_file(f"{os.getcwd()}/reports")
 
-    # TODO: Here check if the dates are in another month by checking the datetime objects month value
-    # If so then create a new file.
-    # If not edit the existing one.
+    # Use year and month to check if a new excel spreadsheet needs to be created
+    try:
+      split_date = latest_file.split("/")
+      month = split_date[-2]
+      year = split_date[-3]
+      
+      # "%Y-%m-%d %H:%M:%S"
+      current_date = get_sk_date().split("-")
+      cur_year = current_date[0]
+      cur_month = current_date[1]
+      
+      if cur_year == year and month == cur_month:
+        with open(latest_file, "a+") as report_file:
+            report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
-    # if latest_file:
-    #   with open(latest_file, "a+") as report_file:
-    #     report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+      else:
+          path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
+          with open(path, "a+") as new_file: 
+            new_file.write(f"email,auto,cas_od,cas_do,meskanie,note")
+            new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
-    #write_to_csv(recipient, car_name, timeof, timeto)
-    path = f"{os.getcwd()}/reports/ICLS_report.csv"
+    except Exception as e:
+      print(f"{e}, \nMost likely a bad file name in the reports folder.")
+      path = f"{os.getcwd()}/reports/{get_sk_date()}ICLS_report.csv"
+      with open(path, "a+") as new_file: 
+        new_file.write(f"email,auto,cas_od,cas_do,meskanie,note")
+        new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
 
-    with open(path, "+a") as new_report:
-      new_report.write("\nI am working!")
+
 
     return {"status": True, "private": private}
       
