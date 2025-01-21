@@ -616,31 +616,34 @@ def lease_car():
     latest_file = get_latest_file(f"{os.getcwd()}/reports")
 
     # Use year and month to check if a new excel spreadsheet needs to be created
+    # '2025-01-21 15:37:00ICLS_report.csv'  '2025-01-21 15:37:26_ICLS_report.csv'
+          # 2025-01-21 15:31:23_ICLS_report.csv 
+    split_date = latest_file.split("-")
+    year = split_date[0]
+    month = split_date[1]
+
+    
+    # "%Y-%m-%d %H:%M:%S"
+    current_date = get_sk_date().split("-")
+    cur_year = current_date[0]
+    cur_month = current_date[1]
+    
+    if cur_year == year and month == cur_month:
+      with open(latest_file, "a+") as report_file:
+          report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+
+    else:
+        path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
+        with open(path, "a+") as new_file: 
+          new_file.write(f"email,auto,cas_od,cas_do,meskanie,note\n")
+          new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}\n")
     try:
-      # 2025-01-21 15:31:23_ICLS_report.csv 
-      split_date = latest_file.split("-")
-      year = split_date[0]
-      month = split_date[1]
-
-      
-      # "%Y-%m-%d %H:%M:%S"
-      current_date = get_sk_date().split("-")
-      cur_year = current_date[0]
-      cur_month = current_date[1]
-      
-      if cur_year == year and month == cur_month:
-        with open(latest_file, "a+") as report_file:
-            report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
-
-      else:
-          path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
-          with open(path, "a+") as new_file: 
-            new_file.write(f"email,auto,cas_od,cas_do,meskanie,note\n")
-            new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}\n")
+      a = 12
+      print(a)
 
     except Exception as e:
       print(f"{e}, \nMost likely a bad file name in the reports folder.")
-      path = f"{os.getcwd()}/reports/{get_sk_date()}ICLS_report.csv"
+      path = f"{os.getcwd()}/reports/{get_sk_date()}exc_ICLS_report.csv"
       with open(path, "a+") as new_file: 
         new_file.write(f"email,auto,cas_od,cas_do,meskanie,note\n")
         new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}\n")
