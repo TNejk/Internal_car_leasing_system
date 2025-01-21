@@ -612,13 +612,36 @@ def lease_car():
 
   con, cur = connect_to_db()
 
-  def write_to_csv(recipient, car_name, timeof, timeto):
-      path = f"{os.getcwd()}/reports/AHAHHAHAHAHHA.csv"
+  def write_report(recipient, car_name, timeof, timeto):
+    latest_file = get_latest_file(f"{os.getcwd()}/reports")
 
-      file = open(path, "a+")
-      file.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
-      file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
-      file.close()
+    # Use year and month to check if a new excel spreadsheet needs to be created
+    try:
+      split_date = latest_file.split("/")
+      month = split_date[-2]
+      year = split_date[-3]
+      
+      # "%Y-%m-%d %H:%M:%S"
+      current_date = get_sk_date().split("-")
+      cur_year = current_date[0]
+      cur_month = current_date[1]
+      
+      if cur_year == year and month == cur_month:
+        with open(latest_file, "a+") as report_file:
+            report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+
+      else:
+          path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
+          with open(path, "a+") as new_file: 
+            new_file.write(f"email,auto,cas_od,cas_do,meskanie,note")
+            new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
+
+    except Exception as e:
+      print(f"{e}, \nMost likely a bad file name in the reports folder.")
+      path = f"{os.getcwd()}/reports/{get_sk_date()}ICLS_report.csv"
+      with open(path, "a+") as new_file: 
+        new_file.write(f"email,auto,cas_od,cas_do,meskanie,note")
+        new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
     
   def get_sk_date():
       # Ensure the datetime is in UTC before converting
@@ -626,12 +649,6 @@ def lease_car():
       utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
       bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
       return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
-
-  # FIrst check if a lease in a given timeframe doesnt allready exist
-
-  # check by the car_id and time from and time to if just one result comes up throw an error back to the user
-  # možno vráť aj odkedy dokedy je čas zabratý ked nedokažem to robit cez UI
-  # return {"status": "taken", "time_of": "11/23 2022", "time_to": "11/23 2026",}, 501
 
 
   cur.execute("select id_car from car where name = %s", (car_name,))
@@ -671,12 +688,9 @@ def lease_car():
               topic="manager"
           )
     messaging.send(message)
-    # TODO: ADD A CSV WRITER FUNCTION HERE ALSO
-    path = f"{os.getcwd()}/reports/ICLS_report.csv"
 
-    with open(path, "+a") as new_report:
-      new_report.write("\nI am working!")
-    
+    #!!!!!!!!!!!!
+    write_report(recipient, car_name, timeof, timeto)
     return {"status": True, "private": private}
 
   # If the user leasing is a manager allow him to order lease for other users
@@ -708,39 +722,8 @@ def lease_car():
       return jsonify(msg= f"Error occured when leasing. {e}")
     con.close()
 
-
-    latest_file = get_latest_file(f"{os.getcwd()}/reports")
-
-    # Use year and month to check if a new excel spreadsheet needs to be created
-    try:
-      split_date = latest_file.split("/")
-      month = split_date[-2]
-      year = split_date[-3]
-      
-      # "%Y-%m-%d %H:%M:%S"
-      current_date = get_sk_date().split("-")
-      cur_year = current_date[0]
-      cur_month = current_date[1]
-      
-      if cur_year == year and month == cur_month:
-        with open(latest_file, "a+") as report_file:
-            report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
-
-      else:
-          path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
-          with open(path, "a+") as new_file: 
-            new_file.write(f"email,auto,cas_od,cas_do,meskanie,note")
-            new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
-
-    except Exception as e:
-      print(f"{e}, \nMost likely a bad file name in the reports folder.")
-      path = f"{os.getcwd()}/reports/{get_sk_date()}ICLS_report.csv"
-      with open(path, "a+") as new_file: 
-        new_file.write(f"email,auto,cas_od,cas_do,meskanie,note")
-        new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}")
-
-
-
+    #!!!  
+    write_report(recipient, car_name, timeof, timeto)
     return {"status": True, "private": private}
       
   else:
