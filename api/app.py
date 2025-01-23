@@ -611,6 +611,7 @@ def lease_car():
 
   role = str(data["role"])
   car_name  = str(data["car_name"])
+  stk = str(data["stk"])
   private = data["is_private"]
 
   # Needed date format
@@ -620,7 +621,7 @@ def lease_car():
 
   con, cur = connect_to_db()
 
-  def write_report(recipient, car_name, timeof, timeto):
+  def write_report(recipient, car_name, stk, timeof, timeto):
     """
     Writes to a csv lease file about a new lease being made, if no such file exists it creates it.
     
@@ -645,20 +646,20 @@ def lease_car():
       
       if cur_year == spl_year and spl_month == cur_month:
         with open(latest_file, "a+") as report_file:
-            report_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"LATEST_FILE"}")
+            report_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},{"REPLACE"},{"LATEST_FILE"}")
 
       else:
           path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
           with open(path, "a+") as new_file: 
-            new_file.write(f"email,auto,cas_od,cas_do,meskanie,note\n")
-            new_file.write(f"{recipient},{car_name},{timeof},{timeto},{split_date},{current_date}\n")
+            new_file.write(f"email,auto,stk,cas_od,cas_do,meskanie,note\n")
+            new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},{split_date},{current_date}\n")
 
     except Exception as e:
       #? Triggered only if ./reports is empty or a naming issue
       path = f"{os.getcwd()}/reports/{get_sk_date()}exc_ICLS_report.csv"
       with open(path, "a+") as new_file: 
-        new_file.write(f"email,auto,cas_od,cas_do,meskanie,note\n")
-        new_file.write(f"{recipient},{car_name},{timeof},{timeto},{"REPLACE"},{"REPLACE"}\n")
+        new_file.write(f"email,auto,stk,cas_od,cas_do,meskanie,note\n")
+        new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},{"REPLACE"},{"REPLACE"}\n")
   
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
   cur.execute("select * from car where name = %s", (car_name,))
@@ -666,7 +667,7 @@ def lease_car():
   # Check if a lease conflicts time wise with another
   # This doesnt work for some reason
   # probalby beacue the sql is fucked up
-  # SQL FORMAT:  2025-01-01 16:10:00+01        | 2025-01-10 15:15:00+01 
+  # SQL FORMAT:  2025-01-01 16:10:00+01 | 2025-01-10 15:15:00+01 
   #   "timeof": "2025-01-21 20:10:00+01",
   #   "timeto": "2025-02-10 11:14:00+01"
   # USER ROLE CHECKER
@@ -726,7 +727,7 @@ def lease_car():
     messaging.send(message)
 
     #!!!!!!!!!!!!
-    write_report(recipient, car_name, timeof, timeto)
+    write_report(recipient, car_name,stk, timeof, timeto)
     return {"status": True, "private": private}
 
   # If the user leasing is a manager allow him to order lease for other users
@@ -745,12 +746,6 @@ def lease_car():
         return {"status": False, "private": False, "msg": f"Error has occured! 111"}, 500
             
       con.commit()
-
-      asd = messaging.Message(
-        data= {"msg": "I have been sent."},
-        topic= "system"
-      )
-      messaging.send(asd)
       
       # Upozorni manazerou iba ak si leasne auto normalny smrtelnik 
       message = messaging.Message(
@@ -766,7 +761,7 @@ def lease_car():
     con.close()
 
     #!!!  
-    write_report(recipient, car_name, timeof, timeto)
+    write_report(recipient, car_name,stk, timeof, timeto)
     return {"status": True, "private": private}
       
   else:
