@@ -745,6 +745,13 @@ def lease_car():
         return {"status": False, "private": False, "msg": f"Error has occured! 111"}, 500
             
       con.commit()
+
+      asd = messaging.Message(
+        data= {"msg": "I have been sent."},
+        topic= "system"
+      )
+      messaging.send(asd)
+      
       # Upozorni manazerou iba ak si leasne auto normalny smrtelnik 
       message = messaging.Message(
                 notification=messaging.Notification(

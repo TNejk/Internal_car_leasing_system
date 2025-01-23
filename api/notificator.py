@@ -86,7 +86,7 @@ while True:
             email = cur.fetchone()
 
             cur.execute("select name from car where id_car = %s", (i[1],))
-            car_name = cur.fetchone()
+            car_name = cur.fetchall()[0]
             # send notif to the email topic and the
             str_mess = "Skončil sa limit na vrátenie auta, prosím odovzdajte auto v aplikácií!"
 
@@ -141,4 +141,4 @@ while True:
             messaging.send(message)
             print(f"{datetime.now(tz).replace(microsecond=0)}  ## Reminder message sent to {email}. ")
 
-    sleep_replacement(60)
+    sleep_replacement(600)
