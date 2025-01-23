@@ -712,10 +712,10 @@ def lease_car():
     con.close()
     asd = messaging.Message(
         data= {"msg": "I have been sent."},
-        topic= "test@user.sk"
+        topic= "test_user.sk"
     )
     messaging.send(asd)
-    
+
     message = messaging.Message(
               notification=messaging.Notification(
               title="Upozornenie o leasingu auta!",
