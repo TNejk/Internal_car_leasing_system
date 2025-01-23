@@ -177,6 +177,7 @@ def login():
 
 @app.route('/get_users', methods=['GET'])
 @jwt_required()
+
 def get_users():
     conn, cur = connect_to_db()
     try:
@@ -709,6 +710,12 @@ def lease_car():
       return {"status": False, "private": False, "msg": f"Error has occured! 113"}, 500
     
     con.close()
+    asd = messaging.Message(
+        data= {"msg": "I have been sent."},
+        topic= "test@user.sk"
+    )
+    messaging.send(asd)
+    
     message = messaging.Message(
               notification=messaging.Notification(
               title="Upozornenie o leasingu auta!",

@@ -92,6 +92,7 @@ while True:
 
             #TODO: PRED POSLANIM SA MUSIM ZBAVIT @ V EMAILE KEDZE TO NENI PLATNY TOPIC, NAHRAD HO _
             #! email.replace("@", "_")
+
             message = messaging.Message(
                                 notification=messaging.Notification(
                                 title="Prekrocenie limitu na odovzdanie auta",
@@ -103,12 +104,12 @@ while True:
 
             manager_message = messaging.Message(
                 notification=messaging.Notification(
-                    title=f"Zamestnanec {email[0]} nestihol odovzdať auto včas {car_name}.",
-                    body="Okamžitá poprava strelnou zbraňou je odporúčaná."
+                    title=f"Zamestnanec {email[0]} nestihol odovzdať auto včas {car_name}."
                 ),
                 topic = "late_returns"
             )
             messaging.send(manager_message)
+
             print(f"{datetime.now(tz).replace(microsecond=0)}  ## Later return message sent to {email}. ")
 
     reminder_query = """
@@ -133,8 +134,7 @@ while True:
             car_name = cur.fetchone()
             message = messaging.Message(
                                 notification=messaging.Notification(
-                                title=f"Nezabudni odovzdať požičané auto: {car_name}",
-                                body="inak bue zle :()"
+                                title=f"Nezabudni odovzdať požičané auto: {car_name}"
                             ),
                                 topic=email[0].replace("@", "_")
                             )
