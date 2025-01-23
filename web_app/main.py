@@ -32,7 +32,7 @@ def sign_in():
 @app.route('/sign-up', methods=['GET', 'POST'])
 def sign_up():
   if request.method == 'GET':
-    error = 'fake error :)'
+    error = 'Nesprávne meno alebo heslo!'
     return render_template('signs/sign_in.html', error=error)
   else:
     data = request.get_json()
@@ -52,8 +52,10 @@ def dashboard():
   settings = url_for('static', filename='sources/images/settings.svg')
   location = request.args.get('location', None)
   cars = request_all_car_data(location)
+  username = session['username']
+  role = session['role']
 
-  return render_template('dashboards/dashboard.html', cars = cars, token=session.get('token'), icons = [bell, user, settings])
+  return render_template('dashboards/dashboard.html', cars = cars, token=session.get('token'), icons = [bell, user, settings], username=username, role=role)
 
 @app.route('/logout')
 def logout():
