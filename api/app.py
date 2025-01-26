@@ -748,10 +748,11 @@ def lease_car():
       con.commit()
       
       # Upozorni manazerou iba ak si leasne auto normalny smrtelnik 
+      #!!!!!!!!!!!!!!!!!!!!!!  POZOR OTAZNIK NEZNAMY SYMBOL JE NEW LINE CHARACTER OD TIALTO: http://www.unicode-symbol.com/u/0085.html
       message = messaging.Message(
                 notification=messaging.Notification(
-                title="Upozornenie o leasingu auta!",
-                body=f"""Zamestnanec: {recipient} si rezervoval auto: {car_name}! \n Rezervácia trvá: \n od {timeof} \n do {timeto} !"""
+                title=f"Upozornenie o leasingu auta: {car_name}!",
+                body=f"""email: {recipient}  Od: {timeof[:-4]}  Do: {timeto}"""
             ),
                 topic="manager"
             )
