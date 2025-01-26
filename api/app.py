@@ -719,8 +719,8 @@ def lease_car():
 
     message = messaging.Message(
               notification=messaging.Notification(
-              title="Upozornenie o leasingu auta!",
-              body=f"""Zamestnanec: {recipient} si rezervoval auto: {car_name}! \n Rezervácia trvá: \n od {timeof} \n do {timeto} !"""
+              title=f"Upozornenie o leasingu auta: {car_name}!",
+              body=f"""email: {recipient}  Od: {timeof[:-4]}  Do: {timeto}"""
           ),
               topic="manager"
           )
