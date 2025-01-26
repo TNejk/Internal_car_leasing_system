@@ -720,7 +720,7 @@ def lease_car():
     message = messaging.Message(
               notification=messaging.Notification(
               title=f"Upozornenie o leasingu auta: {car_name}!",
-              body=f"""email: {recipient}  Od: {timeof[:-4]}  Do: {timeto}"""
+              body=f"""email: {recipient} \n Od: {timeof[:-4]} \n Do: {timeto}"""
           ),
               topic="manager"
           )
@@ -752,7 +752,7 @@ def lease_car():
       message = messaging.Message(
                 notification=messaging.Notification(
                 title=f"Upozornenie o leasingu auta: {car_name}!",
-                body=f"""email: {recipient}  Od: {timeof[:-4]}  Do: {timeto}"""
+                body=f"""email: {recipient} \n Od: {timeof[:-4]} \n Do: {timeto}"""
             ),
                 topic="manager"
             )
