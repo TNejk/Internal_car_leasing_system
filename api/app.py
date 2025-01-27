@@ -414,13 +414,25 @@ def get_full_car_info():
 
 
 # # Get a list of reports, using their name you then download the correct file
-# @app.route('/list_reports', methods = ['POST'])
-# #! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
-# def list_reports():
-#   # Should return all file names
-#   return {"reports": get_reports_paths(folder_path=f"{os.getcwd()}/reports/")}
+@app.route('/list_reports', methods = ['POST'])
+@jwt_required()
+def list_reports():
+  data = request.get_json()
+  email = data["email"]
+  role = data["role"]
+
+  conn, curr = connect_to_db()
+
+  curr.execute("select id_driver from driver where name = %s and role = %s", (email, role))
+  res =  curr.fetchall()
+  if not res:
+    return {"msg": "Unauthorized access detected, ball explosion spell had been cast at your spiritual chackra."}
+  # Should return all file names
+  return {"reports": get_reports_paths(folder_path=f"{os.getcwd()}/reports/")}
 
 
+# NEED TO REPLACE WHITESPACE WITH %20
+# https://icls.sosit-wh.net/get_report/2025-01-21%2018:06:00exc_ICLS_report.csv?email=test@manager.sk&role=manager
 @app.route('/get_report/<path:filename>', methods=['GET'])  # Changed to <path:filename> and explicit methods
 @jwt_required()
 def get_reports(filename):
