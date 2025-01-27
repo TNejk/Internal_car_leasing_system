@@ -433,7 +433,7 @@ def reports():
 
   conn, curr = connect_to_db()
 
-  query = "select id_driver from driver where email = %s and role = %s"
+  query = "select id_driver from driver where email = '%s' and role = '%s'"
   res = curr.execute(query, (email, role, ))
 
   if not res:
