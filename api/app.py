@@ -446,7 +446,7 @@ def reports():
     return {"msg": f"Error getting file! {e}"}
 
   if path:
-    return send_from_directory(filepath, as_attachment=True)
+    return send_from_directory(path=filepath, as_attachment=True)
   else: 
     return {"msg": f"No file found! {path}"}
 
