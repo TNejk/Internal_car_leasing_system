@@ -421,8 +421,8 @@ def list_reports():
   return {"reports": get_reports_paths(folder_path=f"{os.getcwd()}/reports/")}
 
 
-@app.route('/reports', methods = ['POST'])
-#! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
+@app.route('/get_report/', methods = ['POST'])
+@jwt_required()
 def reports():
   data = request.get_json()
   email = data["email"]
