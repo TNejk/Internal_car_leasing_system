@@ -423,9 +423,9 @@ def list_reports():
 
   conn, curr = connect_to_db()
 
-  curr.execute("select id_driver from driver where name = %s and role = %s", (email, role))
+  curr.execute("select id_driver from driver where email = %s and role = %s", (email, role))
   res =  curr.fetchall()
-  if not res:
+  if len(res) <1:
     return {"msg": "Unauthorized access detected, ball explosion spell had been cast at your spiritual chackra."}
   # Should return all file names
   return {"reports": get_reports_paths(folder_path=f"{os.getcwd()}/reports/")}
