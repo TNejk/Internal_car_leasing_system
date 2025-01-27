@@ -59,14 +59,21 @@ def connect_to_db():
   except psycopg2.Error as e:
     return None, str(e)
 
-def send_email(msg: str) -> bool:
-  	return requests.post(
-  		"https://api.mailgun.net/v3/sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org/messages",
-  		auth=("api", mail_api_key),
-  		data={"from": "ICLS <mailgun@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org>",
-  			"to": ["iclsgamo@gmail.com", "mailgun@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org"],
-  			"subject": "Rezervácia auta",
-  			"text": "Zamestnanec: {user} \n Auto: {auto}, \n Čas od: {timeof}, \n Čas do: {timeto}"})
+# def send_email(msg: str) -> bool:
+#   	return requests.post(
+#   		"https://api.mailgun.net/v3/sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org/messages",
+#   		auth=("api", mail_api_key),
+#   		data={"from": "ICLS <mailgun@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org>",
+#   			"to": ["iclsgamo@gmail.com", "mailgun@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org"],
+#   			"subject": "Rezervácia auta",
+#   			"text": "Zamestnanec: {user} \n Auto: {auto}, \n Čas od: {timeof}, \n Čas do: {timeto}"})
+def get_reports_paths(folder_path):
+    try:
+      files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+      return files
+    except: 
+      return None
+
 
 def get_latest_file(folder_path):
     """
@@ -410,7 +417,8 @@ def get_full_car_info():
 @app.route('/list_reports', methods = ['POST'])
 #! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
 def list_reports():
-  return {"reports": ["something.csv"]}
+  # Should return all file names
+  return {"reports": get_reports_paths(folder_path=f"{os.getcwd()}/reports/")}
 
 
 @app.route('/reports', methods = ['POST'])
@@ -419,11 +427,28 @@ def reports():
   data = request.get_json()
   email = data["email"]
   role = data["role"]
+  filename = data["filename"]
 
   # Check if the requester is a manager, if not ignore him  
-  path = get_latest_file()
-  return send_from_directory(path, as_attachment=True)
 
+  conn, curr = connect_to_db()
+
+  query = "select id_driver from driver where name = %s and role = %s"
+  res = curr.execute(query, (email, role, ))
+
+  if not res:
+    return {"msg": "Invalid authorization."}
+
+  try:
+    filepath = f"{os.getcwd()}/reports/{filename}"
+    path = os.path.isfile(filepath)
+  except:
+    return {"msg": "Error getting file!"}
+    
+  if path:
+    return send_from_directory(filepath, as_attachment=True)
+  else: 
+    return {"msg": "No file found!"}
 
 
 
@@ -754,7 +779,7 @@ def lease_car():
 
     #!!!!!!!!!!!!
     write_report(recipient, car_name,stk, timeof, timeto)
-    send_email(msg="Auto bolo rezervovane!")
+    #send_email(msg="Auto bolo rezervovane!")
 
     return {"status": True, "private": private}
 
@@ -791,7 +816,7 @@ def lease_car():
 
     #!!!  
     write_report(recipient, car_name,stk, timeof, timeto)
-    send_email(msg="Auto bolo rezervovane!")
+    #send_email(msg="Auto bolo rezervovane!")
     return {"status": True, "private": private}
       
   else:
