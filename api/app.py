@@ -437,18 +437,18 @@ def reports():
   res = curr.execute(query, (email, role, ))
 
   if not res:
-    return {"msg": "Invalid authorization."}
+    return {"msg": f"Invalid authorization. {res}"}
 
   try:
     filepath = f"{os.getcwd()}/reports/{filename}"
     path = os.path.isfile(filepath)
-  except:
-    return {"msg": "Error getting file!"}
+  except Exception as e:
+    return {"msg": f"Error getting file! {e}"}
 
   if path:
     return send_from_directory(filepath, as_attachment=True)
   else: 
-    return {"msg": "No file found!"}
+    return {"msg": f"No file found! {path}"}
 
 
 
