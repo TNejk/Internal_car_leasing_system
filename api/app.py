@@ -141,6 +141,29 @@ def modify_token():
     conn.close()
     return jsonify(msg="JWT revoked")
 
+# ONLY ICLS GAMO CAN REGISTETR PEOPLE
+@app.route('/register', methods = ['POST'])
+def register():
+  data = request.get_json()
+  email = data['email']
+  password = data['password']
+  role = data['role']
+
+  if not email or not password:
+    return {"status": False, "msg": f"Chýba meno, heslo!"}
+  #query = "select id_driver from driver where name = ''"
+  
+  salted = login_salt+password+login_salt
+  hashed = hashlib.sha256(salted.encode()).hexdigest()
+
+
+  conn, cur = connect_to_db()
+  result = cur.execute("insert into driver values(name, password, role) email, salted, role")
+
+  if result:
+    return {"status": True}
+  else:
+    return {"status": False, "msg": "Chyba pri tvorbe!"}
 
 
 @app.route('/login', methods=['POST'])
