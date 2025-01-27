@@ -433,7 +433,7 @@ def reports():
 
   conn, curr = connect_to_db()
 
-  query = "select id_driver from driver where name = %s and role = %s"
+  query = "select id_driver from driver where email = %s and role = %s"
   res = curr.execute(query, (email, role, ))
 
   if not res:
@@ -444,7 +444,7 @@ def reports():
     path = os.path.isfile(filepath)
   except:
     return {"msg": "Error getting file!"}
-    
+
   if path:
     return send_from_directory(filepath, as_attachment=True)
   else: 
