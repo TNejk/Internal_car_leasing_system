@@ -4,6 +4,7 @@ import jwt
 import psycopg2
 from flask_mail import Mail, Message
 from flask import Flask, request, jsonify, send_from_directory
+import requests
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from flask_cors import CORS, cross_origin
 from functools import wraps
@@ -16,8 +17,11 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import messaging
 
+import smtplib, ssl
+
 bratislava_tz = pytz.timezone('Europe/Bratislava')
 
+mail_api_key = os.getenv("MAIL_API_KEY")
 db_host = os.getenv('DB_HOST')
 db_port = os.getenv('DB_PORT')
 db_user = os.getenv('POSTGRES_USER')
@@ -56,13 +60,13 @@ def connect_to_db():
     return None, str(e)
 
 def send_email(msg: str) -> bool:
-  msg = Message(
-    'ICLS Rezervácia auta, ' + datetime.now(pytz.timezone('Europe/Bratislava')),
-    recipients=['recipient@example.com'],
-    body=msg
-  )
-  mail.send(msg)
-  return True
+  	return requests.post(
+  		"https://api.mailgun.net/v3/sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org/messages",
+  		auth=("api", mail_api_key),
+  		data={"from": "Excited User <mailgun@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org>",
+  			"to": ["iclsgamo@gmail.com", "YOU@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org"],
+  			"subject": "Hello",
+  			"text": "Testing some Mailgun awesomeness!"})
 
 def get_latest_file(folder_path):
     """
@@ -400,6 +404,15 @@ def get_full_car_info():
     return response, 200
 
 
+
+
+# Get a list of reports, using their name you then download the correct file
+@app.route('/list_reports', methods = ['POST'])
+#! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
+def list_reports():
+  return {"reports": ["something.csv"]}
+
+
 @app.route('/reports', methods = ['POST'])
 #! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
 def reports():
@@ -407,8 +420,7 @@ def reports():
   email = data["email"]
   role = data["role"]
 
-  # Check if the requester is a manager, if not ignore him
-  
+  # Check if the requester is a manager, if not ignore him  
   path = get_latest_file()
   return send_from_directory(path, as_attachment=True)
 
@@ -742,6 +754,7 @@ def lease_car():
 
     #!!!!!!!!!!!!
     write_report(recipient, car_name,stk, timeof, timeto)
+    send_email()
     return {"status": True, "private": private}
 
   # If the user leasing is a manager allow him to order lease for other users
@@ -777,6 +790,7 @@ def lease_car():
 
     #!!!  
     write_report(recipient, car_name,stk, timeof, timeto)
+    send_email()
     return {"status": True, "private": private}
       
   else:
