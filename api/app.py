@@ -63,10 +63,10 @@ def send_email(msg: str) -> bool:
   	return requests.post(
   		"https://api.mailgun.net/v3/sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org/messages",
   		auth=("api", mail_api_key),
-  		data={"from": "Excited User <mailgun@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org>",
+  		data={"from": "ICLS <mailgun@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org>",
   			"to": ["iclsgamo@gmail.com", "YOU@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org"],
-  			"subject": "Hello",
-  			"text": "Testing some Mailgun awesomeness!"})
+  			"subject": "Rezervácia auta",
+  			"text": "Zamestnanec: {user} \n Auto: {auto}, \n Čas od: {timeof}, \n Čas do: {timeto}"})
 
 def get_latest_file(folder_path):
     """
