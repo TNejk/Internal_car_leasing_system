@@ -421,33 +421,49 @@ def get_full_car_info():
 #   return {"reports": get_reports_paths(folder_path=f"{os.getcwd()}/reports/")}
 
 
-@app.route('/get_report/<filename>')
+@app.route('/get_report/<path:filename>', methods=['GET'])  # Changed to <path:filename> and explicit methods
 @jwt_required()
 def get_reports(filename):
+    email = request.args.get('email')
+    role = request.args.get('role')
+    
+    # Validate parameters
+    if not email or not role:
+        return {"msg": "Missing email or role parameters"}, 400
 
-  email = request.args.get('email')
-  role = request.args.get('role')
- 
-  conn, curr = connect_to_db()
+    try:
+        conn, curr = connect_to_db()
+        query = "SELECT email FROM driver WHERE email = %s AND role = %s"  # Removed semicolon
+        curr.execute(query, (email, role))
+        res = curr.fetchone()
+    except Exception as e:
+        return {"msg": f"Database error: {str(e)}"}, 500
+    finally:
+        if conn:
+            conn.close()
 
-  query = "select email from driver where email = %s and role = %s;"
-  curr.execute(query, (email, role, ))
-  res = curr.fetchone()
-  conn.close()
+    if not res:
+        return {"msg": "Invalid authorization"}, 403
 
-  if not res:
-    return {"msg": f"Invalid authorization. {res}"}
+    try:
+        # Safe path construction
+        reports_dir = os.path.join(os.getcwd(), 'reports')
+        safe_path = os.path.join(reports_dir, filename)
+        
+        # Security check to prevent path traversal
+        if not os.path.realpath(safe_path).startswith(os.path.realpath(reports_dir)):
+            return {"msg": "Invalid file path"}, 400
 
-  try:
-    filepath = f"{os.getcwd()}/reports/{filename}"
-    path = os.path.isfile(filepath)
-  except Exception as e:
-    return {"msg": f"Error getting file! {e}"}
+        if not os.path.isfile(safe_path):
+            return {"msg": "File not found"}, 404
 
-  if path:
-     return send_from_directory(directory=f"{os.getcwd()}/reports", path=filepath, as_attachment=True)
-  else: 
-    return {"msg": f"No file found! {path}"}
+        return send_from_directory(
+            directory=reports_dir,
+            path=filename,
+            as_attachment=True
+        )
+    except Exception as e:
+        return {"msg": f"Error accessing file: {str(e)}"}, 500
 
 
 
