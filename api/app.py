@@ -421,13 +421,13 @@ def get_full_car_info():
 #   return {"reports": get_reports_paths(folder_path=f"{os.getcwd()}/reports/")}
 
 
-@app.route('/get_report/<path:filename>', methods = ['GET', 'POST'])
+@app.route('/get_report/<filename>')
 @jwt_required()
 def get_reports(filename):
-  data = request.get_json()
-  email = data["email"]
-  role = data["role"]
 
+  email = request.args.get('email')
+  role = request.args.get('role')
+ 
   conn, curr = connect_to_db()
 
   query = "select email from driver where email = %s and role = %s;"
@@ -448,7 +448,7 @@ def get_reports(filename):
      return send_from_directory(directory=f"{os.getcwd()}/reports", path=filepath, as_attachment=True)
   else: 
     return {"msg": f"No file found! {path}"}
-  return {"msg": "dead"}
+
 
 
 
