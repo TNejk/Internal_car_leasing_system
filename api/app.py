@@ -67,13 +67,12 @@ def connect_to_db():
 #   			"to": ["iclsgamo@gmail.com", "mailgun@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org"],
 #   			"subject": "Rezervácia auta",
 #   			"text": "Zamestnanec: {user} \n Auto: {auto}, \n Čas od: {timeof}, \n Čas do: {timeto}"})
-def get_reports_paths(folder_path):
-    try:
-      files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
-      return files
-    except: 
-      return None
-
+def get_reports_paths(folder_path):  
+    try:  
+        with os.scandir(folder_path) as entries:  
+            return [entry.path for entry in entries if entry.is_file()]  
+    except OSError:  # Specific exception > bare except!  
+        return None  
 
 def get_latest_file(folder_path):
     """
@@ -414,6 +413,10 @@ def get_full_car_info():
 
 
 # # Get a list of reports, using their name you then download the correct file
+#?
+    # "reports": [
+    #     "/app/reports/2025-01-21 18:06:00exc_ICLS_report.csv"
+    # ]
 @app.route('/list_reports', methods = ['POST'])
 @jwt_required()
 def list_reports():
