@@ -3,14 +3,14 @@ import hashlib
 import jwt
 import psycopg2
 from flask_mail import Mail, Message
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from flask_cors import CORS, cross_origin
 from functools import wraps
 from datetime import datetime, timedelta, timezone
 from dateutil.parser import parse
 import pytz
-import openpyxl
+from openpyxl import load_workbook
 import glob
 import firebase_admin
 from firebase_admin import credentials
@@ -403,23 +403,14 @@ def get_full_car_info():
 @app.route('/reports', methods = ['POST'])
 #! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
 def reports():
-  con, cur = connect_to_db()
-  if con is None:
-    return jsonify({'error': cur}), 501
-  
-  reports = []
-  sql_string = "select * from reports;"
-  # the app will just use the url to get the file instead
-  # you need to just  return
-  result = cur.execute(sql_string)
-  
-  for i in result:
-    reports.append( {"name": i[1], "url": i[2]} )
-  con.close()
+  data = request.get_json()
+  email = data["email"]
+  role = data["role"]
 
-  return {
-    'reports': reports
-  }
+  # Check if the requester is a manager, if not ignore him
+  
+  path = get_latest_file()
+  return send_from_directory(path, as_attachment=True)
 
 
 
