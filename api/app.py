@@ -421,36 +421,33 @@ def get_full_car_info():
 #   return {"reports": get_reports_paths(folder_path=f"{os.getcwd()}/reports/")}
 
 
-@app.route('/get_report', methods = ['POST'])
+@app.route('/get_report/<path:filename>', methods = ['GET', 'POST'])
 @jwt_required()
-def get_reports():
+def get_reports(filename):
   data = request.get_json()
   email = data["email"]
   role = data["role"]
-  filename = data["filename"]
 
-  # Check if the requester is a manager, if not ignore him  
+  conn, curr = connect_to_db()
 
-  # conn, curr = connect_to_db()
+  query = "select email from driver where email = %s and role = %s;"
+  curr.execute(query, (email, role, ))
+  res = curr.fetchone()
+  conn.close()
 
-  # query = "select email from driver where email = %s and role = %s;"
-  # curr.execute(query, (email, role, ))
-  # res = curr.fetchone()
-  # conn.close()
+  if not res:
+    return {"msg": f"Invalid authorization. {res}"}
 
-  # if not res:
-  #   return {"msg": f"Invalid authorization. {res}"}
+  try:
+    filepath = f"{os.getcwd()}/reports/{filename}"
+    path = os.path.isfile(filepath)
+  except Exception as e:
+    return {"msg": f"Error getting file! {e}"}
 
-  # try:
-  #   filepath = f"{os.getcwd()}/reports/{filename}"
-  #   path = os.path.isfile(filepath)
-  # except Exception as e:
-  #   return {"msg": f"Error getting file! {e}"}
-
-  # if path:
-  #   return send_from_directory(directory=f"{os.getcwd()}/reports", path=filepath, as_attachment=True)
-  # else: 
-  #   return {"msg": f"No file found! {path}"}
+  if path:
+     return send_from_directory(directory=f"{os.getcwd()}/reports", path=filepath, as_attachment=True)
+  else: 
+    return {"msg": f"No file found! {path}"}
   return {"msg": "dead"}
 
 
