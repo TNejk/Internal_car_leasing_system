@@ -413,17 +413,17 @@ def get_full_car_info():
 
 
 
-# Get a list of reports, using their name you then download the correct file
-@app.route('/list_reports', methods = ['POST'])
-#! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
-def list_reports():
-  # Should return all file names
-  return {"reports": get_reports_paths(folder_path=f"{os.getcwd()}/reports/")}
+# # Get a list of reports, using their name you then download the correct file
+# @app.route('/list_reports', methods = ['POST'])
+# #! ADD @jwt_required() AFTER IT WORKS TO LOOK FOR TOKEN FOR SECURITY
+# def list_reports():
+#   # Should return all file names
+#   return {"reports": get_reports_paths(folder_path=f"{os.getcwd()}/reports/")}
 
 
-@app.route('/get_report/', methods = ['POST'])
+@app.route('/get_report', methods = ['POST'])
 @jwt_required()
-def reports():
+def get_reports():
   data = request.get_json()
   email = data["email"]
   role = data["role"]
@@ -431,24 +431,26 @@ def reports():
 
   # Check if the requester is a manager, if not ignore him  
 
-  conn, curr = connect_to_db()
+  # conn, curr = connect_to_db()
 
-  query = "select email from driver where email = %s and role = %s;"
-  curr.execute(query, (email, role, ))
-  res = curr.fetchone()
-  if not res:
-    return {"msg": f"Invalid authorization. {res}"}
+  # query = "select email from driver where email = %s and role = %s;"
+  # curr.execute(query, (email, role, ))
+  # res = curr.fetchone()
+  # conn.close()
 
-  try:
-    filepath = f"{os.getcwd()}/reports/{filename}"
-    path = os.path.isfile(filepath)
-  except Exception as e:
-    return {"msg": f"Error getting file! {e}"}
+  # if not res:
+  #   return {"msg": f"Invalid authorization. {res}"}
 
-  if path:
-    return send_from_directory(directory=f"{os.getcwd()}/reports", path=filepath, as_attachment=True)
-  else: 
-    return {"msg": f"No file found! {path}"}
+  # try:
+  #   filepath = f"{os.getcwd()}/reports/{filename}"
+  #   path = os.path.isfile(filepath)
+  # except Exception as e:
+  #   return {"msg": f"Error getting file! {e}"}
+
+  # if path:
+  #   return send_from_directory(directory=f"{os.getcwd()}/reports", path=filepath, as_attachment=True)
+  # else: 
+  #   return {"msg": f"No file found! {path}"}
 
 
 
