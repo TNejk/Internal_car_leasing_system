@@ -421,7 +421,7 @@ def list_reports():
   return {"reports": get_reports_paths(folder_path=f"{os.getcwd()}/reports/")}
 
 
-@app.route('/get_report/', methods = ['POST'])
+@app.route('/get_report/', methods = ['GET','POST'])
 @jwt_required()
 def reports():
   data = request.get_json()
