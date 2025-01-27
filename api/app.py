@@ -70,7 +70,7 @@ def connect_to_db():
 def get_reports_paths(folder_path):  
     try:  
         with os.scandir(folder_path) as entries:  
-            return [entry.path for entry in entries if entry.is_file()]  
+            return [entry.path.removeprefix("/app/reports/") for entry in entries if entry.is_file()]  
     except OSError:  # Specific exception > bare except!  
         return None  
 
