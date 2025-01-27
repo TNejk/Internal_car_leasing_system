@@ -451,6 +451,7 @@ def get_reports():
   #   return send_from_directory(directory=f"{os.getcwd()}/reports", path=filepath, as_attachment=True)
   # else: 
   #   return {"msg": f"No file found! {path}"}
+  return {"msg": "dead"}
 
 
 
