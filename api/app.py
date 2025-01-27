@@ -755,6 +755,7 @@ def lease_car():
     #!!!!!!!!!!!!
     write_report(recipient, car_name,stk, timeof, timeto)
     send_email(msg="Auto bolo rezervovane!")
+    
     return {"status": True, "private": private}
 
   # If the user leasing is a manager allow him to order lease for other users
