@@ -433,9 +433,9 @@ def reports():
 
   conn, curr = connect_to_db()
 
-  query = "select id_driver from driver where email = '%s' and role = '%s'"
-  res = curr.execute(query, (email, role, ))
-
+  query = "select email from driver where email = %s and role = %s;"
+  curr.execute(query, (email, role, ))
+  res = curr.fetchone()
   if not res:
     return {"msg": f"Invalid authorization. {res}"}
 
