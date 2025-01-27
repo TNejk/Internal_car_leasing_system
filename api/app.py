@@ -64,7 +64,7 @@ def send_email(msg: str) -> bool:
   		"https://api.mailgun.net/v3/sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org/messages",
   		auth=("api", mail_api_key),
   		data={"from": "ICLS <mailgun@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org>",
-  			"to": ["iclsgamo@gmail.com", "YOU@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org"],
+  			"to": ["iclsgamo@gmail.com", "mailgun@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org"],
   			"subject": "Rezervácia auta",
   			"text": "Zamestnanec: {user} \n Auto: {auto}, \n Čas od: {timeof}, \n Čas do: {timeto}"})
 
@@ -755,7 +755,7 @@ def lease_car():
     #!!!!!!!!!!!!
     write_report(recipient, car_name,stk, timeof, timeto)
     send_email(msg="Auto bolo rezervovane!")
-    
+
     return {"status": True, "private": private}
 
   # If the user leasing is a manager allow him to order lease for other users
