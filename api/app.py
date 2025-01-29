@@ -179,7 +179,7 @@ def register():
 
 
   result = cur.execute(
-      "INSERT INTO driver (name, password, role) VALUES (%s, %s, %s)",
+      "INSERT INTO driver (email, password, role) VALUES (%s, %s, %s)",
       (email, salted, role)
   )
   if result:
