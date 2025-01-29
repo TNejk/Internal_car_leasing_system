@@ -178,7 +178,7 @@ def register():
   hashed = hashlib.sha256(salted.encode()).hexdigest()
 
 
-  result = cur.execute("insert into driver values(name, password, role) %s, %s, %s", (email, salted, role, ))
+  result = cur.execute("insert into driver(name, password, role) values( %s, %s, %s,") ,(email, salted, role, )
 
   if result:
     return {"status": True}
