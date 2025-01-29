@@ -167,9 +167,9 @@ def register():
     return {"status": False, "msg": f"Chýba meno, heslo!"}
   
   conn, cur = connect_to_db()
-  
+
   #! Only allow the admin to create users
-  res = cur.execute("select id_driver from driver where email = %s and role like 'admin'", (requster, req_role, ))
+  res = cur.execute("select id_driver from driver where email = %s and role like 'admin'", (requster,))
   tmp = cur.fetchall()
   if len(tmp) <1:
      return {"status": False, "msg": "Unauthorized"}
