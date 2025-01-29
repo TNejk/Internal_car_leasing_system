@@ -728,20 +728,20 @@ def lease_car():
       
       if cur_year == spl_year and spl_month == cur_month:
         with open(latest_file, "a+") as report_file:
-            report_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},{"REPLACE"},{"LATEST_FILE"}")
+            new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE\n")
 
       else:
           path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
           with open(path, "a+") as new_file: 
-            new_file.write(f"email,auto,stk,cas_od,cas_do,meskanie,note\r\n")
-            new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},{split_date},{current_date},\r\n")
+            new_file.write(f"email,auto,stk,cas_od,cas_do,meskanie,note\n")
+            new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE\n") #{split_date},{current_date}\n")
 
     except Exception as e:
       #? Triggered only if ./reports is empty or a naming issue
       path = f"{os.getcwd()}/reports/{get_sk_date()}exc_ICLS_report.csv"
       with open(path, "a+") as new_file: 
-        new_file.write(f"email,auto,stk,cas_od,cas_do,meskanie,note\r\n")
-        new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},{"REPLACE"},{"REPLACE"},\r\n")
+        new_file.write(f"email,auto,stk,cas_od,cas_do,meskanie,note\n")
+        new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE\n")
   
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
   cur.execute("select * from car where name = %s", (car_name,))
