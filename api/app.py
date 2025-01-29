@@ -718,7 +718,7 @@ def lease_car():
       # /app/reports/'2025-01-21 17:51:44exc_ICLS_report.csv' -> 2025-01-21 18:53:46
 
       split_date = latest_file.split("-")
-      spl_year = split_date[0]#.removeprefix("/app/reports/")
+      spl_year = split_date[0].removeprefix("/app/reports/")
       spl_month = split_date[1]
 
       # "%Y-%m-%d %H:%M:%S"
@@ -820,11 +820,11 @@ def lease_car():
       # If the manager is leasing a car for someone else check if the recipeint exists and lease for his email
       try:
         cur.execute("select id_driver from driver where email = %s", (recipient,)) # NO need to check for role here!!!
-        recipient = cur.fetchall()
+        id_recipient = cur.fetchall()
         if private == False:
-          cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s,  %s, %s, %s)", (car_data[0][0], recipient[0][0], timeof, timeto, True, False))
+          cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s,  %s, %s, %s)", (car_data[0][0], id_recipient[0][0], timeof, timeto, True, False))
         else:
-          cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s,  %s, %s, %s)", (car_data[0][0], recipient[0][0], timeof, timeto, True, True))
+          cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s,  %s, %s, %s)", (car_data[0][0], id_recipient[0][0], timeof, timeto, True, True))
 
       except:
         return {"status": False, "private": False, "msg": f"Error has occured! 111"}, 500
