@@ -718,7 +718,7 @@ def lease_car():
       # /app/reports/'2025-01-21 17:51:44exc_ICLS_report.csv' -> 2025-01-21 18:53:46
 
       split_date = latest_file.split("-")
-      spl_year = split_date[0].removeprefix("/app/reports/")
+      spl_year = split_date[0]#.removeprefix("/app/reports/")
       spl_month = split_date[1]
 
       # "%Y-%m-%d %H:%M:%S"
