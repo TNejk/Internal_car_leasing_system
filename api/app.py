@@ -153,22 +153,32 @@ def modify_token():
 
 # ONLY ICLS GAMO CAN REGISTETR PEOPLE
 @app.route('/register', methods = ['POST'])
+@jwt_required()
 def register():
   data = request.get_json()
+  requster = data["requester"]
+  req_role = data["req_role"]
+
   email = data['email']
   password = data['password']
   role = data['role']
 
   if not email or not password:
     return {"status": False, "msg": f"Chýba meno, heslo!"}
-  #query = "select id_driver from driver where name = ''"
+  
+  conn, cur = connect_to_db()
+  
+  #! Only allow the admin to create users
+  res = cur.execute("select id_driver from driver where email = %s and role like 'admin'", (requster, req_role, ))
+  tmp = cur.fetchall()
+  if len(tmp) <1:
+     return {"status": False, "msg": "Unauthorized"}
   
   salted = login_salt+password+login_salt
   hashed = hashlib.sha256(salted.encode()).hexdigest()
 
 
-  conn, cur = connect_to_db()
-  result = cur.execute("insert into driver values(name, password, role) email, salted, role")
+  result = cur.execute("insert into driver values(name, password, role) %s, %s, %s", (email, salted, role, ))
 
   if result:
     return {"status": True}
