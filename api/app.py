@@ -741,7 +741,7 @@ def lease_car():
       path = f"{os.getcwd()}/reports/{get_sk_date()}exc_ICLS_report.csv"
       with open(path, "a+") as new_file: 
         new_file.write(f"email,auto,stk,cas_od,cas_do,meskanie,note\n")
-        new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE\n")
+        new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},{e},REPLACE\n")
   
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
   cur.execute("select * from car where name = %s", (car_name,))
