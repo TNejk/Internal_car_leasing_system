@@ -182,10 +182,10 @@ def register():
       "INSERT INTO driver (email, password, role) VALUES (%s, %s, %s)",
       (email, salted, role)
   )
-  if result:
-    return {"status": True}
-  else:
-    return {"status": False, "msg": "Chyba pri tvorbe!"}
+  conn.close()
+  
+  return {"status": True}
+
 
 
 @app.route('/login', methods=['POST'])
