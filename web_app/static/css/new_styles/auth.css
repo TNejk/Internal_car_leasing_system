@@ -1,0 +1,25 @@
+.sign-div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.sign-in-input label {
+    margin-bottom: 5px;
+}
+
+.sign-in-button {
+    margin-top: 100px;
+}
+
+.sign-in-error {
+    margin-top: 10px;
+    color: red;
+}

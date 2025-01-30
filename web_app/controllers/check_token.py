@@ -5,7 +5,7 @@ from flask import abort, session, render_template
 from sign_in_api import sign_in_api
 
 SALT = os.getenv('SALT')
-SALT = '7tqeo@#%%^&*(n7irqcnw78oaieNOQIE73124@#%%^&*NCo'
+SALT = '%2b%12%4/ZiN3Ga8VQjxm9.K2V3/.'
 
 def check_token():
   def decorator(func):

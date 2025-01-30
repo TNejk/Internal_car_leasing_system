@@ -6,6 +6,7 @@ let car_name = null;
 let is_private = false;
 let Token = null;
 let car_id = null;
+let stk = null;
 
 const closeModal = document.getElementById('close-modal');
 const modal = document.getElementById('modal');
@@ -69,6 +70,7 @@ function renderCalendar(dates) {
               'recipient': username, // zmen na recipient ked budes robit managera
               'role': role,
               'car_name': car_name,
+              'stk': stk,
               'is_private': is_private,
               'timeof': selectedRange['start'],
               'timeto': selectedRange['end'],
@@ -142,6 +144,7 @@ function renderCalendar(dates) {
 function renderDetails(car_details) {
   const carDetails = car_details[0];
   car_name = carDetails[1];
+  stk = carDetails[8]
   if (carDetails[3] == 'stand_by') {
     carDetails[3] = 'Voľné';
   } else if (carDetails[3] == 'leased') {
@@ -158,6 +161,7 @@ function renderDetails(car_details) {
   document.getElementById('car-health').textContent = `Zdravie - ${carDetails[4]}`;
   document.getElementById('car-frequency').textContent = `Frekvencia obsadenia - ${carDetails[5]}`;
   document.getElementById('car-location').textContent = `Domáce mesto - ${carDetails[6]}`;
+  document.getElementById('car-spz').textContent = `SPZ - ${carDetails[8]}`;
 
   // Check if an image URL exists
   if (carDetails[7]) {

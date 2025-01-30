@@ -1,5 +1,6 @@
 import os, requests, hashlib
-from flask import session, render_template
+from flask import session, render_template, jsonify
+
 
 def sign_in_api(username, password, SALT):
     payload = {"username": username, "password": password}
@@ -9,21 +10,25 @@ def sign_in_api(username, password, SALT):
             json=payload
         )
         response = response.json()
-        print(response)
         if response is None:
-            return render_template('signs/sign_out.html', data='Niekde sa stala chyba!')
+            return 'Niekde nastala chyba!'
         if 'type' in response:
             if response['type'] == 0:
-                return render_template('signs/sign_in.html', data='Chýba meno alebo heslo!')
+                return 'Nesprávne meno alebo heslo!'
             elif response['type'] == 1:
-                return render_template('signs/sign_in.html', data='Nesprávne meno alebo heslo!')
-        salted = SALT + SALT + SALT + SALT + SALT + SALT + SALT + SALT + SALT + password + SALT + SALT + SALT + SALT + SALT
+                return 'Chýba meno alebo heslo!'
+            else:
+                return 'Niečo je zle!'
+
+        salted = SALT + password + SALT
         hashed = hashlib.sha256(salted.encode()).hexdigest()
         session['username'] = username
         session['password'] = hashed
         session['token'] = response['access_token']
         session['role'] = response['role']
         session.permanent = True
+
+        return 'success'
 
     except requests.exceptions.RequestException as e:
         print("An error occurred while making the request:", e)

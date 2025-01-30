@@ -1,0 +1,11 @@
+.sidebar {
+    position: sticky;
+    top: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+.main-content {
+    overflow-y: auto;
+    max-height: 91vh;
+}

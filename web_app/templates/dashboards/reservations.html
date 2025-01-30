@@ -1,10 +1,96 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Title</title>
-</head>
-<body>
-<h5>rezervacie</h5>
-</body>
-</html>
+{% extends 'base/base.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/header.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/layout.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/cards.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/modals.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/notifications.css') }}">
+<!--<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/reservations.css') }}">-->
+<title>ICLS - Gamo</title>
+{% endblock %}
+
+{% block body %}
+<header class="main-header">
+  <h2 style="color: black">Autodoprava</h2>
+<!--  <input type="text" placeholder="Vyhľadaj auto">-->
+  <div class="icons">
+    <ul>
+      <li><a href="/dashboard">Domcek</a></li>
+      <li>
+        <a href="#"><span class="icon"><img src="{{ icons[0] }}" style="width: 24px;height: 24px;" alt="Zvoncek"></span></a>
+        <ul class="dropdown">
+          {% if notifications|length == 0 %}
+            <p id="notification-default">Nemáte žiadne notifikácie.</p>
+          {% else %}
+            {% for notification in notifications %}
+              <li>
+                <h2>{{ notification[0] }}</h2><br>
+                <p>{{ notification[1] }}</p>
+              </li>
+            {% endfor %}
+          {% endif %}
+        </ul>
+      </li>
+      <li>
+        <a href="#"><span class="icon"><img src="{{ icons[1] }}" style="width: 24px;height: 24px;" alt="Zvoncek"></span></a>
+        <ul class="dropdown">
+          <li><a href="/reservations">Rezervácie</a></li>
+          <li></li>
+          <li>
+            <a href="/settings">
+              <span class="icon"><img src="{{ icons[2] }}" style="width: 24px;height: 24px;" alt="Zvoncek"></span>
+              <p>Nastavenia</p>
+            </a>
+          </li>
+          <li><a href="/sign-out">Odhlásiť sa</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</header>
+<div class="container">
+  <div class="sidebar">
+    <img src="{{ icons[1] }}" alt="{{ Pandrlác }}" style="width: 80px; height: 80px; border-radius: 50%;">
+    <p>{{ username }}</p>
+    <button>Zmena hesla</button>
+    <form action="/logout">
+      <button>Odhlasenie</button>
+    </form>
+    {% if role == 'manager' %}
+    <script></script>
+      <select>
+        <option>Používatelia</option>
+      </select>
+    {% endif %}
+
+  </div>
+  <div class="content">
+    <div class="card-container">
+      <div class="card" id="reservations-card" onclick=`openModal()` style="display: none">
+         <img id="reservations-car-image" src="" alt="">
+         <h2 id="reservations-car-name"></h2>
+         <p id="reservations-time-from"></p>
+         <p id="reservations-time-to"></p>
+        <p id="reservations-user"></p>
+      </div>
+      <div id="default-message" style="display: none;">Neexistuje žiadna rezervácia!</div>
+    </div>
+
+  <div class="modal-backdrop" id="modal-backdrop" onclick="closeModal()"></div>
+  <div class="modal" id="modal">
+    <h2 id="modal-car-name"></h2>
+    <p id="modal-time-from"></p>
+    <p id="modal-time-to"></p>
+    {% if role == 'manager' %}
+      <p id="modal-user"></p>
+    {% endif %}
+    <button id="finish-reservation-modal">Odovzdaj auto</button>
+    <button id="scrap-reservation-modal">Zruš rezerváciu</button>
+    <button id="close-modal">Zatvor</button>
+  </div>
+</div>
+
+
+<script src="{{ url_for('static', filename='js/reservations.js' )}}"></script>
+{% endblock %}

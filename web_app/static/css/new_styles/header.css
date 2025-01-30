@@ -1,0 +1,19 @@
+.main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    background-color: #e0e0e0;
+    color: white;
+}
+
+.main-header input {
+    width: 50%;
+    padding: 5px;
+    margin: 0 15px;
+}
+
+.main-header .icons {
+    display: flex;
+    gap: 10px;
+}

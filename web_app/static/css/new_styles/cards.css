@@ -1,0 +1,29 @@
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Increased min size */
+    gap: 20px;
+    margin: 0 auto;
+}
+
+.card {
+    background: #f0f0f0;
+    padding: 20px; /* Slightly more padding */
+    border-radius: 12px;
+    box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow */
+    cursor: pointer;
+    transition: transform 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.card img {
+    width: 100%;
+    border-radius: 12px 12px 0 0;
+    height: 180px; /* Increased height for larger images */
+    object-fit: cover;
+}
+
+.card:hover {
+    transform: scale(1.08); /* Expands a bit more */
+}
