@@ -182,6 +182,8 @@ def register():
       "INSERT INTO driver (email, password, role) VALUES (%s, %s, %s)",
       (email, salted, role)
   )
+  
+  conn.commit()
   conn.close()
   
   return {"status": True}
