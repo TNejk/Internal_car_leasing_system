@@ -787,7 +787,7 @@ def lease_car():
   #return {"sd": timeof, "sda": timeto}, 200
   conflicting_leases = cur.fetchall()
   if len(conflicting_leases) > 0:
-     return {"status": False, "private": False, "msg": f"{conflicting_leases}"}
+     return {"status": False, "private": False, "msg": f"Zabratý dátum (hodina typujem)"}
   
   # compare the user leasing and user thats recieving the lease,
   if recipient ==  username:
