@@ -180,7 +180,7 @@ def register():
 
   result = cur.execute(
       "INSERT INTO driver (email, password, role) VALUES (%s, %s, %s)",
-      (email, salted, role)
+      (email, hashed, role)
   )
   
   conn.commit()
