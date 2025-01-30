@@ -741,19 +741,19 @@ def lease_car():
       cur_month = current_date[1]
       
       if cur_year == spl_year and spl_month == cur_month:
-        with open(latest_file, "a+") as report_file:
+        with open(latest_file, "a+", encoding='utf8') as report_file:
             report_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE\n")
 
       else:
           path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
-          with open(path, "a+") as new_file: 
+          with open(path, "a+", encoding='utf8') as new_file: 
             new_file.write(f"email,auto,stk,cas_od,cas_do,meskanie,note\n")
             new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE\n") #{split_date},{current_date}\n")
 
     except Exception as e:
       #? Triggered only if ./reports is empty or a naming issue
       path = f"{os.getcwd()}/reports/{get_sk_date()}exc_ICLS_report.csv"
-      with open(path, "a+") as new_file: 
+      with open(path, "a+", encoding='utf8') as new_file: 
         new_file.write(f"email,auto,stk,cas_od,cas_do,meskanie,note\n")
         new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},{e},REPLACE\n")
   
@@ -929,6 +929,9 @@ def return_car():
       cur.execute(query, (health, 'stand_by', um, location, id_car ))
 
     conn.commit()
+    # Update report, open as csv object, look for row where time_from ,time_to, id_car, id_driver is the same and update the return&-time, meskanie and note values
+
+
     return jsonify({'status': "returned"}), 200
 
   except psycopg2.Error as e:
