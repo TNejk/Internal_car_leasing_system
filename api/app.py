@@ -1,3 +1,4 @@
+import csv
 import os
 import hashlib
 import jwt
@@ -874,7 +875,33 @@ def return_car():
   data = request.get_json()
   if not data:
     return jsonify({'error': 'No data'}), 501
+  
+  def edit_csv_row(timeof,timeto, new_odovzdanie, new_meskanie, new_note):
+      # Read the CSV file and store its rows in a list
+      csv_file_path = get_latest_file(f"{os.getcwd()}/reports")
 
+      rows = []
+      with open(csv_file_path, mode='r', newline='\n', encoding='utf8') as file:
+          reader = csv.DictReader(file)
+          fieldnames = reader.fieldnames
+          for row in reader:
+              rows.append(row)
+
+      # Find the row with the matching recipient email and update the specified columns
+      for row in rows:
+          if row['timeof'] == timeof and row["timeto"] == timeto:
+              row['odovzdanie'] = new_odovzdanie
+              row['meskanie'] = new_meskanie
+              row['note'] = new_note
+              break
+
+      # Write the updated rows back to the CSV file
+      with open(csv_file_path, mode='w', newline='\n', encoding='utf8') as file:
+          writer = csv.DictWriter(file, fieldnames=fieldnames)
+          writer.writeheader()
+          writer.writerows(rows)
+    
+  
   id_lease = data["id_lease"]
   # TODO: ADD A VARIABLE FOR TIME_TO SO YOU CAN CALCULATE BEING LATE and write it to a csv
   tor = data["time_of_return"]
