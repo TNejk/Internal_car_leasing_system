@@ -876,7 +876,7 @@ def return_car():
   if not data:
     return jsonify({'error': 'No data'}), 501
   
-  def edit_csv_row(timeof,timeto, new_odovzdanie, new_meskanie, new_note):
+  def edit_csv_row(timeof,timeto, return_date, meskanie, new_note):
       # Read the CSV file and store its rows in a list
       csv_file_path = get_latest_file(f"{os.getcwd()}/reports")
 
@@ -890,8 +890,8 @@ def return_car():
       # Find the row with the matching recipient email and update the specified columns
       for row in rows:
           if row['timeof'] == timeof and row["timeto"] == timeto:
-              row['odovzdanie'] = new_odovzdanie
-              row['meskanie'] = new_meskanie
+              row['odovzdanie'] = return_date
+              row['meskanie'] = meskanie
               row['note'] = new_note
               break
 
@@ -955,9 +955,16 @@ def return_car():
       query = "UPDATE car SET health = %s, status = %s, usage_metric = %s, location = %s WHERE id_car = %s;"
       cur.execute(query, (health, 'stand_by', um, location, id_car ))
 
-    conn.commit()
-    # Update report, open as csv object, look for row where time_from ,time_to, id_car, id_driver is the same and update the return&-time, meskanie and note values
+      # If the return date is after the timeof, indicate late return of car
+      late_return = "False"
+      if tor < res[2]:
+        late_return = "True"
 
+      # Update report, open as csv object, look for row where time_from ,time_to, id_car, id_driver is the same and update the return&-time, meskanie and note values
+      edit_csv_row(timeof=res[1], timeto=res[2], return_date=tor, meskanie=late_return, note= note)
+
+    conn.commit()
+    
 
     return jsonify({'status': "returned"}), 200
 
