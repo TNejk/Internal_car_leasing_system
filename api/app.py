@@ -898,7 +898,7 @@ def return_car():
               break
 
       # Write the updated rows back to the CSV file
-      with open(csv_file_path, mode='w', newline='\n', encoding='utf8') as file:
+      with open(csv_file_path, mode='w', newline='\n', encoding='utf-8') as file:
           writer = csv.DictWriter(file, fieldnames=fieldnames)
           writer.writeheader()
           writer.writerows(rows)
