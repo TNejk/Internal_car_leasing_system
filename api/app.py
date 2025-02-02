@@ -959,7 +959,7 @@ def return_car():
       late_return = "False"
       # Str + datetime.datetime
       
-      tor_as_datetime = datetime.strptime(tor, "%Y-%m-%d %H:%M:%S%z")
+      tor_as_datetime = datetime.strptime(tor, "%Y-%m-%d %H:%M:%S.%f%z")
       # Now you can compare the two datetime objects
       if tor_as_datetime < res[0][2]:
           late_return = "True"
