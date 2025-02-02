@@ -888,6 +888,8 @@ def return_car():
               rows.append(row)
       # email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note
       # Find the row with the matching recipient email and update the specified columns
+      
+      # cas_do: 2025-02-01 16:00:00
       for row in rows:
           if row['cas_od'] == timeof and row["cas_do"] == timeto:
               row['odovzdanie'] = return_date
@@ -966,8 +968,8 @@ def return_car():
       else:
           late_return = "False"
 
-      str_timeof = res[0][1].strftime("%Y-%m-%d %H:%M:%S.%f%z")
-      str_timeto = res[0][2].strftime("%Y-%m-%d %H:%M:%S.%f%z")
+      str_timeof = res[0][1].strftime("%Y-%m-%d %H:%M:%S")
+      str_timeto = res[0][2].strftime("%Y-%m-%d %H:%M:%S")
 
       # Update report, open as csv object, look for row where time_from ,time_to, id_car, id_driver is the same and update the return&-time, meskanie and note values
       edit_csv_row(timeof=str_timeof, timeto=str_timeto, return_date=tor, meskanie=late_return, new_note= note)
