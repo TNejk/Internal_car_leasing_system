@@ -713,7 +713,13 @@ def lease_car():
 
   # Needed date format
   # 2011-08-09 00:00:00+09
+
+  # Try to dezinfect timeof from the .2342212 number horseshit
   timeof = data["timeof"]
+  try:
+    timeof = timeof.split(".", 1)[0]
+  except:
+    pass
   timeto = data["timeto"]
 
   con, cur = connect_to_db()
@@ -741,6 +747,7 @@ def lease_car():
       cur_year = current_date[0]
       cur_month = current_date[1]
       
+      #timeof = timeof.strftime("%Y-%m-%d %H:%M:%S")
       if cur_year == spl_year and spl_month == cur_month:
         with open(latest_file, "a+", encoding='utf-8') as report_file:
             report_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE,REPLACE\n")
@@ -888,7 +895,7 @@ def return_car():
               rows.append(row)
       # email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note
       # Find the row with the matching recipient email and update the specified columns
-      
+      # cas_od: 2025-02-02 20:50:29.498211Z  !!! This is being fixed
       # cas_do: 2025-02-01 16:00:00
       for row in rows:
           if row['cas_od'] == timeof and row["cas_do"] == timeto:
