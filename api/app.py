@@ -720,6 +720,7 @@ def lease_car():
     timeof = timeof.split(".", 1)[0]
   except:
     pass
+  # 2025-02-02 21:04:48+01        | 2025-02-20 21:04:00+01
   timeto = data["timeto"]
 
   con, cur = connect_to_db()
@@ -750,13 +751,13 @@ def lease_car():
       #timeof = timeof.strftime("%Y-%m-%d %H:%M:%S")
       if cur_year == spl_year and spl_month == cur_month:
         with open(latest_file, "a+", encoding='utf-8') as report_file:
-            report_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE,REPLACE\n")
+            report_file.write(f"{recipient},{car_name},{stk},{timeto},{timeof},REPLACE,REPLACE,REPLACE\n")
 
       else:
           path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
           with open(path, "a+", encoding='utf-8') as new_file: 
             new_file.write(f"email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note\n")
-            new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE,REPLACE\n") #{split_date},{current_date}\n")
+            new_file.write(f"{recipient},{car_name},{stk},{timeto},{timeof},REPLACE,REPLACE,REPLACE\n") #{split_date},{current_date}\n")
 
     except Exception as e:
       #? Triggered only if ./reports is empty or a naming issue
@@ -824,7 +825,7 @@ def lease_car():
     message = messaging.Message(
               notification=messaging.Notification(
               title=f"Upozornenie o leasingu auta: {car_name}!",
-              body=f"""email: {recipient} \n Od: {timeof[:-4]} \n Do: {timeto}"""
+              body=f"""email: {recipient} \n Od: {timeof} \n Do: {timeto}"""
           ),
               topic="manager"
           )
