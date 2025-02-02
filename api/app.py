@@ -966,9 +966,11 @@ def return_car():
       else:
           late_return = "False"
 
+      str_timeof = res[0][1].strftime("%Y-%m-%d %H:%M:%S.%f%z")
+      str_timeto = res[0][2].strftime("%Y-%m-%d %H:%M:%S.%f%z")
 
       # Update report, open as csv object, look for row where time_from ,time_to, id_car, id_driver is the same and update the return&-time, meskanie and note values
-      edit_csv_row(timeof=res[0][1], timeto=res[0][2], return_date=tor, meskanie=late_return, note= note)
+      edit_csv_row(timeof=str_timeof, timeto=str_timeto, return_date=tor, meskanie=late_return, new_note= note)
 
     conn.commit()
     
