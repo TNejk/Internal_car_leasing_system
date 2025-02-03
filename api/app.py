@@ -732,6 +732,14 @@ def lease_car():
     If a report is too old it creates a new one each month. 
     ex: '2025-01-21 15:37:00ICLS_report.csv'
     """
+    # To fix the wierd seconds missing error, i will just get rid of the seconds manually
+    if timeof.count(":") > 1:
+      timeof = timeof[:-2]
+    
+    if timeto.count(":") > 1:
+      timeto = timeto[:-2]
+
+    
     latest_file = get_latest_file(f"{os.getcwd()}/reports")
 
     # Use year and month to check if a new excel spreadsheet needs to be created
