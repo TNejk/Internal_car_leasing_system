@@ -734,10 +734,10 @@ def lease_car():
     """
     # To fix the wierd seconds missing error, i will just get rid of the seconds manually
     if timeof.count(":") > 1:
-      timeof = timeof[:-2]
+      timeof = timeof[:-3]
     
     if timeto.count(":") > 1:
-      timeto = timeto[:-2]
+      timeto = timeto[:-3]
 
     
     latest_file = get_latest_file(f"{os.getcwd()}/reports")
@@ -894,6 +894,12 @@ def return_car():
   
   def edit_csv_row(timeof,timeto, return_date, meskanie, new_note):
       # Read the CSV file and store its rows in a list
+      if timeof.count(":") > 1:
+        timeof = timeof[:-3]
+    
+      if timeto.count(":") > 1:
+        timeto = timeto[:-3]
+      
       csv_file_path = get_latest_file(f"{os.getcwd()}/reports")
 
       rows = []
@@ -904,8 +910,8 @@ def return_car():
               rows.append(row)
       # email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note
       # Find the row with the matching recipient email and update the specified columns
-      # cas_od: 2025-02-02 20:50:29.498211Z  !!! This is being fixed
-      # cas_do: 2025-02-01 16:00:00
+      # cas_od: 2025-02-02 20:50 
+      # cas_do: 2025-02-01 16:00
       for row in rows:
           if row['cas_od'] == timeof and row["cas_do"] == timeto:
               row['odovzdanie'] = return_date
