@@ -751,7 +751,7 @@ def lease_car():
       #timeof = timeof.strftime("%Y-%m-%d %H:%M:%S")
       if cur_year == spl_year and spl_month == cur_month:
         with open(latest_file, "a+", encoding='utf-8') as report_file:
-            report_file.write(f"{recipient},{car_name},{stk},{timeof},TIMTO,REPLACE,REPLACE,REPLACE\n")
+            report_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE,REPLACE\n")
 
       else:
           path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
