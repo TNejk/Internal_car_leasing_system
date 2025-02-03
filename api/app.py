@@ -893,7 +893,8 @@ def return_car():
     return jsonify({'error': 'No data'}), 501
   
   def edit_csv_row(timeof,timeto, return_date, meskanie, new_note):
-      # Read the CSV file and store its rows in a list
+      # Get rid of the seconds, cuz python sometimes cuts them off on one date and that fucks up the editing proces
+      # So just get rid of them yourself
       if timeof.count(":") > 1:
         timeof = timeof[:-3]
     
@@ -994,7 +995,9 @@ def return_car():
 
       str_timeof = res[0][1].strftime("%Y-%m-%d %H:%M:%S")
       str_timeto = res[0][2].strftime("%Y-%m-%d %H:%M:%S")
-
+      
+      # Get rid of the miliseconds
+      tor = tor_as_datetime.strftime("%Y-%m-%d %H:%M:%S")
       # Update report, open as csv object, look for row where time_from ,time_to, id_car, id_driver is the same and update the return&-time, meskanie and note values
       edit_csv_row(timeof=str_timeof, timeto=str_timeto, return_date=tor, meskanie=late_return, new_note= note)
 
