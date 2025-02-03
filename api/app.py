@@ -919,8 +919,6 @@ def return_car():
               row['meskanie'] = meskanie
               row['note'] = new_note
               break
-          else:
-            row["note"] = "EDITED"
 
       # Write the updated rows back to the CSV file
       with open(csv_file_path, mode='w', newline='\n', encoding='utf-8') as file:
@@ -995,7 +993,7 @@ def return_car():
 
       str_timeof = res[0][1].strftime("%Y-%m-%d %H:%M:%S")
       str_timeto = res[0][2].strftime("%Y-%m-%d %H:%M:%S")
-      
+
       # Get rid of the miliseconds
       tor = tor_as_datetime.strftime("%Y-%m-%d %H:%M:%S")
       # Update report, open as csv object, look for row where time_from ,time_to, id_car, id_driver is the same and update the return&-time, meskanie and note values
