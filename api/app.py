@@ -625,6 +625,7 @@ def get_leases():
         "time_to": convert_to_bratislava_timezone(i[7]),
         "time_of_return": i[8],
         "private": i[9], 
+        "spz": i[10] 
 
       })
     return {"active_leases": leases}, 200
