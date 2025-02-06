@@ -807,7 +807,27 @@ def lease_car():
       with open(path, "a+", encoding='utf-8') as new_file: 
         new_file.write(f"email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note\n")
         new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},{e},REPLACE,REPLACE\n")
-  
+
+      wb = Workbook()
+      ws = wb.active
+      email_ft = Font(bold=True, color="B22222")
+      Header_ft = Font(bold=True, color="000000")
+
+      filler = ["","","","","","","",""]
+      data = [filler,filler,["Email", "Auto", "SPZ", "Čas od", "Čas do", "Odovzdanie", "Meškanie", "Poznámka"],[recipient, car_name, stk, timeof, timeto, "REPLACE", "REPLACE", "REPLACE"]]
+
+      for row in data:
+          ws.append(row)
+          
+      email_cell = ws["B3"]
+      email_cell.font = email_ft
+
+      for row in ws["C3:H3"]:
+          for cell in row:
+              cell.font = Header_ft
+
+      wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_EXCEL_ICLS_report.xlsx")
+
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
   cur.execute("select * from car where name = %s", (car_name,))
   car_data = cur.fetchall()
