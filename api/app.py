@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from dateutil.parser import parse
 import pytz
 import openpyxl
-from openpyxl.styles import Font, PatternFill
+from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl import Workbook
 import glob
 import firebase_admin
@@ -769,68 +769,112 @@ def lease_car():
       
       #timeof = timeof.strftime("%Y-%m-%d %H:%M:%S")
       if cur_year == spl_year and int(cur_month) == int(spl_month):
-        # with open(latest_file, "a+", encoding='utf-8') as report_file:
-        #     report_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE,REPLACE\n")
+        # Here check if its the same day, if not create a new sheet and write to it
+        # Then when writing same day, find the last sheet and write to that one
         wb = openpyxl.load_workbook(latest_file)
         ws = wb.active
-        data = [["",recipient, car_name, stk, timeof, timeto, "REPLACE", "REPLACE", "REPLACE"]]
+        data = [["","",timeof, timeto, car_name, stk, recipient, "REPLACE", "REPLACE", "REPLACE"]]
         for row in data:
           ws.append(row)
 
         wb.save(latest_file)
 
       else:
-          # path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
-          # with open(path, "a+", encoding='utf-8') as new_file: 
-          #   new_file.write(f"email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note\n")
-          #   new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE,REPLACE\n") #{split_date},{current_date}\n")
+          # Define styles
+          red_flag_ft = Font(bold=True, color="B22222")
+          red_flag_fill = PatternFill("solid", "B22222")
+          Header_fill = PatternFill("solid", "00CCFFFF")
+          Header_ft = Font(bold=True, color="000000", size=20)
+          Data_ft = Font(size=16)  # New font for data cells
 
+          Header_border = Border(
+              left=Side(border_style="thick", color='FF000000'),
+              right=Side(border_style="thick", color='FF000000'),
+              top=Side(border_style="thick", color='FF000000'),
+              bottom=Side(border_style="thick", color='FF000000')
+          )
+
+          header_alignment = Alignment(
+              horizontal='center',
+              vertical='center'
+          )
           wb = Workbook()
           ws = wb.active
-          email_ft = Font(bold=True, color="B22222")
-          Header_ft = Font(bold=True, color="000000")
-
+          #email_ft = Font(bold=True, color="B22222")
           filler = ["","","","","","","",""]
-          data = [filler,filler,["","Email", "Auto", "SPZ", "Čas od", "Čas do", "Odovzdanie", "Meškanie", "Poznámka"],["",recipient, car_name, stk, timeof, timeto, "REPLACE", "REPLACE", "REPLACE"]]
+          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, recipient, "REPLACE", "REPLACE", "REPLACE"]]
 
           for row in data:
               ws.append(row)
-              
+              # Format red flag cell (B3)
+          red_flag_cell = ws["B3"]
+          red_flag_cell.font = red_flag_ft
+          red_flag_cell.fill = red_flag_fill
+          red_flag_cell.border = Header_border
           email_cell = ws["B3"]
-          email_cell.font = email_ft
+          #email_cell.font = email_ft
 
-          for row in ws["C3:H3"]:
-              for cell in row:
+          # Set row height for header row
+          ws.row_dimensions[3].height = 35
+
+          # Set column widths for data columns
+          for col in ["C", "D", "E", "F", "G", "H", "I", "J"]:
+              ws.column_dimensions[col].width = 23
+
+          # Format header row (C3:J3)
+          for row_cells in ws["C3:J3"]:
+              for cell in row_cells:
                   cell.font = Header_ft
+                  cell.alignment = header_alignment
+                  cell.fill = Header_fill
+                  cell.border = Header_border
+
+          # Format data rows (from row 4 onwards, columns C-J)
+          for row in ws.iter_rows(min_row=4, min_col=3, max_col=10):
+              for cell in row:
+                  cell.font = Data_ft
 
           wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_EXCEL_ICLS_report.xlsx")
 
-    except Exception as e:
-      #? Triggered only if ./reports is empty or a naming issue
-      # path = f"{os.getcwd()}/reports/{get_sk_date()}exc_ICLS_report.csv"
-      # with open(path, "a+", encoding='utf-8') as new_file: 
-      #   new_file.write(f"email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note\n")
-      #   new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},{e},REPLACE,REPLACE\n")
-
-      wb = Workbook()
-      ws = wb.active
-      email_ft = Font(bold=True, color="B22222")
-      Header_ft = Font(bold=True, color="000000")
-
-      filler = ["","","","","","","",""]
-      data = [filler,filler,["","Email", "Auto", "SPZ", "Čas od", "Čas do", "Odovzdanie", "Meškanie", "Poznámka"],["",recipient, car_name, stk, timeof, timeto, "REPLACE", "REPLACE", "REPLACE"]]
-
-      for row in data:
-          ws.append(row)
+    except Exception as e: #? ONLY HAPPENDS IF THE DIRECTORY IS EMPTY, SO LIKE ONCE 
+          # Define styles
+          red_flag_ft = Font(bold=True, color="B22222")
+          red_flag_fill = PatternFill("solid", "B22222")
+          Header_fill = PatternFill("solid", "00CCFFFF")
+          Header_ft = Font(bold=True, color="000000", size=20)
+          Data_ft = Font(size=16)  # New font for data cells
+          Header_border = Border(left=Side(border_style="thick", color='FF000000'),right=Side(border_style="thick", color='FF000000'),top=Side(border_style="thick", color='FF000000'),bottom=Side(border_style="thick", color='FF000000'))
+          header_alignment = Alignment(horizontal='center',vertical='center')
           
-      email_cell = ws["B3"]
-      email_cell.font = email_ft
-
-      for row in ws["C3:H3"]:
-          for cell in row:
-              cell.font = Header_ft
-
-      wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_EXCEL_ICLS_report.xlsx")
+          wb = Workbook()
+          ws = wb.active
+          filler = ["","","","","","","",""]
+          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, recipient, "REPLACE", "REPLACE", "REPLACE"]]
+          for row in data:
+              ws.append(row)
+              # Format red flag cell (B3)
+          red_flag_cell = ws["B3"]
+          red_flag_cell.font = red_flag_ft
+          red_flag_cell.fill = red_flag_fill
+          red_flag_cell.border = Header_border
+          email_cell = ws["B3"]
+          # Set row height for header row
+          ws.row_dimensions[3].height = 35
+          # Set column widths for data columns
+          for col in ["C", "D", "E", "F", "G", "H", "I", "J"]:
+              ws.column_dimensions[col].width = 23
+          # Format header row (C3:J3)
+          for row_cells in ws["C3:J3"]:
+              for cell in row_cells:
+                  cell.font = Header_ft
+                  cell.alignment = header_alignment
+                  cell.fill = Header_fill
+                  cell.border = Header_border
+          # Format data rows (from row 4 onwards, columns C-J)
+          for row in ws.iter_rows(min_row=4, min_col=3, max_col=10):
+              for cell in row:
+                  cell.font = Data_ft
+          wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_EXCEL_ICLS_report.xlsx")
 
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
   cur.execute("select * from car where name = %s", (car_name,))
@@ -988,10 +1032,11 @@ def return_car():
       sheet1 = wb.active
 
       # Loop over all rows in the worksheet
+      # ["","Čas od", "Čas do", "Auto", "SPZ","Email", "Odovzdanie", "Meškanie", "Poznámka"]
       for row in range(1, sheet1.max_row + 1):
           # Get the values from the cells in the current row
-          exc_timeof = sheet1.cell(row=row, column=5).value
-          exc_timeto = sheet1.cell(row=row, column=6).value
+          exc_timeof = sheet1.cell(row=row, column=1).value
+          exc_timeto = sheet1.cell(row=row, column=2).value
           time_of_return_cell = sheet1.cell(row=row, column=7)
           late_return_cell = sheet1.cell(row=row, column=8)
           note_cell = sheet1.cell(row=row, column=9)
