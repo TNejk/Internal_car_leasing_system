@@ -833,7 +833,9 @@ def lease_car():
           for row in ws.iter_rows(min_row=4, min_col=3, max_col=10):
               for cell in row:
                   cell.font = Data_ft
-
+          # Set row height for data rows (from row 4 to the last row)
+          for row in range(4, ws.max_row + 1):
+              ws.row_dimensions[row].height = 25  # set desired height for data rows
           wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_EXCEL_ICLS_report.xlsx")
 
     except Exception as e: #? ONLY HAPPENDS IF THE DIRECTORY IS EMPTY, SO LIKE ONCE 
@@ -845,7 +847,7 @@ def lease_car():
           Data_ft = Font(size=16)  # New font for data cells
           Header_border = Border(left=Side(border_style="thick", color='FF000000'),right=Side(border_style="thick", color='FF000000'),top=Side(border_style="thick", color='FF000000'),bottom=Side(border_style="thick", color='FF000000'))
           header_alignment = Alignment(horizontal='center',vertical='center')
-          
+
           wb = Workbook()
           ws = wb.active
           filler = ["","","","","","","",""]
@@ -874,6 +876,9 @@ def lease_car():
           for row in ws.iter_rows(min_row=4, min_col=3, max_col=10):
               for cell in row:
                   cell.font = Data_ft
+                  # Set row height for data rows (from row 4 to the last row)
+          for row in range(4, ws.max_row + 1):
+              ws.row_dimensions[row].height = 30  # set desired height for data rows
           wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_EXCEL_ICLS_report.xlsx")
 
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
