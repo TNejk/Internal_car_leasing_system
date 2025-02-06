@@ -787,7 +787,7 @@ def lease_car():
           Header_ft = Font(bold=True, color="000000")
 
           filler = ["","","","","","","",""]
-          data = [filler,filler,["Email", "Auto", "SPZ", "Čas od", "Čas do", "Odovzdanie", "Meškanie", "Poznámka"][recipient, car_name, stk, timeof, timeto, "REPLACE", "REPLACE", "REPLACE"]]
+          data = [filler,filler,["Email", "Auto", "SPZ", "Čas od", "Čas do", "Odovzdanie", "Meškanie", "Poznámka"],[recipient, car_name, stk, timeof, timeto, "REPLACE", "REPLACE", "REPLACE"]]
 
           for row in data:
               ws.append(row)
