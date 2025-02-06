@@ -772,9 +772,7 @@ def lease_car():
       if cur_year == spl_year and int(cur_month) == int(spl_month):
         with open(latest_file, "a+", encoding='utf-8') as report_file:
             report_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE,REPLACE\n")
-
-
-
+            
       else:
           path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
           with open(path, "a+", encoding='utf-8') as new_file: 
@@ -787,7 +785,7 @@ def lease_car():
           Header_ft = Font(bold=True, color="000000")
 
           filler = ["","","","","","","",""]
-          data = [filler,filler,["Email", "Auto", "SPZ", "Čas od", "Čas do", "Odovzdanie", "Meškanie", "Poznámka"],[recipient, car_name, stk, timeof, timeto, "REPLACE", "REPLACE", "REPLACE"]]
+          data = [filler,filler,["","Email", "Auto", "SPZ", "Čas od", "Čas do", "Odovzdanie", "Meškanie", "Poznámka"],["",recipient, car_name, stk, timeof, timeto, "REPLACE", "REPLACE", "REPLACE"]]
 
           for row in data:
               ws.append(row)
@@ -814,7 +812,7 @@ def lease_car():
       Header_ft = Font(bold=True, color="000000")
 
       filler = ["","","","","","","",""]
-      data = [filler,filler,["Email", "Auto", "SPZ", "Čas od", "Čas do", "Odovzdanie", "Meškanie", "Poznámka"],[recipient, car_name, stk, timeof, timeto, "REPLACE", "REPLACE", "REPLACE"]]
+      data = [filler,filler,["","Email", "Auto", "SPZ", "Čas od", "Čas do", "Odovzdanie", "Meškanie", "Poznámka"],["",recipient, car_name, stk, timeof, timeto, "REPLACE", "REPLACE", "REPLACE"]]
 
       for row in data:
           ws.append(row)
