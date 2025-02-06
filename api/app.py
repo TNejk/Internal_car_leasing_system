@@ -566,7 +566,8 @@ def get_leases():
           l.start_of_lease,
           l.end_of_lease,
           l.time_of_return,
-          l.private
+          l.private,
+          c.stk
         FROM 
             lease l
         JOIN 
@@ -589,7 +590,8 @@ def get_leases():
           l.start_of_lease,
           l.end_of_lease,
           l.time_of_return,
-          l.private
+          l.private,
+          c.stk
         FROM 
             lease l
         JOIN 
