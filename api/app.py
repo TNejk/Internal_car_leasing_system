@@ -778,6 +778,8 @@ def lease_car():
         for row in data:
           ws.append(row)
 
+        wb.save(latest_file)
+
       else:
           # path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
           # with open(path, "a+", encoding='utf-8') as new_file: 
@@ -985,22 +987,26 @@ def return_car():
 
       wb = openpyxl.load_workbook(csv_file_path)
       sheet1 = wb.active
-      
-      exc_timeof = sheet1.cell(row=row, column=5)
-      exc_timeto = sheet1.cell(row=row, column=6)
-      time_of_return = sheet1.cell(row=row, column=7)
-      
-      late_return = sheet1.cell(row=row, column=8)
-      note = sheet1.cell(row=row, column=9)
 
-      for row in range(1, sheet1.max_row+1):
+      # Loop over all rows in the worksheet
+      for row in range(1, sheet1.max_row + 1):
+          # Get the values from the cells in the current row
+          exc_timeof = sheet1.cell(row=row, column=5).value
+          exc_timeto = sheet1.cell(row=row, column=6).value
+          time_of_return_cell = sheet1.cell(row=row, column=7)
+          late_return_cell = sheet1.cell(row=row, column=8)
+          note_cell = sheet1.cell(row=row, column=9)
+          
+            # To avoid duplicates when returing, as dates could collide probalby idk fuck my stupid chungus life 
+          if time_of_return_cell.value == "REPLACE":
 
-        # To not duplicate returns if the date occured in the past 
-        if time_of_return.value == "REPLACE":
-          if exc_timeof == timeof and exc_timeto == timeto:
-            time_of_return.value = tor
-            late_return.value = meskanie
-            note.value = new_note
+              if exc_timeof == timeof and exc_timeto == timeto:
+                  time_of_return_cell.value = tor
+                  late_return_cell.value = meskanie
+                  note_cell.value = new_note
+
+      # Save changes to the workbook
+      wb.save(csv_file_path)
     
   
   id_lease = data["id_lease"]
