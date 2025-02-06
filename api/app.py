@@ -498,8 +498,7 @@ def get_reports(filename):
 
         return send_from_directory(
             directory=reports_dir,
-            path=filename,
-            as_attachment=True
+            path=filename
         )
     except Exception as e:
         return {"msg": f"Error accessing file: {str(e)}"}, 500
