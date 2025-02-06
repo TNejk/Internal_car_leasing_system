@@ -770,14 +770,19 @@ def lease_car():
       
       #timeof = timeof.strftime("%Y-%m-%d %H:%M:%S")
       if cur_year == spl_year and int(cur_month) == int(spl_month):
-        with open(latest_file, "a+", encoding='utf-8') as report_file:
-            report_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE,REPLACE\n")
-            
+        # with open(latest_file, "a+", encoding='utf-8') as report_file:
+        #     report_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE,REPLACE\n")
+        wb = openpyxl.load_workbook(latest_file)
+        ws = wb.active
+        data = [["",recipient, car_name, stk, timeof, timeto, "REPLACE", "REPLACE", "REPLACE"]]
+        for row in data:
+          ws.append(row)
+
       else:
-          path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
-          with open(path, "a+", encoding='utf-8') as new_file: 
-            new_file.write(f"email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note\n")
-            new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE,REPLACE\n") #{split_date},{current_date}\n")
+          # path = f"{os.getcwd()}/reports/{get_sk_date()}_ICLS_report.csv"
+          # with open(path, "a+", encoding='utf-8') as new_file: 
+          #   new_file.write(f"email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note\n")
+          #   new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},REPLACE,REPLACE,REPLACE\n") #{split_date},{current_date}\n")
 
           wb = Workbook()
           ws = wb.active
@@ -801,10 +806,10 @@ def lease_car():
 
     except Exception as e:
       #? Triggered only if ./reports is empty or a naming issue
-      path = f"{os.getcwd()}/reports/{get_sk_date()}exc_ICLS_report.csv"
-      with open(path, "a+", encoding='utf-8') as new_file: 
-        new_file.write(f"email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note\n")
-        new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},{e},REPLACE,REPLACE\n")
+      # path = f"{os.getcwd()}/reports/{get_sk_date()}exc_ICLS_report.csv"
+      # with open(path, "a+", encoding='utf-8') as new_file: 
+      #   new_file.write(f"email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note\n")
+      #   new_file.write(f"{recipient},{car_name},{stk},{timeof},{timeto},{e},REPLACE,REPLACE\n")
 
       wb = Workbook()
       ws = wb.active
@@ -955,28 +960,47 @@ def return_car():
       
       csv_file_path = get_latest_file(f"{os.getcwd()}/reports")
 
-      rows = []
-      with open(csv_file_path, mode='r', newline='\n', encoding='utf-8') as file:
-          reader = csv.DictReader(file)
-          fieldnames = reader.fieldnames
-          for row in reader:
-              rows.append(row)
-      # email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note
-      # cas_od: 2025-02-02 20:50 
-      # Find the row with the matching recipient email and update the specified columns
-      # cas_do: 2025-02-01 16:00
-      for row in rows:
-          if row['cas_od'] == timeof and row["cas_do"] == timeto:
-              row['odovzdanie'] = return_date
-              row['meskanie'] = meskanie
-              row['note'] = new_note
-              break
+      # rows = []
+      # with open(csv_file_path, mode='r', newline='\n', encoding='utf-8') as file:
+      #     reader = csv.DictReader(file)
+      #     fieldnames = reader.fieldnames
+      #     for row in reader:
+      #         rows.append(row)
+      # # email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note
+      # # cas_od: 2025-02-02 20:50 
+      # # Find the row with the matching recipient email and update the specified columns
+      # # cas_do: 2025-02-01 16:00
+      # for row in rows:
+      #     if row['cas_od'] == timeof and row["cas_do"] == timeto:
+      #         row['odovzdanie'] = return_date
+      #         row['meskanie'] = meskanie
+      #         row['note'] = new_note
+      #         break
 
-      # Write the updated rows back to the CSV file
-      with open(csv_file_path, mode='w', newline='\n', encoding='utf-8') as file:
-          writer = csv.DictWriter(file, fieldnames=fieldnames)
-          writer.writeheader()
-          writer.writerows(rows)
+      # # Write the updated rows back to the CSV file
+      # with open(csv_file_path, mode='w', newline='\n', encoding='utf-8') as file:
+      #     writer = csv.DictWriter(file, fieldnames=fieldnames)
+      #     writer.writeheader()
+      #     writer.writerows(rows)
+
+      wb = openpyxl.load_workbook(csv_file_path)
+      sheet1 = wb.active
+      
+      exc_timeof = sheet1.cell(row=row, column=5)
+      exc_timeto = sheet1.cell(row=row, column=6)
+      time_of_return = sheet1.cell(row=row, column=7)
+      
+      late_return = sheet1.cell(row=row, column=8)
+      note = sheet1.cell(row=row, column=9)
+
+      for row in range(1, sheet1.max_row+1):
+
+        # To not duplicate returns if the date occured in the past 
+        if time_of_return.value == "REPLACE":
+          if exc_timeof == timeof and exc_timeto == timeto:
+            time_of_return.value = tor
+            late_return.value = meskanie
+            note.value = new_note
     
   
   id_lease = data["id_lease"]
