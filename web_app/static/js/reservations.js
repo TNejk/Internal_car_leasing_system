@@ -2,89 +2,118 @@ const closeModal = document.getElementById('close-modal');
 const finishReservationModal = document.getElementById('finish-reservation-modal');
 const scrapReservationModal = document.getElementById('scrap-reservation-modal');
 const modal = document.getElementById('modal');
+const modalStatus = document.getElementById('modal-status');
+const closeModalStatus = document.getElementById('close-modal-status');
 let leaseId;
-let token;
+let role;
 
-function get_leases{
+function get_leases(){
   fetch('/get_session_data', {method: 'POST'})
+  .then(res => res.json())
+  .then(data => {
+    role = data.role;
+
+    fetch('/get_user_leases', {method: 'POST'})
     .then(res => res.json())
     .then(data => {
-      var username = data.username;
-      var token = data.token;
-      var role = data.role;
-      var data = {'email': username, 'role': role};
+      if (!data){
+        document.getElementById('default-message').style.display = 'block';
+      }
+      else {
+        // Get the container where cards will be added
+        const cardCont = document.getElementById('card-container');
+        cardCont.innerHTML = ''; // Clear existing cards
 
-      fetch('https://icls.sosit-wh.net/get_leases', {
-        method: 'POST',
-        headers: {
-                Authorization: 'Bearer ' + Token,
-                'Content-Type': 'application/json'},
-              body: JSON.stringify(data)
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (!data){
-            document.getElementById('default-message').style.display = 'block';
-          }
-          else {
-            for (lease in data) {
-              document.getElementById('reservation-card').onclick = openModal(lease.lease_id);
-              document.getElementById('reservation-car-image').src = lease.url;
-              document.getElementById('reservation-car-image').alt = lease.car_name;
-              document.getElementById('reservation-car-name').innerText = lease.car_name;
-              document.getElementById('reservation-time_from').innerText = lease.time_from;
-              document.getElementById('reservation-time-to').innerText = lease.time_to;
-              if (role == 'manager'){
-                document.getElementById('reservation-user').innerText = lease.email;
-              }
+        // Loop through each reservation in data
+        for (let lease of data) {
+            // Create a new card element dynamically
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.onclick = function () {
+                openModal(lease);
+            };
+            card.id = 'card';
 
-              document.getElementById('reservations-card').style.display = 'block';
+            // Create car image
+            const img = document.createElement('img');
+            img.src = lease.url;
+            img.alt = lease.car_name;
+            card.appendChild(img);
+
+            // Create car name element
+            const carName = document.createElement('h2');
+            carName.innerText = lease.car_name;
+            card.appendChild(carName);
+
+            // Create reservation time elements
+            const timeFrom = document.createElement('p');
+            timeFrom.innerText = `From: ${lease.time_from}`;
+            card.appendChild(timeFrom);
+
+            const timeTo = document.createElement('p');
+            timeTo.innerText = `To: ${lease.time_to}`;
+            card.appendChild(timeTo);
+
+            // Add user info if role is manager
+            if (role === 'manager') {
+                const userInfo = document.createElement('p');
+                userInfo.innerText = lease.email;
+                card.appendChild(userInfo);
             }
-          }
-        });
+            // Add card to the container
+            cardCont.appendChild(card);
+        }
+      }
     });
+  })
 };
 
 function openModal(lease) {
   leaseId = lease.lease_id;
+  console.log(lease);
   document.getElementById("modal-car-name").innerText = lease['car_name'];
   document.getElementById("modal-time-from").innerText = lease['time_from'];
   document.getElementById("modal-time-to").innerText = lease['time_to'];
-  document.getElementById("modal-user").innerText = lease['email'];
+  if (role === 'manager') {
+    document.getElementById("modal-user").innerText = lease['email'];
+  }
   document.getElementById("modal").style.display = "block";
   document.getElementById("modal-backdrop").style.display = "block";
 };
 
-closeModal.addEventListener('click', () => {
+function closeModalF(){
   document.getElementById("modal").style.display = "none";
   document.getElementById("modal-backdrop").style.display = "none";
+};
+
+closeModal.addEventListener('click', function(){
+  document.getElementById("modal").style.display = "none";
 });
 
 finishReservationModal.addEventListener('click', () => {
-  function formatDate(date) {
-    const year = date.substr(0, 4);
-    const month = date.substr(5, 2);
-    const day = date.substr(8, 2);
-    const hours = date.substr(11, 2);
-    const minutes = date.substr(14, 2);
-    const seconds = date.substr(17, 2);
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  function formatDate() {
+    const date = new Date();
+    const formattedDate = date.toISOString().replace('T', ' ').replace('Z', '') + "+0000";
+    return formattedDate;
   };
+
+  const note = document.getElementById("note").value;
+  const health = document.getElementById("card-health").value;
+  const location = document.getElementById("card-location").value;
 
   fetch('/get_session_data', {method: 'POST'})
     .then(response => response.json())
     .then(data => {
       token = data.token;
-      console.log(token);
-
-      const returnTime = formatDate(new Date().toISOString());
+      const returnTime = formatDate();
       const payload = {
-        "id_lease": leaseId,
-        "time_of_return": returnTime,
-        "note": '',
-        'location': 'Banská Bystrica',
-        'health': 'good'
+        'id_lease': leaseId,
+        'time_of_return': returnTime,
+        'note': note,
+        'location': location,
+        'health': health
       };
+      console.log(payload);
       fetch('https://icls.sosit-wh.net/return_car', {
         method: 'POST',
         headers: {
@@ -94,16 +123,38 @@ finishReservationModal.addEventListener('click', () => {
         body: JSON.stringify(payload),
       }).then((response) => response.json())
         .then((data) => {
-          console.log(data);
+          closeModalF();
+          reload(data);
+          get_leases();
         }).catch((error) => console.error('Error fetching car details:', error));
     });
-
 });
 
 scrapReservationModal.addEventListener('click', () => {
   console.log("Scrap Reservation");
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+function reload(data){
+  const status = data['status'];
+  const modalTitle = document.querySelector('#modal-status #modal-inner h2');
+  const modalMessage = document.querySelector('#modal-status #modal-inner p');
+  if (status == 'returned'){
+    modalTitle.textContent = 'Úspech :)';
+    modalMessage.textContent = 'Rezervácia auta bola úspešná!';
+  }else{
+    modalTitle.textContent = 'Neúspech :(';
+    modalMessage.textContent = 'Rezervácia auta sa nepodarila, skúste to znova.';
+  }
+  document.getElementById('modal-status').style.display = 'block';
+  document.getElementById('modal-inner').style.display = 'block';
+};
 
+closeModalStatus.addEventListener('click', function() {
+  document.getElementById("modal-backdrop").style.display = "none";
+  document.getElementById('modal-status').style.display = "none";
+})
+
+document.addEventListener('DOMContentLoaded', () => {
+  get_leases();
+  document.getElementById('modal-inner').style.display = 'none';
 })

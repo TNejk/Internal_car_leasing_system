@@ -11,51 +11,13 @@
 {% endblock %}
 
 {% block body %}
-<header class="main-header">
-  <h2 style="color: black">Autodoprava</h2>
-<!--  <input type="text" placeholder="Vyhľadaj auto">-->
-  <div class="icons">
-    <ul>
-      <li><a href="/dashboard">Domcek</a></li>
-      <li>
-        <a href="#"><span class="icon"><img src="{{ icons[0] }}" style="width: 24px;height: 24px;" alt="Zvoncek"></span></a>
-        <ul class="dropdown">
-          {% if notifications|length == 0 %}
-            <p id="notification-default">Nemáte žiadne notifikácie.</p>
-          {% else %}
-            {% for notification in notifications %}
-              <li>
-                <h2>{{ notification[0] }}</h2><br>
-                <p>{{ notification[1] }}</p>
-              </li>
-            {% endfor %}
-          {% endif %}
-        </ul>
-      </li>
-      <li>
-        <a href="#"><span class="icon"><img src="{{ icons[1] }}" style="width: 24px;height: 24px;" alt="Zvoncek"></span></a>
-        <ul class="dropdown">
-          <li><a href="/reservations">Rezervácie</a></li>
-          <li></li>
-          <li>
-            <a href="/settings">
-              <span class="icon"><img src="{{ icons[2] }}" style="width: 24px;height: 24px;" alt="Zvoncek"></span>
-              <p>Nastavenia</p>
-            </a>
-          </li>
-          <li><a href="/sign-out">Odhlásiť sa</a></li>
-        </ul>
-      </li>
-    </ul>
-  </div>
-</header>
 <div class="container">
   <div class="sidebar">
     <img src="{{ icons[1] }}" alt="{{ Pandrlác }}" style="width: 80px; height: 80px; border-radius: 50%;">
     <p>{{ username }}</p>
     <button>Zmena hesla</button>
     <form action="/logout">
-      <button>Odhlasenie</button>
+      <button>Odhlásenie</button>
     </form>
     {% if role == 'manager' %}
     <script></script>
@@ -66,18 +28,13 @@
 
   </div>
   <div class="content">
-    <div class="card-container">
-      <div class="card" id="reservations-card" onclick=`openModal()` style="display: none">
-         <img id="reservations-car-image" src="" alt="">
-         <h2 id="reservations-car-name"></h2>
-         <p id="reservations-time-from"></p>
-         <p id="reservations-time-to"></p>
-        <p id="reservations-user"></p>
-      </div>
+    <div class="card-container" id="card-container">
+<!--      davam sem dynamicky v js karty-->
       <div id="default-message" style="display: none;">Neexistuje žiadna rezervácia!</div>
     </div>
+  </div>
 
-  <div class="modal-backdrop" id="modal-backdrop" onclick="closeModal()"></div>
+  <div class="modal-backdrop" id="modal-backdrop" onclick="closeModalF()"></div>
   <div class="modal" id="modal">
     <h2 id="modal-car-name"></h2>
     <p id="modal-time-from"></p>
@@ -85,12 +42,33 @@
     {% if role == 'manager' %}
       <p id="modal-user"></p>
     {% endif %}
+
+    <label for="card-health">Stav Auta:</label>
+    <select id="card-health">
+      <option value="good">Dobrý</option>
+      <option value="mild">Postačujúci</option>
+      <option value="bad">Zlý</option>
+    </select>
+    <label for="card-location">Miesto návratu auta:</label>
+    <select id="card-location">
+      <option value="Banská Bystrica">Banská Bystrica</option>
+      <option value="Bratislava">Bratislava</option>
+      <option value="Košice">Košice</option>
+    </select>
+    <label for="note">Poznámka</label>
+    <input type="text" id="note" placeholder="">
     <button id="finish-reservation-modal">Odovzdaj auto</button>
     <button id="scrap-reservation-modal">Zruš rezerváciu</button>
     <button id="close-modal">Zatvor</button>
   </div>
+  <div id="modal-status" class="modal-status">
+    <div id="modal-inner">
+      <h2></h2>
+      <p></p>
+      <button id="close-modal-status">OK</button>
+    </div>
+  </div>
 </div>
-
 
 <script src="{{ url_for('static', filename='js/reservations.js' )}}"></script>
 {% endblock %}

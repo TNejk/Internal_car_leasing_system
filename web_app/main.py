@@ -1,12 +1,15 @@
 import sys, os
-sys.path.append('controllers')
-sys.path.append('workers')
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+sys.path.append('controllers')
+from check_token import check_token
 from require_role import require_role
+from revoke_token import revoke_token
+sys.path.append('workers')
 from request_all_car_data import request_all_car_data
 from sign_in_api import sign_in_api
-from check_token import check_token
 from request_user_leases import request_user_leases
+from list_reports import list_reports
+from get_report import get_report
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 SALT = os.getenv('SALT')
@@ -20,6 +23,7 @@ def index():
   return redirect('/sign-in')
 
 @app.route('/sign-in', methods=['GET','POST'])
+@revoke_token()
 def sign_in():
   if request.method == 'GET':
     return render_template('signs/sign_in.html')
@@ -30,25 +34,24 @@ def sign_in():
     if result == 'success':
       return redirect('/dashboard')
     else:
-      return render_template('signs/sign_in.html', data=result)
+      return render_template('signs/sign_in.html', data=result, show_header=False)
 
 @app.route('/sign-up', methods=['GET', 'POST'])
+@revoke_token()
 def sign_up():
   if request.method == 'GET':
     error = 'Nesprávne meno alebo heslo!'
-    return render_template('signs/sign_in.html', error=error)
+    return render_template('signs/sign_in.html', error=error, show_header=False)
   else:
     data = request.get_json()
     username = data['email']
     password = data['password']
-    session['username'] = username
-    session['password'] = password
-    session['role'] = 'user'
+    # sprav funkciu
     return redirect('/dashboard')
 
 @app.route(f'/dashboard', methods=['GET'])
 @require_role('user','manager')
-#@check_token() # nefunguje
+@check_token()
 def dashboard():
   bell = url_for('static', filename='sources/images/bell.svg')
   user = url_for('static', filename='sources/images/user.svg')
@@ -58,30 +61,49 @@ def dashboard():
   username = session['username']
   role = session['role']
 
-  return render_template('dashboards/dashboard.html', cars = cars, token=session.get('token'), icons = [bell, user, settings], username=username, role=role)
+  return render_template('dashboards/dashboard.html', cars = cars, token=session.get('token'), icons = [bell, user, settings], username=username, role=role, show_header=True)
 
 @app.route(f'/reservations', methods=['GET', 'POST'])
 @require_role('user','manager')
-#@check_token() # nefunguje
+@check_token()
 def reservations():
   bell = url_for('static', filename='sources/images/bell.svg')
   user = url_for('static', filename='sources/images/user.svg')
   settings = url_for('static', filename='sources/images/settings.svg')
   leases = request_user_leases(session['username'],session['role'])
-  print(leases)
-  return render_template('dashboards/reservations.html', leases=leases, icons = [bell, user, settings], username=session['username'], role=session['role'])
+  return render_template('dashboards/reservations.html', leases=leases, icons = [bell, user, settings], username=session['username'], role=session['role'], show_header=True)
 
+@app.route('/get_user_leases', methods=['GET', 'POST'])
+@require_role('user', 'manager')
+@check_token()
+def get_user_leases():
+  data = request_user_leases(session['username'], session['role'])
+  return jsonify(data)
 
-@app.route('/logout')
-def logout():
-    session.pop('username', None)
-    session.pop('role', None)
-    session.pop('token', None)
-    session.pop('password', None)
-    return redirect(url_for('sign_in'))
+@app.route(f'/reports', methods=['GET', 'POST'])
+@require_role('manager')
+@check_token()
+def reports():
+  bell = url_for('static', filename='sources/images/bell.svg')
+  user = url_for('static', filename='sources/images/user.svg')
+  settings = url_for('static', filename='sources/images/settings.svg')
+  data = list_reports(session['username'], session['role'])
 
-@require_role('user','manager')
+  return render_template('dashboards/reports.html', icons = [bell, user, settings], data=data, show_header=True)
+
+@app.route(f'/get_report', methods=['GET', 'POST'])
+@require_role('manager')
+@check_token()
+def get_report_r():
+  report = request.args.get('report', None)
+  email = session['username']
+  role = session['role']
+  returned_report = get_report(email,role,report)
+  return returned_report
+
 @app.route('/get_session_data', methods=['POST'])
+@require_role('user','manager')
+@check_token()
 def get_session_data():
     data = {
       'username': session.get('username'),
@@ -91,9 +113,23 @@ def get_session_data():
     }
     return jsonify(data)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+@app.route('/save_notification', methods=['POST'])
+@require_role('user','manager')
+def save_notification():
+  data = request.get_json()
+  session['notifications'] = [data['notifications']]
+  return jsonify("success")
 
+@app.route('/get_notifications', methods=['POST'])
+@require_role('user','manager')
+def get_notifications():
+  data = session['notifications']
+  return jsonify(data)
+
+@app.route('/logout')
+@revoke_token()
+def logout():
+    return redirect(url_for('sign_in'))
 
 if __name__ == '__main__':
   app.run(debug=True, use_reloader=True)

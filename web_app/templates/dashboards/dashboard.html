@@ -7,44 +7,6 @@
 {% endblock %}
 
 {% block body %}
-<header class="main-header">
-  <h2 style="color: black">Autodoprava</h2>
-<!--  <input type="text" placeholder="Vyhľadaj auto">-->
-  <div class="icons">
-    <ul>
-      <li><a href="/dashboard">Domcek</a></li>
-      <li>
-        <a href="#"><span class="icon"><img src="{{ icons[0] }}" style="width: 24px;height: 24px;" alt="Zvoncek"></span></a>
-        <ul class="dropdown">
-          {% if notifications|length == 0 %}
-            <p id="notification-default">Nemáte žiadne notifikácie.</p>
-          {% else %}
-            {% for notification in notifications %}
-              <li>
-                <h2>{{ notification[0] }}</h2><br>
-                <p>{{ notification[1] }}</p>
-              </li>
-            {% endfor %}
-          {% endif %}
-        </ul>
-      </li>
-      <li>
-        <a href="#"><span class="icon"><img src="{{ icons[1] }}" style="width: 24px;height: 24px;" alt="Zvoncek"></span></a>
-        <ul class="dropdown">
-          <li><a href="/reservations">Rezervácie</a></li>
-          <li></li>
-          <li>
-            <a href="/settings">
-              <span class="icon"><img src="{{ icons[2] }}" style="width: 24px;height: 24px;" alt="Zvoncek"></span>
-              <p>Nastavenia</p>
-            </a>
-          </li>
-          <li><a href="/sign-out">Odhlásiť sa</a></li>
-        </ul>
-      </li>
-    </ul>
-  </div>
-</header>
 <div class="container">
   <div class="sidebar">
     <div class="car-list">

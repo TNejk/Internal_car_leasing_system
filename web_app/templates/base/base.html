@@ -4,11 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/style.css') }}">
-  <script src="{{ url_for('static', filename='js/script.js' )}}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/header.css') }}">
   {% block head %}{% endblock %}
 </head>
 <body>
-  {% block body %}{% endblock %}
-  {% block script %}{% endblock %}
+
+  {% if show_header %}
+    {% include 'base/header.html' %}
+  {% endif %}
+
+  {% block body %}
+  {% endblock %}
+
+  {% block script %}
+    <script src="{{ url_for('static', filename='js/script.js' )}}"></script>
+  {% endblock %}
 </body>
 </html>

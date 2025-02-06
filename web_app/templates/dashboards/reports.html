@@ -1,0 +1,27 @@
+{% extends 'base/base.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/header.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/layout.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/cards.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/modals.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/notifications.css') }}">
+<!--<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/reservations.css') }}">-->
+<title>ICLS - Reporty</title>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  {% if data|length == 0 %}
+    <div id="default-message">Neexistuje žiadny report</div>
+  {% else %}
+    {% for report in data %}
+      <a href="/get_report?report={{report}}">{{report}}</a>
+    {% endfor %}
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

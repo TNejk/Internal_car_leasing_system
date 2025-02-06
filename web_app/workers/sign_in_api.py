@@ -1,7 +1,6 @@
 import os, requests, hashlib
 from flask import session, render_template, jsonify
 
-
 def sign_in_api(username, password, SALT):
     payload = {"username": username, "password": password}
     try:

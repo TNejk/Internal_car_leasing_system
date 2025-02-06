@@ -65,29 +65,7 @@ function renderCalendar(dates) {
         text: 'Rezervuj!',
         click: function () {
           if (selectedRange) {
-            data = {
-              'username': username,
-              'recipient': username, // zmen na recipient ked budes robit managera
-              'role': role,
-              'car_name': car_name,
-              'stk': stk,
-              'is_private': is_private,
-              'timeof': selectedRange['start'],
-              'timeto': selectedRange['end'],
-            };
-            fetch('https://icls.sosit-wh.net/lease_car', {
-              method: 'POST',
-              headers: {
-                Authorization: 'Bearer ' + Token,
-                'Content-Type': 'application/json'},
-              body: JSON.stringify(data)
-            })
-              .then(response => response.json())
-              .then(data => {
-                reload(data);
-                fetchCarData(car_id, Token, username, role);
-              })
-              .catch(error => console.error('Error:', error));
+            leaseCar(selectedRange);
           } else {
             console.log('No range selected.');
           };
@@ -189,6 +167,33 @@ function reload(data){
   modal.classList.add('open');
 
 };
+
+function leaseCar(selectedRange) {
+  data = {
+    'username': username,
+    'recipient': username, // zmen na recipient ked budes robit managera
+    'role': role,
+    'car_name': car_name,
+    'stk': stk,
+    'is_private': is_private,
+    'timeof': selectedRange['start'],
+    'timeto': selectedRange['end'],
+  };
+  fetch('https://icls.sosit-wh.net/lease_car', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + Token,
+      'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  })
+    .then(response => response.json())
+    .then(data => {
+      reload(data);
+      fetchCarData(car_id, Token, username, role);
+
+    })
+    .catch(error => console.error('Error:', error));
+}
 
 closeModal.addEventListener('click', () => {
   modal.classList.remove('open')
