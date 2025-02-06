@@ -158,19 +158,23 @@ def modify_token():
 def register():
   data = request.get_json()
   requster = data["requester"]
-  req_role = data["req_role"]
+  req_password = data["req_password"]
 
   email = data['email']
   password = data['password']
   role = data['role']
 
+  
+
   if not email or not password:
     return {"status": False, "msg": f"Chýba meno, heslo!"}
   
   conn, cur = connect_to_db()
+  req_salted = login_salt+req_password+login_salt
+  req_hashed = hashlib.sha256(req_salted.encode()).hexdigest()
 
   #! Only allow the admin to create users
-  res = cur.execute("select id_driver from driver where email = %s and role like 'admin'", (requster,))
+  res = cur.execute("select id_driver from driver where email = %s, password = %s and role like 'admin'", (requster,req_password))
   tmp = cur.fetchall()
   if len(tmp) <1:
      return {"status": False, "msg": "Unauthorized"}
@@ -913,8 +917,8 @@ def return_car():
           for row in reader:
               rows.append(row)
       # email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note
-      # Find the row with the matching recipient email and update the specified columns
       # cas_od: 2025-02-02 20:50 
+      # Find the row with the matching recipient email and update the specified columns
       # cas_do: 2025-02-01 16:00
       for row in rows:
           if row['cas_od'] == timeof and row["cas_do"] == timeto:
