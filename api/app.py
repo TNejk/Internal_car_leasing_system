@@ -157,7 +157,7 @@ def modify_token():
 @jwt_required()
 def register():
   data = request.get_json()
-  requster = data["requester"]
+  requester = data["requester"]
   req_password = data["req_password"]
 
   email = data['email']
@@ -174,7 +174,10 @@ def register():
   req_hashed = hashlib.sha256(req_salted.encode()).hexdigest()
 
   #! Only allow the admin to create users
-  res = cur.execute("select id_driver from driver where email = %s, password = %s and role like 'admin'", (requster,req_password))
+  res = cur.execute(
+    "SELECT id_driver FROM driver WHERE email = %s AND password = %s AND role LIKE 'admin'", 
+    (requester, req_hashed)
+  )
   tmp = cur.fetchall()
   if len(tmp) <1:
      return {"status": False, "msg": "Unauthorized"}
