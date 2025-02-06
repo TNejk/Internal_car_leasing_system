@@ -785,7 +785,7 @@ def lease_car():
           red_flag_fill = PatternFill("solid", "B22222")
           Header_fill = PatternFill("solid", "00CCFFFF")
           Header_ft = Font(bold=True, color="000000", size=20)
-          Data_ft = Font(size=16)  # New font for data cells
+          Data_ft = Font(size=17)  # New font for data cells
 
           Header_border = Border(
               left=Side(border_style="thick", color='FF000000'),
@@ -844,7 +844,7 @@ def lease_car():
           red_flag_fill = PatternFill("solid", "B22222")
           Header_fill = PatternFill("solid", "00CCFFFF")
           Header_ft = Font(bold=True, color="000000", size=20)
-          Data_ft = Font(size=16)  # New font for data cells
+          Data_ft = Font(size=17)  # New font for data cells
           Header_border = Border(left=Side(border_style="thick", color='FF000000'),right=Side(border_style="thick", color='FF000000'),top=Side(border_style="thick", color='FF000000'),bottom=Side(border_style="thick", color='FF000000'))
           header_alignment = Alignment(horizontal='center',vertical='center')
 
@@ -1038,7 +1038,7 @@ def return_car():
 
       # Loop over all rows in the worksheet
       # ["","Čas od", "Čas do", "Auto", "SPZ","Email", "Odovzdanie", "Meškanie", "Poznámka"]
-      for row in range(1, sheet1.max_row + 1):
+      for row in range(3, sheet1.max_row + 1):
           # Get the values from the cells in the current row
           exc_timeof = sheet1.cell(row=row, column=1).value
           exc_timeto = sheet1.cell(row=row, column=2).value
