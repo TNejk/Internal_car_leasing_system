@@ -871,7 +871,7 @@ def lease_car():
               ws.column_dimensions[col].width = 23
 
           # Format header row (C3:J3)
-          for row_cells in ws["C3:K3"]:
+          for row_cells in ws["C3:L3"]:
               for cell in row_cells:
                   cell.font = Header_ft
                   cell.alignment = header_alignment
