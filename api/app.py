@@ -70,12 +70,32 @@ def connect_to_db():
 #   			"to": ["iclsgamo@gmail.com", "mailgun@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org"],
 #   			"subject": "Rezervácia auta",
 #   			"text": "Zamestnanec: {user} \n Auto: {auto}, \n Čas od: {timeof}, \n Čas do: {timeto}"})
-def get_reports_paths(folder_path):  
-    try:  
-        with os.scandir(folder_path) as entries:  
-            return [entry.path.removeprefix("/app/reports/") for entry in entries if entry.is_file()]  
-    except OSError:  # Specific exception > bare except!  
-        return None  
+
+def get_reports_paths(folder_path):
+    try:
+        files = []
+        with os.scandir(folder_path) as entries:
+            for entry in entries:
+                if entry.is_file() and entry.name.endswith('.xlsx'):
+                    try:
+                        # Extract datetime from filename
+                        timestamp_str = entry.name.split('_', 1)[0]
+                        file_date = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+                        files.append((file_date, entry.path))
+                    except (ValueError, IndexError) as e:
+                        # Skip files with invalid format
+                        print(f"Skipping invalid file: {entry.name} - {str(e)}")
+                        continue
+        
+        # Sort by datetime descending (newest first)
+        files.sort(key=lambda x: x[0], reverse=True)
+        
+        # Remove path prefix and return just sorted filenames
+        return [entry[1].removeprefix("/app/reports/") for entry in files]
+        
+    except OSError as e:
+        print(f"Error accessing directory: {str(e)}")
+        return None
 
 def get_latest_file(folder_path):
     """
@@ -783,7 +803,7 @@ def lease_car():
       cur_month = current_date[1]
       
       timeof = timeof.strftime("%Y-%m-%d %H:%M:%S")
-      if cur_year == spl_year and int(cur_month) == int(spl_month):
+      if int(cur_year) == int(spl_year) and int(cur_month) == int(spl_month):
         # Here check if its the same day, if not create a new sheet and write to it
         # Then when writing same day, find the last sheet and write to that one
         wb = openpyxl.load_workbook(latest_file)
@@ -853,7 +873,10 @@ def lease_car():
               ws.row_dimensions[row].height = 25  # set desired height for data rows
           wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_EXCEL_ICLS_report.xlsx")
 
-    except Exception as e: #? ONLY HAPPENDS IF THE DIRECTORY IS EMPTY, SO LIKE ONCE 
+    except Exception as e: #? ONLY HAPPENDS IF THE DIRECTORY IS EMPTY, SO LIKE ONCE
+          with open(f"{os.getcwd()}/reports/{get_sk_date()}_ERRORt.txt") as file:
+             file.write(f"{e}")
+              
           # Define styles
           red_flag_ft = Font(bold=True, color="B22222")
           red_flag_fill = PatternFill("solid", "B22222")
