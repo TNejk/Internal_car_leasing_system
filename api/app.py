@@ -864,7 +864,7 @@ def lease_car():
           wb = Workbook()
           ws = wb.active
           filler = ["","","","","","","",""]
-          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, recipient, "REPLACE", "REPLACE", "REPLACE"]]
+          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, recipient, "REPLACE", "REPLACE", e]]
           for row in data:
               ws.append(row)
               # Format red flag cell (B3)
