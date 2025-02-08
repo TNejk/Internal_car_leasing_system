@@ -751,11 +751,14 @@ def lease_car():
   role = str(data["role"])
   car_name  = str(data["car_name"])
   stk = str(data["stk"])
+  gas = data["gas"]
+  shaft = data["shaft"]
   private = data["is_private"]
+
+  drive_type = f"{gas}, {shaft}"
 
   # Needed date format
   # 2011-08-09 00:00:00+09
-
   # Try to dezinfect timeof from the .2342212 number horseshit
   timeof = data["timeof"]
   try:
@@ -782,7 +785,7 @@ def lease_car():
 
   con, cur = connect_to_db()
 
-  def write_report(recipient, car_name, stk, timeof, timeto):
+  def write_report(recipient, car_name, stk, drive_type, timeof, timeto):
     """
     Writes to a csv lease file about a new lease being made, if no such file exists it creates it.
     
@@ -819,7 +822,7 @@ def lease_car():
         # Then when writing same day, find the last sheet and write to that one
         wb = openpyxl.load_workbook(latest_file)
         ws = wb.active
-        data = [["","",timeof, timeto, car_name, stk, recipient, "REPLACE", "REPLACE", "REPLACE"]]
+        data = [["","",timeof, timeto, car_name, stk, drive_type, recipient, "REPLACE", "REPLACE", "REPLACE"]]
         for row in data:
           ws.append(row)
 
@@ -848,7 +851,7 @@ def lease_car():
           ws = wb.active
           #email_ft = Font(bold=True, color="B22222")
           filler = ["","","","","","","",""]
-          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, recipient, "REPLACE","REPLACE","REPLACE"]]
+          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "REPLACE","REPLACE","REPLACE"]]
 
           for row in data:
               ws.append(row)
@@ -864,11 +867,11 @@ def lease_car():
           ws.row_dimensions[3].height = 35
 
           # Set column widths for data columns
-          for col in ["C", "D", "E", "F", "G", "H", "I", "J"]:
+          for col in ["C", "D", "E", "F", "G", "H", "I", "J","K"]:
               ws.column_dimensions[col].width = 23
 
           # Format header row (C3:J3)
-          for row_cells in ws["C3:J3"]:
+          for row_cells in ws["C3:K3"]:
               for cell in row_cells:
                   cell.font = Header_ft
                   cell.alignment = header_alignment
@@ -900,7 +903,7 @@ def lease_car():
           wb = Workbook()
           ws = wb.active
           filler = ["","","","","","","",""]
-          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, recipient,"REPLACE","REPLACE","REPLACE"]]
+          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "TYP","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient,"REPLACE","REPLACE","REPLACE"]]
           for row in data:
               ws.append(row)
               # Format red flag cell (B3)
@@ -928,7 +931,7 @@ def lease_car():
                   # Set row height for data rows (from row 4 to the last row)
           for row in range(4, ws.max_row + 1):
               ws.row_dimensions[row].height = 30  # set desired height for data rows
-          wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_ER_ICLS_report.xlsx")
+          wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_NW_ICLS_report.xlsx")
 
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
   cur.execute("select * from car where name = %s", (car_name,))
