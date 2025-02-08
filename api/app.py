@@ -734,27 +734,18 @@ def lease_car():
   # 2025-02-02 21:04:48+01        | 2025-02-20 21:04:00+01
   timeto = data["timeto"]
   
-    # shit fix but whatever idk
-  def format_datetime(ts: str) -> str:
-      """Convert ISO-like timestamp to MM-DD-YYYY HH:mm:ss+tz format"""
-      try:
-          # Handle possible microseconds
-          if '.' in ts:
-              dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f%z")
-          else:
-              dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S%z")
-              
-          return dt.strftime("%m-%d-%Y %H:%M:%S%z")
-          
-      except ValueError as e:
-          raise ValueError(f"Invalid timestamp format: {ts}") from e
+  # shit fix but whatever idk
+  # Chnage time of date format
+  # tmp_of = timeof.split(" ")
+  # dates =  tmp_of[0].split("-")
+  # # 02-20-2025 21:40:00+01
+  # form_timeof = f"{dates[1]}-{dates[2]}-{dates[0]} {tmp_of[1]}"
 
-  try:
-      timeof = format_datetime(data["timeof"])
-      timeto = format_datetime(data["timeto"])
-  except ValueError as e:
-      # Handle invalid format appropriately
-      raise
+  # # Chnage time to date format
+  # tmp_to = timeto.split(" ")
+  # dates =  tmp_to[0].split("-")
+  # # 02-20-2025 21:40:00+01
+  # form_timeto = f"{dates[1]}-{dates[2]}-{dates[0]} {tmp_to[1]}"
 
   con, cur = connect_to_db()
 
@@ -766,12 +757,32 @@ def lease_car():
     ex: '2025-01-21 15:37:00ICLS_report.csv'
     """
     # To fix the wierd seconds missing error, i will just get rid of the seconds manually
-    if timeof.count(":") > 1:
-      timeof = timeof[:-3]
+    # if timeof.count(":") > 1:
+    #   timeof = timeof[:-3]
     
-    if timeto.count(":") > 1:
-      timeto = timeto[:-3]
+    # if timeto.count(":") > 1:
+    #   timeto = timeto[:-3]
 
+    def format_datetime(ts: str) -> str:
+        """Convert ISO-like timestamp to MM-DD-YYYY HH:mm:ss+tz format"""
+        try:
+            # Handle possible microseconds
+            if '.' in ts:
+                dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f%z")
+            else:
+                dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S%z")
+                
+            return dt.strftime("%m-%d-%Y %H:%M:%S%z")
+            
+        except ValueError as e:
+            raise ValueError(f"Invalid timestamp format: {ts}") from e
+
+    try:
+        timeof = format_datetime(data["timeof"])
+        timeto = format_datetime(data["timeto"])
+    except ValueError as e:
+        # Handle invalid format appropriately
+        raise
     
     latest_file = get_latest_file(f"{os.getcwd()}/reports")
 
