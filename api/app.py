@@ -731,12 +731,13 @@ def lease_car():
     timeof = timeof.split(".", 1)[0]
   except:
     pass
-  # 2025-02-02 21:04:48+01        | 2025-02-20 21:04:00+01
+  
   timeto = data["timeto"]
   
   # shit implementation for a shit fucking data format, god if cuking haéte working with dates, such a retarted THING
   # kys
   # And yes i know i could use a strptime and make it better, but guess waht? I am wokring on this shit for FREE on a saturday so i dont give a fuck
+  # 2025-02-02 21:04:48+01        | 2025-02-20 21:04:00+01
   tmp_of = timeof.split(" ")
   dates =  tmp_of[0].split("-")
   # 02-20-2025 21:40:00+01
@@ -816,7 +817,7 @@ def lease_car():
           ws = wb.active
           #email_ft = Font(bold=True, color="B22222")
           filler = ["","","","","","","",""]
-          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, recipient, "REPLACE", "REPLACE", "REPLACE"]]
+          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, recipient, f"{cur_year}, {cur_month}", spl_year, spl_month]]
 
           for row in data:
               ws.append(row)
