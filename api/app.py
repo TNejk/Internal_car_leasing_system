@@ -722,26 +722,29 @@ def lease_car():
   stk = str(data["stk"])
   private = data["is_private"]
 
-  def format_datetime(ts: str) -> str:
-      """Convert ISO-like timestamp to MM-DD-YYYY HH:mm:ss+tz format"""
-      try:
-          # Handle possible microseconds
-          if '.' in ts:
-              dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f%z")
-          else:
-              dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S%z")
-              
-          return dt.strftime("%m-%d-%Y %H:%M:%S%z")
-          
-      except ValueError as e:
-          raise ValueError(f"Invalid timestamp format: {ts}") from e
+  # Needed date format
+  # 2011-08-09 00:00:00+09
 
+  # Try to dezinfect timeof from the .2342212 number horseshit
+  timeof = data["timeof"]
   try:
-      timeof = format_datetime(data["timeof"])
-      timeto = format_datetime(data["timeto"])
-  except ValueError as e:
-      # Handle invalid format appropriately
-      raise
+    timeof = timeof.split(".", 1)[0]
+  except:
+    pass
+  # 2025-02-02 21:04:48+01        | 2025-02-20 21:04:00+01
+  timeto = data["timeto"]
+  
+  # Chnage time of date format
+  tmp_of = timeof.split(" ")
+  dates =  tmp_of[0].split("-")
+  # 02-20-2025 21:40:00+01
+  timeof = f"{dates[1]}-{dates[2]}-{dates[0]} {tmp_of[1]}"
+
+  # Chnage time to date format
+  tmp_to = timeto.split(" ")
+  dates =  tmp_to[0].split("-")
+  # 02-20-2025 21:40:00+01
+  timeof = f"{dates[1]}-{dates[2]}-{dates[0]} {tmp_to[1]}"
 
   con, cur = connect_to_db()
 
