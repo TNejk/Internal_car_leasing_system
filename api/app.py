@@ -725,26 +725,28 @@ def lease_car():
   # Needed date format
   # 2011-08-09 00:00:00+09
 
-  def format_datetime(ts: str) -> str:
-      """Convert ISO-like timestamp to MM-DD-YYYY HH:mm:ss+tz format"""
-      try:
-          # Handle possible microseconds
-          if '.' in ts:
-              dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f%z")
-          else:
-              dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S%z")
-              
-          return dt.strftime("%m-%d-%Y %H:%M:%S%z")
-          
-      except ValueError as e:
-          raise ValueError(f"Invalid timestamp format: {ts}") from e
-
+  # Try to dezinfect timeof from the .2342212 number horseshit
+  timeof = data["timeof"]
   try:
-      timeof = format_datetime(data["timeof"])
-      timeto = format_datetime(data["timeto"])
-  except ValueError as e:
-      # Handle invalid format appropriately
-      raise
+    timeof = timeof.split(".", 1)[0]
+  except:
+    pass
+  # 2025-02-02 21:04:48+01        | 2025-02-20 21:04:00+01
+  timeto = data["timeto"]
+  
+  # shit implementation for a shit fucking data format, god if cuking haéte working with dates, such a retarted THING
+  # kys
+  # And yes i know i could use a strptime and make it better, but guess waht? I am wokring on this shit for FREE on a saturday so i dont give a fuck
+  tmp_of = timeof.split(" ")
+  dates =  tmp_of[0].split("-")
+  # 02-20-2025 21:40:00+01
+  form_timeof = f"{dates[1]}-{dates[2]}-{dates[0]} {tmp_of[1]}"
+
+  # Chnage time to date format
+  tmp_to = timeto.split(" ")
+  dates =  tmp_to[0].split("-")
+  # 02-20-2025 21:40:00+01
+  form_timeto = f"{dates[1]}-{dates[2]}-{dates[0]} {tmp_to[1]}"
 
   con, cur = connect_to_db()
 
@@ -755,13 +757,12 @@ def lease_car():
     If a report is too old it creates a new one each month. 
     ex: '2025-01-21 15:37:00ICLS_report.csv'
     """
-    #To fix the wierd seconds missing error, i will just get rid of the seconds manually
+    # To fix the wierd seconds missing error, i will just get rid of the seconds manually
     if timeof.count(":") > 1:
       timeof = timeof[:-3]
     
     if timeto.count(":") > 1:
       timeto = timeto[:-3]
-
 
     
     latest_file = get_latest_file(f"{os.getcwd()}/reports")
