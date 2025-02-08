@@ -722,17 +722,26 @@ def lease_car():
   stk = str(data["stk"])
   private = data["is_private"]
 
-  # Needed date format
-  # 2011-08-09 00:00:00+09
+  def format_datetime(ts: str) -> str:
+      """Convert ISO-like timestamp to MM-DD-YYYY HH:mm:ss+tz format"""
+      try:
+          # Handle possible microseconds
+          if '.' in ts:
+              dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f%z")
+          else:
+              dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S%z")
+              
+          return dt.strftime("%m-%d-%Y %H:%M:%S%z")
+          
+      except ValueError as e:
+          raise ValueError(f"Invalid timestamp format: {ts}") from e
 
-  # Try to dezinfect timeof from the .2342212 number horseshit
-  timeof = data["timeof"]
   try:
-    timeof = timeof.split(".", 1)[0]
-  except:
-    pass
-  # 2025-02-02 21:04:48+01        | 2025-02-20 21:04:00+01
-  timeto = data["timeto"]
+      timeof = format_datetime(data["timeof"])
+      timeto = format_datetime(data["timeto"])
+  except ValueError as e:
+      # Handle invalid format appropriately
+      raise
 
   con, cur = connect_to_db()
 
@@ -767,7 +776,7 @@ def lease_car():
       cur_year = current_date[0]
       cur_month = current_date[1]
       
-      #timeof = timeof.strftime("%Y-%m-%d %H:%M:%S")
+      timeof = timeof.strftime("%Y-%m-%d %H:%M:%S")
       if cur_year == spl_year and int(cur_month) == int(spl_month):
         # Here check if its the same day, if not create a new sheet and write to it
         # Then when writing same day, find the last sheet and write to that one
