@@ -600,7 +600,9 @@ def get_leases():
           l.end_of_lease,
           l.time_of_return,
           l.private,
-          c.stk
+          c.stk,
+          c.gas,
+          c.drive_type
         FROM 
             lease l
         JOIN 
@@ -624,7 +626,9 @@ def get_leases():
           l.end_of_lease,
           l.time_of_return,
           l.private,
-          c.stk
+          c.stk,
+          c.gas,
+          c.drive_type
         FROM 
             lease l
         JOIN 
@@ -658,7 +662,9 @@ def get_leases():
         "time_to": convert_to_bratislava_timezone(i[7]),
         "time_of_return": i[8],
         "private": i[9], 
-        "spz": i[10] 
+        "spz": i[10],
+        "gas": i[11],
+        "shaft": i[12]
 
       })
     return {"active_leases": leases}, 200
