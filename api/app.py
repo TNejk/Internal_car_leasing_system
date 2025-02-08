@@ -734,6 +734,7 @@ def lease_car():
   # 2025-02-02 21:04:48+01        | 2025-02-20 21:04:00+01
   timeto = data["timeto"]
   
+  # shit fix but whatever idk
   # Chnage time of date format
   tmp_of = timeof.split(" ")
   dates =  tmp_of[0].split("-")
