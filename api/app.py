@@ -979,8 +979,8 @@ def lease_car():
         # If the request is not accepted, it will be deleted from the table and nothing will happen
         # !
         # TODO
-        #return {"status": True, "private": True, "msg": f"Request for a private ride was sent!"}, 500
-        pass
+        return {"status": True, "private": True, "msg": f"Request for a private ride was sent!"}, 500
+
       else: # User is a manager, therfore no request need to be made, and a private ride is made 
         try:
           cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s, %s, %s,%s)", (car_data[0][0], user[0][0], timeof, timeto, True, True))
@@ -1057,6 +1057,38 @@ def lease_car():
       
   else:
     return {"status": False, "private": False, "msg": f"Users do not match, nor is the requester a manager."}, 500
+
+
+
+@app.route('/get_requests', methods = ['POST'])
+@jwt_required()
+def get_requests():
+  data = request.get_json()
+  if not data:
+     return {"msg": "No Data."}, 501
+  
+  p_request = {}
+  p_requests = []
+  return {"a": True}
+
+
+@app.route('/approve_req', methods = ['POST'])
+@jwt_required()
+def approve_requests():
+  data = request.get_json()
+  if not data:
+     return {"msg": "No Data."}, 501
+  email = data["email"]
+  role = data["role"]
+
+  approval = data["approval"]
+
+  if approval:
+     pass
+
+  return {"a": True}
+
+
 
 
 @app.route('/return_car', methods = ['POST'])
