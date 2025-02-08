@@ -97,20 +97,33 @@ def get_reports_paths(folder_path):
         print(f"Error accessing directory: {str(e)}")
         return None
 
-def get_latest_file(folder_path):
+import os
 
+def get_latest_file(folder_path, use_modification_time=True):
     try:
-        # Get a list of all files in the folder with their full paths
-        files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+        if not os.path.exists(folder_path):
+            raise FileNotFoundError(f"The folder '{folder_path}' does not exist.")
         
-        if not files:
-            return None  # Return None if the folder is empty
-        
-        # Get the latest created file by creation time
-        latest_file = max(files, key=os.path.getctime)
-        
+        if not os.path.isdir(folder_path):
+            raise NotADirectoryError(f"'{folder_path}' is not a directory.")
+
+        latest_file = None
+        latest_time = 0
+
+        # Use os.scandir for better performance
+        with os.scandir(folder_path) as entries:
+            for entry in entries:
+                if entry.is_file():
+                    # Use modification time or creation time based on the parameter
+                    file_time = entry.stat().st_mtime 
+                    
+                    if file_time > latest_time:
+                        latest_time = file_time
+                        latest_file = entry.path
+
         return latest_file
-    except Exception as e:
+
+    except (FileNotFoundError, NotADirectoryError, PermissionError, OSError) as e:
         print(f"An error occurred: {e}")
         return None
 
@@ -794,7 +807,7 @@ def lease_car():
       cur_year = current_date[0]
       cur_month = current_date[1]
       
-      timeof = timeof.strftime("%Y-%m-%d %H:%M:%S")
+      #timeof = timeof.strftime("%Y-%m-%d %H:%M:%S")
       if int(cur_year) == int(spl_year) and int(cur_month) == int(spl_month):
         # Here check if its the same day, if not create a new sheet and write to it
         # Then when writing same day, find the last sheet and write to that one
