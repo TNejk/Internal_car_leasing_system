@@ -874,9 +874,9 @@ def lease_car():
           wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_EXCEL_ICLS_report.xlsx")
 
     except Exception as e: #? ONLY HAPPENDS IF THE DIRECTORY IS EMPTY, SO LIKE ONCE
-          with open(f"{os.getcwd()}/reports/{get_sk_date()}_ERRORt.txt") as file:
+          with open(f"{os.getcwd()}/reports/{get_sk_date()}_ERRORt.txt", "a+") as file:
              file.write(f"{e}")
-              
+
           # Define styles
           red_flag_ft = Font(bold=True, color="B22222")
           red_flag_fill = PatternFill("solid", "B22222")
