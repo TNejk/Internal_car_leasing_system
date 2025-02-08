@@ -739,13 +739,13 @@ def lease_car():
   tmp_of = timeof.split(" ")
   dates =  tmp_of[0].split("-")
   # 02-20-2025 21:40:00+01
-  timeof = f"{dates[1]}-{dates[2]}-{dates[0]} {tmp_of[1]}"
+  form_timeof = f"{dates[1]}-{dates[2]}-{dates[0]} {tmp_of[1]}"
 
   # Chnage time to date format
   tmp_to = timeto.split(" ")
   dates =  tmp_to[0].split("-")
   # 02-20-2025 21:40:00+01
-  timeof = f"{dates[1]}-{dates[2]}-{dates[0]} {tmp_to[1]}"
+  form_timeto = f"{dates[1]}-{dates[2]}-{dates[0]} {tmp_to[1]}"
 
   con, cur = connect_to_db()
 
@@ -960,7 +960,7 @@ def lease_car():
     messaging.send(message)
 
     #!!!!!!!!!!!!
-    write_report(recipient, car_name,stk, timeof, timeto)
+    write_report(recipient, car_name,stk, form_timeof, form_timeto)
     #send_email(msg="Auto bolo rezervovane!")
 
     return {"status": True, "private": private}
@@ -997,7 +997,7 @@ def lease_car():
     con.close()
 
     #!!!  
-    write_report(recipient, car_name,stk, timeof, timeto)
+    write_report(recipient, car_name,stk, form_timeof, form_timeto)
     #send_email(msg="Auto bolo rezervovane!")
     return {"status": True, "private": private}
       
