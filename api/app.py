@@ -822,7 +822,7 @@ def lease_car():
         # Then when writing same day, find the last sheet and write to that one
         wb = openpyxl.load_workbook(latest_file)
         ws = wb.active
-        data = [["","",timeof, timeto, car_name, stk, drive_type, recipient, "REPLACE", "REPLACE", "REPLACE"]]
+        data = [["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL", "NULL", "NULL"]]
         for row in data:
           ws.append(row)
 
@@ -851,7 +851,7 @@ def lease_car():
           ws = wb.active
           #email_ft = Font(bold=True, color="B22222")
           filler = ["","","","","","","",""]
-          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "REPLACE","REPLACE","REPLACE"]]
+          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL"]]
 
           for row in data:
               ws.append(row)
@@ -871,7 +871,7 @@ def lease_car():
               ws.column_dimensions[col].width = 23
 
           # Format header row (C3:J3)
-          for row_cells in ws["C3:L3"]:
+          for row_cells in ws["C3:K3"]:
               for cell in row_cells:
                   cell.font = Header_ft
                   cell.alignment = header_alignment
@@ -903,7 +903,7 @@ def lease_car():
           wb = Workbook()
           ws = wb.active
           filler = ["","","","","","","",""]
-          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "TYP","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient,"REPLACE","REPLACE","REPLACE"]]
+          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "TYP","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient,"NULL","NULL","NULL"]]
           for row in data:
               ws.append(row)
               # Format red flag cell (B3)
@@ -915,10 +915,10 @@ def lease_car():
           # Set row height for header row
           ws.row_dimensions[3].height = 35
           # Set column widths for data columns
-          for col in ["C", "D", "E", "F", "G", "H", "I", "J"]:
+          for col in ["C", "D", "E", "F", "G", "H", "I", "J", "K"]:
               ws.column_dimensions[col].width = 23
           # Format header row (C3:J3)
-          for row_cells in ws["C3:J3"]:
+          for row_cells in ws["C3:K3"]:
               for cell in row_cells:
                   cell.font = Header_ft
                   cell.alignment = header_alignment
@@ -1099,7 +1099,7 @@ def return_car():
           note_cell = sheet1.cell(row=row, column=9)
           
             # To avoid duplicates when returing, as dates could collide probalby idk fuck my stupid chungus life 
-          if time_of_return_cell.value == "REPLACE":
+          if time_of_return_cell.value == "NULL":
 
               if exc_timeof == timeof and exc_timeto == timeto:
                   time_of_return_cell.value = tor
