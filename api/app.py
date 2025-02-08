@@ -999,7 +999,7 @@ def lease_car():
     messaging.send(message)
 
     #!!!!!!!!!!!!
-    write_report(recipient, car_name,stk, form_timeof, form_timeto)
+    write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
     #send_email(msg="Auto bolo rezervovane!")
 
     return {"status": True, "private": private}
@@ -1036,7 +1036,7 @@ def lease_car():
     con.close()
 
     #!!!  
-    write_report(recipient, car_name,stk, form_timeof, form_timeto)
+    write_report(recipient, car_name,stk, drive_type, form_timeof, form_timeto)
     #send_email(msg="Auto bolo rezervovane!")
     return {"status": True, "private": private}
       
