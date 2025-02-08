@@ -419,8 +419,8 @@ def get_full_car_info():
         return jsonify({'error': 'No car found with the given ID'}), 404
 
     
-    #! Remove dates from allowed dates if an active lease exists so you wont lease a car on the same date 
-    #date_list = get_dates_to_end_of_month()
+    # TODO: this
+    #! Here add the check for under_review, as if its true than we need to protect the date range from other users scooping it out 
     query = "SELECT start_of_lease, end_of_lease FROM lease WHERE id_car = %s AND status = %s;"
 
     cur.execute(query, (car, True, ))
@@ -936,9 +936,8 @@ def lease_car():
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
   cur.execute("select * from car where name = %s", (car_name,))
   car_data = cur.fetchall()
+
   # Check if a lease conflicts time wise with another
-  # This doesnt work for some reason
-  # probalby beacue the sql is fucked up
   # SQL FORMAT:  2025-01-01 16:10:00+01 | 2025-01-10 15:15:00+01 
   #   "timeof": "2025-01-21 20:10:00+01",
   #   "timeto": "2025-02-10 11:14:00+01"
@@ -965,19 +964,35 @@ def lease_car():
   if len(conflicting_leases) > 0:
      return {"status": False, "private": False, "msg": f"Zabratý dátum (hodina typujem)"}
   
-  # compare the user leasing and user thats recieving the lease,
+  # If the user is leasing for himself
   if recipient ==  username:
-    
-    # Priavte ride check
+
     if private == True:
-      if user[0][3] == role:
+      if user[0][3] != "manager":
+        # TODOO:
+        # !
+        #! HERE IMPLEMENT THE REQUSEST LOGIC, dont lease a car just yet, return a msg of Requst under review and add a requst to the requst table 
+        #! You then need to lease the car but set the lease under_review = True, this will protect the reserved space until the request is approved/closed by the manager
+        #! Then when the manager presses the OKay button it will lease change the lease state = True and the under_review = False
+        # ?      
+        # You wil probably need another route, that checks the requst being okayed, the users credentials and then edits the lease 
+        # If the request is not accepted, it will be deleted from the table and nothing will happen
+        # !
+        # TODO
+        #return {"status": True, "private": True, "msg": f"Request for a private ride was sent!"}, 500
         pass
-      else: return {"status": False, "private": False, "msg": f"User cannot order private rides"}, 500
+      else: # User is a manager, therfore no request need to be made, and a private ride is made 
+        try:
+          cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s, %s, %s,%s)", (car_data[0][0], user[0][0], timeof, timeto, True, True))
+          con.commit()
+        except Exception as e:
+          return {"status": False, "private": False, "msg": f"Error has occured! 113"}, 500
+        write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
+        return {"status": True, "private": True}
+
 
     try:
-      # id, userid, carid, timeof, timeto, tiemreturn, status, note, status is either 1 or zero to indicate boolean values
-      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status) values (%s, %s, %s, %s, %s)", (car_data[0][0], user[0][0], timeof, timeto, True))
-      #cur.execute("update car set status = %s where name = %s", ("leased", car_name,))
+      cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s, %s, %s, %s)", (car_data[0][0], user[0][0], timeof, timeto, True, False))
       con.commit()
     except Exception as e:
       return {"status": False, "private": False, "msg": f"Error has occured! 113"}, 500
