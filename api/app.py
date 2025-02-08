@@ -740,13 +740,13 @@ def lease_car():
   tmp_of = timeof.split(" ")
   dates =  tmp_of[0].split("-")
   # 02-20-2025 21:40:00+01
-  form_timeof = f"{dates[1]}-{dates[2]}-{dates[0]} {tmp_of[1]}"
+  form_timeof = f"{dates[2]}-{dates[1]}-{dates[0]} {tmp_of[1]}"
 
   # Chnage time to date format
   tmp_to = timeto.split(" ")
   dates =  tmp_to[0].split("-")
   # 02-20-2025 21:40:00+01
-  form_timeto = f"{dates[1]}-{dates[2]}-{dates[0]} {tmp_to[1]}"
+  form_timeto = f"{dates[2]}-{dates[1]}-{dates[0]} {tmp_to[1]}"
 
   con, cur = connect_to_db()
 
