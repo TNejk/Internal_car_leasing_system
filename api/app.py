@@ -842,7 +842,7 @@ def lease_car():
           ws = wb.active
           #email_ft = Font(bold=True, color="B22222")
           filler = ["","","","","","","",""]
-          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, recipient, f"{cur_year}, {cur_month}", spl_year, spl_month]]
+          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, recipient, "REPLACE","REPLACE","REPLACE"]]
 
           for row in data:
               ws.append(row)
@@ -894,7 +894,7 @@ def lease_car():
           wb = Workbook()
           ws = wb.active
           filler = ["","","","","","","",""]
-          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, recipient, f"{cur_year}, {cur_month}", spl_year, spl_month]]
+          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, recipient,"REPLACE","REPLACE","REPLACE"]]
           for row in data:
               ws.append(row)
               # Format red flag cell (B3)
