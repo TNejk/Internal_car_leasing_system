@@ -98,15 +98,7 @@ def get_reports_paths(folder_path):
         return None
 
 def get_latest_file(folder_path):
-    """
-    Returns the path to the latest created file in a specified folder.
 
-    Parameters:
-        folder_path (str): The path to the folder.
-
-    Returns:
-        str: The full path of the latest created file, or None if the folder is empty.
-    """
     try:
         # Get a list of all files in the folder with their full paths
         files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
