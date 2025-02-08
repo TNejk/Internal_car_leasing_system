@@ -866,7 +866,7 @@ def lease_car():
           wb = Workbook()
           ws = wb.active
           filler = ["","","","","","","",""]
-          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, recipient, "REPLACE", "REPLACE", "REPLACE"]]
+          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, recipient, f"{cur_year}, {cur_month}", spl_year, spl_month]]
           for row in data:
               ws.append(row)
               # Format red flag cell (B3)
@@ -894,7 +894,7 @@ def lease_car():
                   # Set row height for data rows (from row 4 to the last row)
           for row in range(4, ws.max_row + 1):
               ws.row_dimensions[row].height = 30  # set desired height for data rows
-          wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_EXCEL_ICLS_report.xlsx")
+          wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_ER_ICLS_report.xlsx")
 
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
   cur.execute("select * from car where name = %s", (car_name,))
