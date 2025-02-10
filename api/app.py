@@ -1023,61 +1023,65 @@ def get_requests():
 
   if not data:
      return {"msg": "No Data."}, 501
+  # triewd to do a role != admin/manager but did not work lmao
+  # idk how to make it not be nested sry
+  if role == "manager" or role =="admin":
+    conn, curr = connect_to_db()
+    curr.execute("select id_driver from driver where email = %s and role = %s", (email, role,))
 
-  if role != "manager":
-    pass
-  elif role != "admin:":
+    if len(curr.fetchall()) <0:
+      return {"active_requests": []}, 500
+
+    curr.execute("""
+          SELECT 
+            d.email AS driver_email,
+            d.role AS driver_role,
+            c.name AS car_name,
+            c.location AS car_location,
+            c.url AS car_url,
+            l.id_request,
+            l.start_of_request,
+            l.end_of_request,
+            c.stk
+          FROM 
+              request l
+          JOIN 
+              driver d ON l.id_driver = d.id_driver
+          JOIN 
+              car c ON l.id_car = c.id_car
+          WHERE 
+              l.status = TRUE; 
+      """)
+    
+
+    def convert_to_bratislava_timezone(dt_obj):
+      # Ensure the datetime is in UTC before converting
+      utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
+      bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
+      return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
+
+    res = curr.fetchall()
+    requests = []
+    for i in res:
+      requests.append({
+        "email": i[0],
+        "role": i[1],
+        "car_name": i[2],
+        "location": i[3],
+        "url": i[4],
+        "request_id": i[5],
+        "time_from": convert_to_bratislava_timezone(i[6]),
+        "time_to": convert_to_bratislava_timezone(i[7]),
+        "spz": i[8]
+      })
+
+    conn.close()
+    return {"active_requests": requests}, 200
+  
+  else: 
     return {"active_requests": []}, 200
     
-  conn, curr = connect_to_db()
-  curr.execute("select id_driver from driver where email = %s and role = %s", (email, role,))
 
-  if len(curr.fetchall()) <0:
-    return {"active_requests": []}, 500
-
-  curr.execute("""
-        SELECT 
-          d.email AS driver_email,
-          d.role AS driver_role,
-          c.name AS car_name,
-          c.location AS car_location,
-          c.url AS car_url,
-          l.id_request,
-          l.start_of_request,
-          l.end_of_request,
-          c.stk
-        FROM 
-            request l
-        JOIN 
-            driver d ON l.id_driver = d.id_driver
-        JOIN 
-            car c ON l.id_car = c.id_car
-        WHERE 
-            l.status = TRUE; 
-    """)
-  
-
-  def convert_to_bratislava_timezone(dt_obj):
-    # Ensure the datetime is in UTC before converting
-    utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
-    bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
-    return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
-
-  res = curr.fetchall()
-  requests = []
-  for i in res:
-    requests.append({
-      "email": i[0],
-      "role": i[1],
-      "car_name": i[2],
-      "location": i[3],
-      "url": i[4],
-      "request_id": i[5],
-      "time_from": convert_to_bratislava_timezone(i[6]),
-      "time_to": convert_to_bratislava_timezone(i[7]),
-      "spz": i[8]
-    })
-  return {"active_requests": requests}, 200
 
 
 @app.route('/approve_req', methods = ['POST'])
@@ -1123,6 +1127,7 @@ def approve_requests():
 
 
   conn.commit()
+  conn.close()
 
   return {"status": True, "msg": "Success"}, 200
 
