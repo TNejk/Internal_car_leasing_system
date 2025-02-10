@@ -1071,9 +1071,7 @@ def get_requests():
       "request_id": i[5],
       "time_from": convert_to_bratislava_timezone(i[6]),
       "time_to": convert_to_bratislava_timezone(i[7]),
-      "time_of_return": i[8],
-      "private": i[9], 
-      "spz": i[10]
+      "spz": i[8]
     })
   return {"active_requests": requests}, 200
 
