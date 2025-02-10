@@ -924,15 +924,19 @@ def lease_car():
   if recipient ==  username:
     if private == True:
       if user[0][3] != "manager" or user[0][3] != "admin":
-        # TODOO:
-        # !  
-        #! HERE IMPLEMENT THE REQUSEST LOGIC, return a msg of Requst under review and add a requst to the requst table 
-        #? No need to change the leases under_review column, as in the car_info table i allready append the dates for requests also            
-        # !
-        # TODO
         # Just need to create a requst row, a new lease is only created and activated after being approved in the approve_request route
         cur.execute("insert into request(start_of_request, end_of_request, status, id_car, id_driver) values (%s, %s, %s, %s, %s)", (timeof, timeto, True, car_data[0][0], user[0][0]))
         con.commit()
+
+        message = messaging.Message(
+                  notification=messaging.Notification(
+                  title=f"Žiadosť o súkromnu jazdu!",
+                  body=f"""email: {username} \n Od: {timeof} \n Do: {timeto}"""
+              ),
+                  topic="manager"
+              )
+        messaging.send(message)
+
         return {"status": True, "private": True, "msg": f"Request for a private ride was sent!"}, 500
 
       else: # User is a manager, therfore no request need to be made, and a private ride is made 
@@ -952,11 +956,7 @@ def lease_car():
       return {"status": False, "private": False, "msg": f"Error has occured! 113"}, 500
     
     con.close()
-    asd = messaging.Message(
-        data= {"msg": "I have been sent."},
-        topic= "test_user.sk"
-    )
-    messaging.send(asd)
+
 
     message = messaging.Message(
               notification=messaging.Notification(
@@ -1024,9 +1024,11 @@ def get_requests():
   if not data:
      return {"msg": "No Data."}, 501
 
-  if role != "manager" or role != "admin":
+  if role != "manager":
+    pass
+  elif role != "admin:":
     return {"active_requests": []}, 200
-
+    
   conn, curr = connect_to_db()
   curr.execute("select id_driver from driver where email = %s and role = %s", (email, role,))
 
