@@ -1042,8 +1042,6 @@ def get_requests():
           l.start_of_request,
           l.end_of_request,
           c.stk,
-          c.gas,
-          c.drive_type
         FROM 
             request l
         JOIN 
@@ -1075,9 +1073,7 @@ def get_requests():
       "time_to": convert_to_bratislava_timezone(i[7]),
       "time_of_return": i[8],
       "private": i[9], 
-      "spz": i[10],
-      "gas": i[11],
-      "shaft": i[12]
+      "spz": i[10]
     })
   return {"active_requests": requests}, 200
 
