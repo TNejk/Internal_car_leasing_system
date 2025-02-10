@@ -924,7 +924,7 @@ def lease_car():
   if recipient ==  username:
 
     if private == True:
-      if user[0][3] != "manager":
+      if user[0][3] != "manager" or user[0][3] != "admin":
         # TODOO:
         # !  
         #! HERE IMPLEMENT THE REQUSEST LOGIC, return a msg of Requst under review and add a requst to the requst table 
