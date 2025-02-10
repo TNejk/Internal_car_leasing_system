@@ -1041,7 +1041,7 @@ def get_requests():
           l.id_request,
           l.start_of_request,
           l.end_of_request,
-          c.stk,
+          c.stk
         FROM 
             request l
         JOIN 
