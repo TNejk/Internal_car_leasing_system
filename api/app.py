@@ -922,7 +922,6 @@ def lease_car():
   
   # If the user is leasing for himself
   if recipient ==  username:
-
     if private == True:
       if user[0][3] != "manager" or user[0][3] != "admin":
         # TODOO:
@@ -1024,6 +1023,9 @@ def get_requests():
 
   if not data:
      return {"msg": "No Data."}, 501
+
+  if role != "manager" or role != "admin":
+    return {"active_requests": []}, 200
 
   conn, curr = connect_to_db()
   curr.execute("select id_driver from driver where email = %s and role = %s", (email, role,))
