@@ -933,7 +933,7 @@ def lease_car():
         # TODO
         # Just need to create a requst row, a new lease is only created and activated after being approved in the approve_request route
         cur.execute("insert into request(start_of_request, end_of_request, status, id_car, id_driver) values (%s, %s, %s, %s, %s)", (timeof, timeto, True, car_data[0][0], user[0][0]))
-     
+        con.commit()
         return {"status": True, "private": True, "msg": f"Request for a private ride was sent!"}, 500
 
       else: # User is a manager, therfore no request need to be made, and a private ride is made 
