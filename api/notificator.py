@@ -32,9 +32,6 @@ def sleep_replacement(seconds):
 tz = pytz.timezone('Europe/Bratislava')
 
 while True:
-
-
-
     now = datetime.now(tz).replace(microsecond=0)
 
     # Set car status as riding rn 
