@@ -597,10 +597,14 @@ def get_leases():
     curr.execute(query)
 
   def convert_to_bratislava_timezone(dt_obj):
-      # Ensure the datetime is in UTC before converting
-      utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
-      bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
-      return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
+      bratislava_tz = pytz.timezone('Europe/Bratislava')
+      if dt_obj.tzinfo is None:
+          # Localize the naive datetime to Bratislava timezone (CET)
+          localized_time = bratislava_tz.localize(dt_obj)
+      else:
+          # Convert the aware datetime to Bratislava timezone
+          localized_time = dt_obj.astimezone(bratislava_tz)
+      return localized_time.strftime("%Y-%m-%d %H:%M:%S")
 
   try:
 
