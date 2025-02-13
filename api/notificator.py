@@ -97,12 +97,9 @@ while True:
             # Since we have established that this car has yet to be returned, we can safely cancell the next lease if its near 30 minutes of its start 
             if next_lease:
                 upcoming_start = next_lease[1]
-                
-                # Get difference of time between the end of the late return lease, and the start of the next one
-                time_difference = upcoming_start - now 
-                # If the difference is smaller than 30 minutes, delete the next lease
+                time_difference = upcoming_start - now
+                # If the upcoming lease starts within 30 minutes, cancel it
                 if time_difference <= timedelta(minutes=30):
-                    # Proceed to cancel the lease
                     cancel_query = """
                         UPDATE lease
                         SET status = false
@@ -111,7 +108,6 @@ while True:
                     cur.execute(cancel_query, (next_lease[2],))
                     db_con.commit()
 
-                    # Send cancellation notification
                     cancel_notification = messaging.Message(
                         notification=messaging.Notification(
                             title="Rezervácia zrušená",
@@ -120,11 +116,12 @@ while True:
                         topic=email[0].replace("@", "_")
                     )
                     messaging.send(cancel_notification)
-                    print(f"{datetime.now(tz).replace(microsecond=0)}  ## Upcoming lease cancelled for {email}.")
+                    print(f"{datetime.now(tz).replace(microsecond=0)} - Upcoming lease cancelled for {email[0]}.")
                 else:
-                    print(f"Next_lease debug: {time_difference}, {upcoming_start}, {now}, {next_lease} \n")
+                    print(f"Next lease debug: time_difference={time_difference}, upcoming_start={upcoming_start}, now={now}, next_lease={next_lease}")
             else:
-                print(f"No leases found. {next_lease}, {i[1]}, {now}")
+                print(f"No upcoming lease found for car {car_name} at {now}.")
+                
             # Set under_review to true so the notification does not go again
             review_query = """
                         UPDATE lease
