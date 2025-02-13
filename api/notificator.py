@@ -33,7 +33,22 @@ tz = pytz.timezone('Europe/Bratislava')
 
 while True:
 
-    now = datetime.now(tz).replace(microsecond=0) 
+
+
+    now = datetime.now(tz).replace(microsecond=0)
+
+    # Set car status as riding rn 
+    query1 = "SELECT id_car FROM lease WHERE start_of_lease < %s AND status = TRUE"
+    cur.execute(query1, (now,))  # Corrected tuple format
+    leases = cur.fetchall()
+
+    for i in leases:
+        query2 = "UPDATE car SET status = 'service' WHERE id_car = %s AND status <> 'service'"
+        cur.execute(query2, (i[0],))  # Corrected tuple format
+
+    db_con.commit()
+
+
     # Late returns
     lease_query = """
         SELECT id_driver, id_car, start_of_lease, end_of_lease, id_lease
@@ -121,7 +136,7 @@ while True:
                     print(f"Next lease debug: time_difference={time_difference}, upcoming_start={upcoming_start}, now={now}, next_lease={next_lease}")
             else:
                 print(f"No upcoming lease found for car {car_name} at {now}.")
-                
+
             # Set under_review to true so the notification does not go again
             review_query = """
                         UPDATE lease
@@ -131,4 +146,4 @@ while True:
             cur.execute(review_query, (i[4], ))
         
 
-    sleep_replacement(60)
+    sleep_replacement(120)
