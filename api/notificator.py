@@ -38,7 +38,7 @@ while True:
     lease_query = """
         SELECT id_driver, id_car, start_of_lease, end_of_lease, id_lease
         FROM lease
-        WHERE end_of_lease < %s AND status = true AND NOT under_review = true;
+        WHERE end_of_lease < %s AND status = true AND under_review IS NOT true;
     """
 
     cur.execute(lease_query, (now,))
@@ -92,14 +92,16 @@ while True:
             """
             cur.execute(next_lease_query, (i[1], now))
             next_lease = cur.fetchone()
+
+            # Then check if it needs to be cancelled by checking if the difference between the now and the next leases start time.
+            # Since we have established that this car has yet to be returned, we can safely cancell the next lease if its near 30 minutes of its start 
             if next_lease:
                 upcoming_start = next_lease[1]
-                # Convert upcoming_start to the same timezone as 'now' for comparison
-                upcoming_start = upcoming_start.astimezone(tz)
-                # Calculate time difference
-                time_difference = upcoming_start - now
-                # Check if the lease starts within the next 5 minutes
-                if time_difference <= timedelta(minutes=60):
+                
+                # Get difference of time between the end of the late return lease, and the start of the next one
+                time_difference = upcoming_start - now 
+                # If the difference is smaller than 30 minutes, delete the next lease
+                if time_difference <= timedelta(minutes=30):
                     # Proceed to cancel the lease
                     cancel_query = """
                         UPDATE lease
@@ -119,7 +121,8 @@ while True:
                     )
                     messaging.send(cancel_notification)
                     print(f"{datetime.now(tz).replace(microsecond=0)}  ## Upcoming lease cancelled for {email}.")
-            
+                else:
+                    print(f"Next_lease debug: {time_difference}, {upcoming_start}, {now}, {next_lease} \n")
             # Set under_review to true so the notification does not go again
             review_query = """
                         UPDATE lease
