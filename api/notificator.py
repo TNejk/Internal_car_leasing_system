@@ -31,7 +31,6 @@ def sleep_replacement(seconds):
 
 tz = pytz.timezone('Europe/Bratislava')
 
-allready_sent_notification = []
 while True:
 
     now = datetime.now(tz).replace(microsecond=0) 
@@ -46,7 +45,7 @@ while True:
     cur.execute(lease_query, (now,))
     active_leases = cur.fetchall()
     if len(active_leases) >0:
-        # if its over the limit
+        # if its over the limit, id_driver, id_car, start_of_lease, end_of_lease
         for i in active_leases:
 
             email_query = "SELECT email FROM driver WHERE id_driver = %s"
@@ -124,30 +123,30 @@ while True:
 
 
 
-    reminder_query = """
-        SELECT id_driver, id_car
-        FROM lease
-        WHERE EXTRACT(EPOCH FROM (end_of_lease - %s)) / 60 < 20 
-        AND status = true
-        LIMIT 1;
-    """
-    cur.execute(reminder_query, (now,))
-    active_leases = cur.fetchall()
-    if len(active_leases) > 0:
-        for i in active_leases:
-            email_query = "SELECT email FROM driver WHERE id_driver = %s"
-            cur.execute(email_query, (i[0],))
-            email = cur.fetchone()
+    # reminder_query = """
+    #     SELECT id_driver, id_car
+    #     FROM lease
+    #     WHERE EXTRACT(EPOCH FROM (end_of_lease - %s)) / 60 < 20 
+    #     AND status = true
+    #     LIMIT 1;
+    # """
+    # cur.execute(reminder_query, (now,))
+    # active_leases = cur.fetchall()
+    # if len(active_leases) > 0:
+    #     for i in active_leases:
+    #         email_query = "SELECT email FROM driver WHERE id_driver = %s"
+    #         cur.execute(email_query, (i[0],))
+    #         email = cur.fetchone()
 
-            cur.execute("select name from car where id_car = %s", (i[1],))
-            car_name = cur.fetchone()
-            message = messaging.Message(
-                                notification=messaging.Notification(
-                                title=f"Nezabudni odovzdať požičané auto: {car_name}"
-                            ),
-                                topic=email[0].replace("@", "_")
-                            )
-            messaging.send(message)
-            print(f"{datetime.now(tz).replace(microsecond=0)}  ## Reminder message sent to {email}. ")
+    #         cur.execute("select name from car where id_car = %s", (i[1],))
+    #         car_name = cur.fetchone()
+    #         message = messaging.Message(
+    #                             notification=messaging.Notification(
+    #                             title=f"Nezabudni odovzdať požičané auto: {car_name}"
+    #                         ),
+    #                             topic=email[0].replace("@", "_")
+    #                         )
+    #         messaging.send(message)
+    #         print(f"{datetime.now(tz).replace(microsecond=0)}  ## Reminder message sent to {email}. ")
 
     sleep_replacement(60)
