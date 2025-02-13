@@ -614,8 +614,8 @@ def get_leases():
         "location": i[3],
         "url": i[4],
         "lease_id": i[5],
-        "time_from": convert_to_bratislava_timezone(i[6]),
-        "time_to": convert_to_bratislava_timezone(i[7]),
+        "time_from": i[6],#convert_to_bratislava_timezone(i[6]),
+        "time_to": i[7],#convert_to_bratislava_timezone(i[7]),
         "time_of_return": i[8],
         "private": i[9], 
         "spz": i[10],
@@ -1072,8 +1072,8 @@ def get_requests():
         "location": i[3],
         "url": i[4],
         "request_id": i[5],
-        "time_from": convert_to_bratislava_timezone(i[6]),
-        "time_to": convert_to_bratislava_timezone(i[7]),
+        "time_from": i[6], #convert_to_bratislava_timezone(i[6]),
+        "time_to":i[7], #convert_to_bratislava_timezone(i[7]),
         "spz": i[8]
       })
 
