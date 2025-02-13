@@ -123,6 +123,8 @@ while True:
                     print(f"{datetime.now(tz).replace(microsecond=0)}  ## Upcoming lease cancelled for {email}.")
                 else:
                     print(f"Next_lease debug: {time_difference}, {upcoming_start}, {now}, {next_lease} \n")
+            else:
+                print(f"No leases found. {next_lease}, {i[1]}, {now}")
             # Set under_review to true so the notification does not go again
             review_query = """
                         UPDATE lease
