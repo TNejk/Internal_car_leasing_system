@@ -34,17 +34,6 @@ tz = pytz.timezone('Europe/Bratislava')
 while True:
     now = datetime.now(tz).replace(microsecond=0)
 
-    # Set car status as riding rn 
-    query1 = "SELECT id_car FROM lease WHERE start_of_lease < %s AND status = TRUE"
-    cur.execute(query1, (now,))  # Corrected tuple format
-    leases = cur.fetchall()
-
-    for i in leases:
-        query2 = "UPDATE car SET status = 'service' WHERE id_car = %s AND status <> 'service'"
-        cur.execute(query2, (i[0],))  # Corrected tuple format
-
-    db_con.commit()
-
 
     # Late returns
     lease_query = """
