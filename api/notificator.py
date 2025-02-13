@@ -150,4 +150,4 @@ while True:
             messaging.send(message)
             print(f"{datetime.now(tz).replace(microsecond=0)}  ## Reminder message sent to {email}. ")
 
-    sleep_replacement(600)
+    sleep_replacement(60)
