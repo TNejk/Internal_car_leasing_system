@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from firebase_admin import messaging
 import psycopg2
 import firebase_admin
@@ -24,48 +24,15 @@ db_con = psycopg2.connect(dbname=db_name, user=db_user, host=db_host, port=db_po
 cur = db_con.cursor()
 print("Notificator started.")
 
-# add a chcecker for when there is 20 minutes till car return 
-# so they wont forget to return i
-# only after that send notifications to both
-
 def sleep_replacement(seconds):
     start_time = time.time()  # Record the current time
     while time.time() - start_time < seconds:
         pass  # Keep looping until the time difference reaches the desired seconds
 
 tz = pytz.timezone('Europe/Bratislava')
+
+allready_sent_notification = []
 while True:
-
-    excel_query = """
-        SELECT 
-            d.email AS email, 
-            c.name AS car_name, 
-            l.start_of_lease, 
-            l.end_of_lease,
-            l.id_lease
-        FROM lease l
-        INNER JOIN driver d ON l.id_driver = d.id_driver
-        INNER JOIN car c ON l.id_car = c.id_car
-        WHERE l.status = true
-        LIMIT 1;
-    """
-
-    # THIS DOES WORK, BUT IT DUPLICATES DATA
-    # AND IT ALSO DOESNT FORMAT IT CORRECTLY
-    # ALOS DOSENT CHECK FOR ALLREADY EXISTING FILES THAT IT COULD READ TO
-    cur.execute(excel_query)
-    active_leases = cur.fetchall()
-    
-    path = f"{os.getcwd()}/reports/ICLS report.csv"
-    # file = open(path, "a+")
-    # file.write("Meno,Auto,Čas prevziatia,Čas odovzdania,Čas vrátenia,Meškanie,Poznámka")
-    # for i in active_leases:
-    #     id_lease = i[4]
-    #     # Look for CSV column id_lease and check if that lease had allready been checked
-    #     # if they have been checked then dont write them
-    #     file.write(f"{i[0]},{i[1]},{i[2]},{i[3]},{"REPLACE"},{"REPLACE"}", "\n")
-    
-    # file.close()
 
     now = datetime.now(tz).replace(microsecond=0) 
     # Late returns
@@ -79,8 +46,9 @@ while True:
     cur.execute(lease_query, (now,))
     active_leases = cur.fetchall()
     if len(active_leases) >0:
-        # if its over the limit get user email
+        # if its over the limit
         for i in active_leases:
+
             email_query = "SELECT email FROM driver WHERE id_driver = %s"
             cur.execute(email_query, (i[0],))
             email = cur.fetchone()
@@ -102,15 +70,59 @@ while True:
                             )
             messaging.send(message)
 
+    
             manager_message = messaging.Message(
-                notification=messaging.Notification(
-                    title=f"Zamestnanec {email[0]} nestihol odovzdať auto včas {car_name}."
-                ),
-                topic = "late_returns"
-            )
+                    notification=messaging.Notification(
+                        title=f"Zamestnanec {email[0]} nestihol odovzdať auto včas {car_name}."
+                    ),
+                    topic = "late_returns"
+                )
             messaging.send(manager_message)
+                # Appedn the car_email combo to the allready send notifications, i[2] is timeof, i[3] is timeto 
+            #allready_sent_notification.append((email, car_name, i[2], i[3]))
 
             print(f"{datetime.now(tz).replace(microsecond=0)}  ## Later return message sent to {email}. ")
+
+            # *** New functionality: Check for an upcoming lease to cancel ***
+            # Look for the next lease for the same car that hasn't started yet
+            next_lease_query = """
+                SELECT id_driver, start_of_lease, id_lease
+                FROM lease
+                WHERE id_car = %s AND start_of_lease >= %s AND status = true
+                ORDER BY start_of_lease ASC
+                LIMIT 1;
+            """
+            cur.execute(next_lease_query, (i[1], now))
+            next_lease = cur.fetchone()
+            if next_lease:
+                upcoming_start = next_lease[1]
+                # Check if the lease's start time is now or within the next 5 minutes
+                if upcoming_start <= now + timedelta(minutes=5):
+                    # Cancel the upcoming lease by updating its status
+                    cancel_query = """
+                        UPDATE lease
+                        SET status = false
+                        WHERE id_lease = %s AND status = true;
+                    """
+                    cur.execute(cancel_query, (next_lease[2],))
+                    db_con.commit()
+
+
+                    cancel_notification = messaging.Message(
+                        notification=messaging.Notification(
+                            title="Rezervácia zrušená",
+                            body="Vaša rezervácia na auto bola zrušená, pretože predchádzajúci prenájom neskončil načas."
+                        ),
+                        topic=email.replace("@", "_")
+                    )
+                    messaging.send(cancel_notification)
+                    print(f"{datetime.now(tz).replace(microsecond=0)}  ## Upcoming lease cancelled for {email}.")
+            
+
+
+
+
+
 
     reminder_query = """
         SELECT id_driver, id_car
@@ -121,9 +133,6 @@ while True:
     """
     cur.execute(reminder_query, (now,))
     active_leases = cur.fetchall()
-    print("ran again")
-    print(active_leases)
-
     if len(active_leases) > 0:
         for i in active_leases:
             email_query = "SELECT email FROM driver WHERE id_driver = %s"
