@@ -707,11 +707,11 @@ def lease_car():
   role = str(data["role"])
   car_name  = str(data["car_name"])
   stk = str(data["stk"])
-  gas = data["gas"]
-  shaft = data["shaft"]
+  #gas = data["gas"]
+  #shaft = data["shaft"]
   private = data["is_private"]
 
-  drive_type = f"{gas}, {shaft}"
+  #drive_type = f"{gas}, {shaft}"
 
   # Needed date format
   # 2011-08-09 00:00:00+09
@@ -891,8 +891,10 @@ def lease_car():
 
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
   cur.execute("select * from car where name = %s", (car_name,))
+  
   car_data = cur.fetchall()
-
+  
+  drive_type = f"{car_data[9]}, {car_data[10]}"
   # Check if a lease conflicts time wise with another
   # SQL FORMAT:  2025-01-01 16:10:00+01 | 2025-01-10 15:15:00+01 
   #   "timeof": "2025-01-21 20:10:00+01",
