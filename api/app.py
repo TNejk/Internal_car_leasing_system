@@ -894,7 +894,7 @@ def lease_car():
   
   car_data = cur.fetchall()
   
-  drive_type = f"{car_data[9]}, {car_data[10]}"
+  drive_type = f"{car_data[0][9]}, {car_data[0][10]}"
   # Check if a lease conflicts time wise with another
   # SQL FORMAT:  2025-01-01 16:10:00+01 | 2025-01-10 15:15:00+01 
   #   "timeof": "2025-01-21 20:10:00+01",
