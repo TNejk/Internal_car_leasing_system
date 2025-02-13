@@ -96,31 +96,25 @@ while True:
             if next_lease:
                 upcoming_start = next_lease[1]
                 # Check if the lease's start time is now or within the next 5 minutes
-                if upcoming_start <= now + timedelta(minutes=5):
-                    # Cancel the upcoming lease by updating its status
-                    cancel_query = """
-                        UPDATE lease
-                        SET status = false
-                        WHERE id_lease = %s AND status = true;
-                    """
-                    cur.execute(cancel_query, (next_lease[2],))
-                    db_con.commit()
+                cancel_query = """
+                    UPDATE lease
+                    SET status = false
+                    WHERE id_lease = %s AND status = true;
+                """
+                cur.execute(cancel_query, (next_lease[2],))
+                db_con.commit()
 
 
-                    cancel_notification = messaging.Message(
-                        notification=messaging.Notification(
-                            title="Rezervácia zrušená",
-                            body="Vaša rezervácia na auto bola zrušená, pretože predchádzajúci prenájom neskončil načas."
-                        ),
-                        topic=email.replace("@", "_")
-                    )
-                    messaging.send(cancel_notification)
-                    print(f"{datetime.now(tz).replace(microsecond=0)}  ## Upcoming lease cancelled for {email}.")
+                cancel_notification = messaging.Message(
+                    notification=messaging.Notification(
+                        title="Rezervácia zrušená",
+                        body="Vaša rezervácia na auto bola zrušená, pretože predchádzajúci prenájom neskončil načas."
+                    ),
+                    topic=email.replace("@", "_")
+                )
+                messaging.send(cancel_notification)
+                print(f"{datetime.now(tz).replace(microsecond=0)}  ## Upcoming lease cancelled for {email}.")
             
-
-
-
-
 
 
     # reminder_query = """
