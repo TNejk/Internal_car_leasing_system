@@ -95,7 +95,8 @@ while True:
             next_lease = cur.fetchone()
             if next_lease:
                 upcoming_start = next_lease[1]
-                # Check if the lease's start time is now or within the next 5 minutes
+                # Check if the lease's start time is now or within the next 5 minutes 
+                #! The if statement was causing problems, the one with 5 minutes thingy
                 cancel_query = """
                     UPDATE lease
                     SET status = false
@@ -110,7 +111,7 @@ while True:
                         title="Rezervácia zrušená",
                         body="Vaša rezervácia na auto bola zrušená, pretože predchádzajúci prenájom neskončil načas."
                     ),
-                    topic=email.replace("@", "_")
+                    topic=email[0].replace("@", "_")
                 )
                 messaging.send(cancel_notification)
                 print(f"{datetime.now(tz).replace(microsecond=0)}  ## Upcoming lease cancelled for {email}.")
