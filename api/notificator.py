@@ -38,8 +38,7 @@ while True:
     lease_query = """
         SELECT id_driver, id_car, start_of_lease, end_of_lease
         FROM lease
-        WHERE end_of_lease < %s AND status = true
-        LIMIT 1;
+        WHERE end_of_lease < %s AND status = true;
     """
 
     cur.execute(lease_query, (now,))
@@ -95,53 +94,31 @@ while True:
             next_lease = cur.fetchone()
             if next_lease:
                 upcoming_start = next_lease[1]
-                # Check if the lease's start time is now or within the next 5 minutes 
-                #! The if statement was causing problems, the one with 5 minutes thingy
-                cancel_query = """
-                    UPDATE lease
-                    SET status = false
-                    WHERE id_lease = %s AND status = true;
-                """
-                cur.execute(cancel_query, (next_lease[2],))
-                db_con.commit()
+                # Convert upcoming_start to the same timezone as 'now' for comparison
+                upcoming_start = upcoming_start.astimezone(tz)
+                # Calculate time difference
+                time_difference = upcoming_start - now
+                # Check if the lease starts within the next 5 minutes
+                if time_difference <= timedelta(minutes=5):
+                    # Proceed to cancel the lease
+                    cancel_query = """
+                        UPDATE lease
+                        SET status = false
+                        WHERE id_lease = %s AND status = true;
+                    """
+                    cur.execute(cancel_query, (next_lease[2],))
+                    db_con.commit()
 
-
-                cancel_notification = messaging.Message(
-                    notification=messaging.Notification(
-                        title="Rezervácia zrušená",
-                        body="Vaša rezervácia na auto bola zrušená, pretože predchádzajúci prenájom neskončil načas."
-                    ),
-                    topic=email[0].replace("@", "_")
-                )
-                messaging.send(cancel_notification)
-                print(f"{datetime.now(tz).replace(microsecond=0)}  ## Upcoming lease cancelled for {email}.")
-            
-
-
-    # reminder_query = """
-    #     SELECT id_driver, id_car
-    #     FROM lease
-    #     WHERE EXTRACT(EPOCH FROM (end_of_lease - %s)) / 60 < 20 
-    #     AND status = true
-    #     LIMIT 1;
-    # """
-    # cur.execute(reminder_query, (now,))
-    # active_leases = cur.fetchall()
-    # if len(active_leases) > 0:
-    #     for i in active_leases:
-    #         email_query = "SELECT email FROM driver WHERE id_driver = %s"
-    #         cur.execute(email_query, (i[0],))
-    #         email = cur.fetchone()
-
-    #         cur.execute("select name from car where id_car = %s", (i[1],))
-    #         car_name = cur.fetchone()
-    #         message = messaging.Message(
-    #                             notification=messaging.Notification(
-    #                             title=f"Nezabudni odovzdať požičané auto: {car_name}"
-    #                         ),
-    #                             topic=email[0].replace("@", "_")
-    #                         )
-    #         messaging.send(message)
-    #         print(f"{datetime.now(tz).replace(microsecond=0)}  ## Reminder message sent to {email}. ")
+                    # Send cancellation notification
+                    cancel_notification = messaging.Message(
+                        notification=messaging.Notification(
+                            title="Rezervácia zrušená",
+                            body="Vaša rezervácia na auto bola zrušená, pretože predchádzajúci prenájom neskončil načas."
+                        ),
+                        topic=email[0].replace("@", "_")
+                    )
+                    messaging.send(cancel_notification)
+                    print(f"{datetime.now(tz).replace(microsecond=0)}  ## Upcoming lease cancelled for {email}.")
+        
 
     sleep_replacement(60)
