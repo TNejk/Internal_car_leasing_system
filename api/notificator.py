@@ -36,9 +36,9 @@ while True:
     now = datetime.now(tz).replace(microsecond=0) 
     # Late returns
     lease_query = """
-        SELECT id_driver, id_car, start_of_lease, end_of_lease
+        SELECT id_driver, id_car, start_of_lease, end_of_lease, id_lease
         FROM lease
-        WHERE end_of_lease < %s AND status = true;
+        WHERE end_of_lease < %s AND status = true AND NOT under_review = true;
     """
 
     cur.execute(lease_query, (now,))
@@ -99,7 +99,7 @@ while True:
                 # Calculate time difference
                 time_difference = upcoming_start - now
                 # Check if the lease starts within the next 5 minutes
-                if time_difference <= timedelta(minutes=5):
+                if time_difference <= timedelta(minutes=60):
                     # Proceed to cancel the lease
                     cancel_query = """
                         UPDATE lease
@@ -119,6 +119,14 @@ while True:
                     )
                     messaging.send(cancel_notification)
                     print(f"{datetime.now(tz).replace(microsecond=0)}  ## Upcoming lease cancelled for {email}.")
+            
+            # Set under_review to true so the notification does not go again
+            review_query = """
+                        UPDATE lease
+                        SET under_review = true
+                        WHERE id_lease = %s AND status = true;
+                    """
+            cur.execute(review_query, (i[4], ))
         
 
     sleep_replacement(60)
