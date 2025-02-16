@@ -840,9 +840,9 @@ def lease_car():
                   cell.border = Header_border
 
           # Format data rows (from row 4 onwards, columns C-J)
-          for row in ws.iter_rows(min_row=4, min_col=3, max_col=10):
-              for cell in row:
-                  cell.font = Data_ft
+          # for row in ws.iter_rows(min_row=4, min_col=3, max_col=10):
+          #     for cell in row:
+          #         cell.font = Data_ft
           # Set row height for data rows (from row 4 to the last row)
           for row in range(4, ws.max_row + 1):
               ws.row_dimensions[row].height = 25  # set desired height for data rows
@@ -886,9 +886,9 @@ def lease_car():
                   cell.fill = Header_fill
                   cell.border = Header_border
           # Format data rows (from row 4 onwards, columns C-J)
-          for row in ws.iter_rows(min_row=4, min_col=3, max_col=10):
-              for cell in row:
-                  cell.font = Data_ft
+          # for row in ws.iter_rows(min_row=4, min_col=3, max_col=10):
+          #     for cell in row:
+          #         cell.font = Data_ft
                   # Set row height for data rows (from row 4 to the last row)
           for row in range(4, ws.max_row + 1):
               ws.row_dimensions[row].height = 30  # set desired height for data rows
