@@ -20,8 +20,7 @@ db_name = os.getenv('POSTGRES_DB')
 cred = credentials.Certificate("icls-56e37-firebase-adminsdk-2d4e2-be93ca6a35.json")
 firebase_admin.initialize_app(cred)
 
-db_con = psycopg2.connect(dbname=db_name, user=db_user, host=db_host, port=db_port, password=db_pass)
-cur = db_con.cursor()
+
 print("Notificator started.")
 
 def sleep_replacement(seconds):
@@ -32,6 +31,8 @@ def sleep_replacement(seconds):
 tz = pytz.timezone('Europe/Bratislava')
 
 while True:
+    db_con = psycopg2.connect(dbname=db_name, user=db_user, host=db_host, port=db_port, password=db_pass)
+    cur = db_con.cursor()
     now = datetime.now(tz).replace(microsecond=0)
 
 
@@ -131,5 +132,5 @@ while True:
                     """
             cur.execute(review_query, (i[4], ))
         
-
+    db_con.close()
     sleep_replacement(120)
