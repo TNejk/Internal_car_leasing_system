@@ -2,6 +2,7 @@ import csv
 import os
 import hashlib
 import jwt
+from dateutil import parser 
 import psycopg2
 from flask_mail import Mail, Message
 from flask import Flask, request, jsonify, send_from_directory
@@ -746,15 +747,22 @@ def lease_car():
 
   
   def convert_to_datetime(string):
-      # Ensure the datetime is 2025-02-02 21:04:48+01 before convert
-      dt_obj = datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
-      utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
-      bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
-      return bratislava_time
-  
+      try:
+          # Parse string, handling timezone if present
+          dt_obj = parser.parse(string)
+      except ValueError as e:
+          raise ValueError(f"Invalid datetime format: {string}") from e
+
+      # If naive, assume Bratislava time (adjust based on actual input)
+      if dt_obj.tzinfo is None:
+          bratislava_tz = pytz.timezone('Europe/Bratislava')
+          dt_obj = bratislava_tz.localize(dt_obj)
+      
+      return dt_obj.astimezone(pytz.utc)  # or keep in Bratislava time
+
   # prevent leasing in the past
   try:
-    if convert_to_datetime(timeto) < get_sk_date():
+    if convert_to_datetime(timeto) < datetime.now(pytz.utc):
       return {"status": False, "private": False, "msg": "Nemožno rezervovať minulosť."}
   except Exception as e:
     return {"status": False, "private": False, "msg": f"{e}"}
