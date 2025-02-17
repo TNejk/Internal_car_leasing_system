@@ -713,14 +713,10 @@ def lease_car():
   role = str(data["role"])
   car_name  = str(data["car_name"])
   stk = str(data["stk"])
-  #gas = data["gas"]
-  #shaft = data["shaft"]
   private = data["is_private"]
 
-  #drive_type = f"{gas}, {shaft}"
 
-  # Needed date format
-  # 2011-08-09 00:00:00+09
+
   # Try to dezinfect timeof from the .2342212 number horseshit
   timeof = data["timeof"]
   try:
@@ -745,29 +741,29 @@ def lease_car():
   # 02-20-2025 21:40:00+01
   form_timeto = f"{dates[2]}-{dates[1]}-{dates[0]} {tmp_to[1]}"
 
-  
-  # def convert_to_datetime(string):
-  #     try:
-  #         # Parse string, handling timezone if present
-  #         dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
-  #     except: #? Ok now bear with me, it may look stupid, be stupid and make me look stupid, but it works :) Did i mention how much i hate dates
-  #       try:
-  #         dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
-  #       except ValueError as e:
-  #         raise ValueError(f"Invalid datetime format: {string}") from e
+  # for some fucking reason this function converts my good looking date format into a datermot of NOW, give it a 20/02 and it spits out the current date
+  def convert_to_datetime(string):
+    try:
+        # Parse string, handling timezone if present
+        dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
+        return dt_obj
+    except: #? Ok now bear with me, it may look stupid, be stupid and make me look stupid, but it works :) Did i mention how much i hate dates
+      try:
+        dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
+        return dt_obj
+      except ValueError as e:
+        raise ValueError(f"Invalid datetime format: {string}") from e
 
-      
-  #     return dt_obj  # or keep in Bratislava time
 
-  # # prevent leasing in the past
-  # today = datetime.strptime(get_sk_date(), "%Y-%m-%d %H:%M:%S")
-  # try:
-  #   if convert_to_datetime(timeto) < today:
-  #     return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti. {today}, {convert_to_datetime(timeto)}, {timeto}"}
-  #   elif convert_to_datetime(timeof) < today:
-  #     return {"status": False, "private": False, "msg": f"Nemožno rezervovať z minulosti. {today}, {convert_to_datetime(timeof)}, {timeof}"}
-  # except Exception as e:
-  #   return {"status": False, "private": False, "msg": f"{e}"}
+  # prevent leasing in the past
+  today = datetime.strptime(get_sk_date(), "%Y-%m-%d %H:%M:%S")
+  try:
+    if convert_to_datetime(timeto) < today:
+      return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti. {today}, {convert_to_datetime(timeto)}, {timeto}"}
+    elif convert_to_datetime(timeof) < today:
+      return {"status": False, "private": False, "msg": f"Nemožno rezervovať z minulosti. {today}, {convert_to_datetime(timeof)}, {timeof}"}
+  except Exception as e:
+    return {"status": False, "private": False, "msg": f"{e}"}
 
   con, cur = connect_to_db()
 
