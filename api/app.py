@@ -764,9 +764,9 @@ def lease_car():
   today = datetime.now(pytz.utc)
   try:
     if convert_to_datetime(timeto) < today:
-      return {"status": False, "private": False, "msg": "Nemožno rezervovať do minulosti."}
+      return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti. {today}, {convert_to_datetime(timeto)}"}
     elif convert_to_datetime(timeof) < today:
-      return {"status": False, "private": False, "msg": "Nemožno rezervovať z minulosti."}
+      return {"status": False, "private": False, "msg": f"Nemožno rezervovať z minulosti. {today}, {convert_to_datetime(timeof)}"}
   except Exception as e:
     return {"status": False, "private": False, "msg": f"{e}"}
 
