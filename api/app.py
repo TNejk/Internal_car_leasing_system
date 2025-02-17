@@ -757,13 +757,14 @@ def lease_car():
 
   # prevent leasing in the past
   today = datetime.strptime(get_sk_date(), "%Y-%m-%d %H:%M:%S")
-  dt_timeto = convert_to_datetime(timeto)
-  dt_timeof = convert_to_datetime(timeof)
+
+  #dt_timeto = convert_to_datetime(timeto)
+  #dt_timeof = convert_to_datetime(timeof)
   try:
-    if convert_to_datetime(dt_timeto) < today:
-      return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti. {today}, {dt_timeto}, {timeto}"}
-    elif convert_to_datetime(dt_timeof) < today:
-      return {"status": False, "private": False, "msg": f"Nemožno rezervovať z minulosti. {today}, {dt_timeof}, {timeof}"}
+    if convert_to_datetime(timeto) < today:
+      return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti. {today},  {timeto}"}
+    elif convert_to_datetime(timeof) < today:
+      return {"status": False, "private": False, "msg": f"Nemožno rezervovať z minulosti. {today},  {timeof}"}
   except Exception as e:
     return {"status": False, "private": False, "msg": f"{e}"}
 
