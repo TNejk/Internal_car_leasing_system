@@ -744,6 +744,17 @@ def lease_car():
   # 02-20-2025 21:40:00+01
   form_timeto = f"{dates[2]}-{dates[1]}-{dates[0]} {tmp_to[1]}"
 
+  
+  def convert_to_bratislava_timezone(dt_obj):
+      # Ensure the datetime is in UTC before converting
+      utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
+      bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
+      return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
+  
+  # prevent leasing in the past
+  if convert_to_bratislava_timezone(timeto) < get_sk_date():
+    return {"status": False, "private": False, "msg": f"Nemožno rezervovať minulosť."}
+
   con, cur = connect_to_db()
 
   def write_report(recipient, car_name, stk, drive_type, timeof, timeto):
