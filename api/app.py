@@ -752,8 +752,11 @@ def lease_car():
       return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
   
   # prevent leasing in the past
-  if convert_to_bratislava_timezone(timeto) < get_sk_date():
-    return {"status": False, "private": False, "msg": f"Nemožno rezervovať minulosť."}
+  try:
+    if convert_to_bratislava_timezone(timeto) < get_sk_date():
+      return {"status": False, "private": False, "msg": "Nemožno rezervovať minulosť."}
+  except Exception as e:
+    return {"status": False, "private": False, "msg": f"{e}"}
 
   con, cur = connect_to_db()
 
