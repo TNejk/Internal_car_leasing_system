@@ -749,7 +749,7 @@ def lease_car():
   def convert_to_datetime(string):
       try:
           # Parse string, handling timezone if present
-          dt_obj = parser.parse(string)
+          dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
       except ValueError as e:
           raise ValueError(f"Invalid datetime format: {string}") from e
 
