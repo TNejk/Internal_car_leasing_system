@@ -756,20 +756,16 @@ def lease_car():
         except ValueError as e:
           raise ValueError(f"Invalid datetime format: {string}") from e
 
-      # If naive, assume Bratislava time (adjust based on actual input)
-      if dt_obj.tzinfo is None:
-          bratislava_tz = pytz.timezone('Europe/Bratislava')
-          dt_obj = bratislava_tz.localize(dt_obj)
       
-      return dt_obj.astimezone(pytz.utc)  # or keep in Bratislava time
+      return dt_obj  # or keep in Bratislava time
 
   # prevent leasing in the past
   today = datetime.now(pytz.utc)
   try:
     if convert_to_datetime(timeto) < today:
-      return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti. {today}, {convert_to_datetime(timeto)}"}
+      return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti. {today}, {convert_to_datetime(timeto)}, {timeto}"}
     elif convert_to_datetime(timeof) < today:
-      return {"status": False, "private": False, "msg": f"Nemožno rezervovať z minulosti. {today}, {convert_to_datetime(timeof)}"}
+      return {"status": False, "private": False, "msg": f"Nemožno rezervovať z minulosti. {today}, {convert_to_datetime(timeof)}, {timeof}"}
   except Exception as e:
     return {"status": False, "private": False, "msg": f"{e}"}
 
