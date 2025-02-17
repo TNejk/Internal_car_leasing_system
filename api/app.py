@@ -750,7 +750,10 @@ def lease_car():
       try:
           # Parse string, handling timezone if present
           dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
-      except ValueError as e:
+      except: #? Ok now bear with me, it may look stupid, be stupid and make me look stupid, but it works :) Did i mention how much i hate dates
+        try:
+          dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
+        except ValueError as e:
           raise ValueError(f"Invalid datetime format: {string}") from e
 
       # If naive, assume Bratislava time (adjust based on actual input)
