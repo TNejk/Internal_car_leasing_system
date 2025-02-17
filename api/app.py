@@ -760,7 +760,7 @@ def lease_car():
       return dt_obj  # or keep in Bratislava time
 
   # prevent leasing in the past
-  today = datetime.strptime(get_sk_date(), "%Y-%m-%d %H:%M%S")
+  today = datetime.strptime(get_sk_date(), "%Y-%m-%d %H:%M:%S")
   try:
     if convert_to_datetime(timeto) < today:
       return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti. {today}, {convert_to_datetime(timeto)}, {timeto}"}
