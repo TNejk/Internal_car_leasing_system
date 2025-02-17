@@ -750,8 +750,8 @@ def lease_car():
       try:
           # Parse string, handling timezone if present
           dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
-      except Exception as e:
-          return {"status": False, "private": False, "msg": f"Chyba pri rezervácií. {e}"}
+      except ValueError as e:
+          raise ValueError(f"Invalid datetime format: {string}") from e
 
       # If naive, assume Bratislava time (adjust based on actual input)
       if dt_obj.tzinfo is None:
