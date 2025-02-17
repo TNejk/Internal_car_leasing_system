@@ -761,9 +761,12 @@ def lease_car():
       return dt_obj.astimezone(pytz.utc)  # or keep in Bratislava time
 
   # prevent leasing in the past
+  today = datetime.now(pytz.utc)
   try:
-    if convert_to_datetime(timeto) < datetime.now(pytz.utc):
-      return {"status": False, "private": False, "msg": "Nemožno rezervovať minulosť."}
+    if convert_to_datetime(timeto) < today:
+      return {"status": False, "private": False, "msg": "Nemožno rezervovať z minulosti."}
+    elif convert_to_datetime(timeof) < today:
+      return {"status": False, "private": False, "msg": "Nemožno rezervovať do minulosti."}
   except Exception as e:
     return {"status": False, "private": False, "msg": f"{e}"}
 
