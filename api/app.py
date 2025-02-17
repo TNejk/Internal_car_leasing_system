@@ -761,7 +761,7 @@ def lease_car():
   dt_timeto = convert_to_datetime(timeto)
   dt_timeof = convert_to_datetime(timeof)
   try:
-    if 1 <2:
+    if (dt_timeto < today) == True:
       return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti. {timeto}, {dt_timeto}"}
     elif 2 > 1:
       return {"status": False, "private": False, "msg": f"Nemožno rezervovať z minulosti. {timeof},"}
