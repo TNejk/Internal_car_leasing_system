@@ -773,8 +773,6 @@ def lease_car():
           return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti. {today}, {convert_to_datetime(timeto)}, {timeto}"}
       elif convert_to_datetime(timeof) < today:
           return {"status": False, "private": False, "msg": f"Nemožno rezervovať z minulosti. {today}, {convert_to_datetime(timeof)}, {timeof}"}
-      else:
-          return {"status": False, "private": False, "msg": f"No problemo"}
   except Exception as e:
       return {"status": False, "private": False, "msg": f"{e}"}
 
