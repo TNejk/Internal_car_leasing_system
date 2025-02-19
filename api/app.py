@@ -743,33 +743,40 @@ def lease_car():
 
   # for some fucking reason this function converts my good looking date format into a datermot of NOW, give it a 20/02 and it spits out the current date
   # def convert_to_datetime(string):
-  #   try:
-  #       # Parse string, handling timezone if present
-  #       dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
-  #       return dt_obj
-  #   except: #? Ok now bear with me, it may look stupid, be stupid and make me look stupid, but it works :) Did i mention how much i hate dates
-  #     try:
-  #       dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
-  #       return dt_obj
-  #     except ValueError as e:
-  #       raise ValueError(f"Invalid datetime format: {string}") from e
-
-
-  # # prevent leasing in the past
-  # today = datetime.strptime(get_sk_date(), "%Y-%m-%d %H:%M:%S")
-
   # dt_timeto = convert_to_datetime(timeto)
   # dt_timeof = convert_to_datetime(timeof)
   # # For some reason if i compare these two like this, time to becomes the value from get_sk_date()
   # # Even if i put it into a parentheses
   # # Fuck me thats wierd, loclly on the pc it does not happen tho
-  # try:
-  #   if (dt_timeto < today) == True:
-  #     return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti. {timeto}, {dt_timeto}"}
-  #   elif 2 > 1:
-  #     return {"status": False, "private": False, "msg": f"Nemožno rezervovať z minulosti. {timeof},"}
-  # except Exception as e:
-  #   return {"status": False, "private": False, "msg": f"{e}"}
+  def convert_to_datetime(string):
+      try:
+          # Parse string, handling timezone if present
+          dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
+          return dt_obj
+      except: #? Ok now bear with me, it may look stupid, be stupid and make me look stupid, but it works :) Did i mention how much i hate dates
+        try:
+          dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
+          return dt_obj
+        except ValueError as e:
+          raise ValueError(f"Invalid datetime format: {string}") from e
+          
+  def get_sk_date():
+      # Ensure the datetime is in UTC before converting
+      dt_obj = datetime.now()
+      utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
+      bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
+      return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
+  
+  today = datetime.strptime(get_sk_date(), "%Y-%m-%d %H:%M:%S")
+  try:
+      if convert_to_datetime(timeto) < today:
+          return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti. {today}, {convert_to_datetime(timeto)}, {timeto}"}
+      elif convert_to_datetime(timeof) < today:
+          return {"status": False, "private": False, "msg": f"Nemožno rezervovať z minulosti. {today}, {convert_to_datetime(timeof)}, {timeof}"}
+      else:
+          return {"status": False, "private": False, "msg": f"No problemo"}
+  except Exception as e:
+      return {"status": False, "private": False, "msg": f"{e}"}
 
   con, cur = connect_to_db()
 
