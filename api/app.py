@@ -767,12 +767,21 @@ def lease_car():
       bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
       return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
   
+  def compare_timeof(a_timeof, today):
+    timeof = convert_to_datetime(string=a_timeof)
+    diff = today - timeof
+    # If the lease from date is a minute behind the current date, dont allow the lease
+    # This gives the user 2 minutes to make a reservation, before being time blocked by leasing into the past
+    if (diff.total_seconds()/60) >= 2:
+        return True
+
+    
   today = datetime.strptime(get_sk_date(), "%Y-%m-%d %H:%M:%S")
   try:
       if convert_to_datetime(timeto) < today:
-          return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti. Dnes: {today}, CH:{timeto}"}
+          return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti.\n Dnes: {today}, \nDO:{timeto}"}
       elif convert_to_datetime(timeof) < today:
-          return {"status": False, "private": False, "msg": f"Nemožno rezervovať z minulosti. Dnes: {today}, CH:{timeof}"}
+          return {"status": False, "private": False, "msg": f"Nemožno rezervovať z minulosti.\n Dnes: {today}, \nOD:{timeof}"}
   except Exception as e:
       return {"status": False, "private": False, "msg": f"{e}"}
 
