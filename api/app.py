@@ -885,6 +885,7 @@ def lease_car():
               vertical='center'
           )
           wb = Workbook()
+          del wb["Sheet"]
           ws = wb.create_sheet(f"{convert_to_datetime(get_sk_date_str()).day}")
           #email_ft = Font(bold=True, color="B22222")
           filler = ["","","","","","","",""]
@@ -938,6 +939,7 @@ def lease_car():
           header_alignment = Alignment(horizontal='center',vertical='center')
 
           wb = Workbook()
+          del wb["Sheet"]
           ws = wb.create_sheet(f"{convert_to_datetime(get_sk_date_str()).day}")
           filler = ["","","","","","","",""]
           data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "TYP","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient,"NULL","NULL","NULL"]]
