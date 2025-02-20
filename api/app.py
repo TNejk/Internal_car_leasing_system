@@ -921,8 +921,6 @@ def lease_car():
           #     for cell in row:
           #         cell.font = Data_ft
           # Set row height for data rows (from row 4 to the last row)
-          for row in range(4, ws.max_row + 1):
-              ws.row_dimensions[row].height = 25  # set desired height for data rows
           wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_EXCEL_ICLS_report.xlsx")
 
     except Exception as e: #? ONLY HAPPENDS IF THE DIRECTORY IS EMPTY, SO LIKE ONCE
@@ -968,8 +966,6 @@ def lease_car():
           #     for cell in row:
           #         cell.font = Data_ft
                   # Set row height for data rows (from row 4 to the last row)
-          for row in range(4, ws.max_row + 1):
-              ws.row_dimensions[row].height = 30  # set desired height for data rows
           wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_NW_ICLS_report.xlsx")
 
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
