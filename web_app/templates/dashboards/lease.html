@@ -1,0 +1,72 @@
+{% extends 'base/base.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/car_details.css') }}">
+<title>ICLS - Gamo</title>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  <div class="sidebar">
+    <div class="car-list">
+      {% if cars|length == 0 %}
+        <p>Neexistuje žiadne auto!</p>
+      {% else %}
+        {% for car in cars %}
+          <div class="car-item" onclick='fetchCarData("{{ car[0] }}", "{{ token }}", "{{ username }}","{{ role }}")'>
+            <img src="{{ car[3] }}" alt="{{ car[1] }} image">
+            <p><strong>{{ car[1] }}</strong><br>
+              {% if car[2] == 'stand_by' %}
+                Voľné
+              {% else %}
+                Obsadené
+              {% endif %}
+            </p>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+
+  <div class="main-content">
+    <div id="default-message">Vyber si auto</div>
+
+    <div id="car-details" style="display: none;">
+
+      <div id="car-details-left">
+        <div id="calendar"></div>
+      </div>
+
+      <div id="car-details-right">
+        <img id="car-image" src="" alt="">
+        <div id="car-details-info">
+          <h3 id="car-name"></h3>
+          <p id="car-type"></p>
+          <p id="car-status"></p>
+          <p id="car-health"></p>
+          <p id="car-frequency"></p>
+          <p id="car-location"></p>
+          <p id="car-spz"></p>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+  <div id="modal" class="modal">
+    <div class="modal-inner">
+      <h2></h2>
+      <p></p>
+      <button id="close-modal">OK</button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/lease.js' )}}"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+{% endblock %}
+
+{% block script %}
+{% endblock %}

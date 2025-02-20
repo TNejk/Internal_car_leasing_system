@@ -1,10 +1,17 @@
 <header class="main-header">
-  <h2 style="color: black">Autodoprava</h2>
+  <img src="../../static/sources/images/logo.svg" alt="GAMO" id="gamo-img">
   <div class="icons">
     <ul>
-      <li><a href="/dashboard">Domcek</a></li>
+        {% if role == 'user' %}
+          <li><a href="/dashboard"><img src="{{ icons[3] }}" alt="Domcek" style="width: 24px;height: 24px" ></a></li>
+        {% elif role == 'manager' %}
+          <li><a href="/manager/dashboard"><img src="{{ icons[3] }}" alt="Domcek" style="width: 24px;height: 24px"></a></li>
+        {% elif role == 'admin' %}
+          <li><a href="/admin/dashboard"><img src="{{ icons[3] }}" alt="Domcek" style="width: 24px;height: 24px"></a></li>
+        {% endif %}
+      <li><a href="/lease"><img src="{{ icons[4] }}" alt="Auticko" style="width: 30px;height: 30px"></a></li>
       <li>
-        <a href="#"><span class="icon"><img src="{{ icons[0] }}" style="width: 24px;height: 24px;" alt="Zvoncek"></span></a>
+        <a href="#"><img src="{{ icons[0] }}" alt="Zvoncek" style="width: 24px;height: 24px"></a>
         <ul class="dropdown">
           {% if notifications|length == 0 %}
             <p id="notification-default">Nemáte žiadne notifikácie.</p>
@@ -19,15 +26,15 @@
         </ul>
       </li>
       <li>
-        <a href="#"><span class="icon"><img src="{{ icons[1] }}" style="width: 24px;height: 24px;" alt="Zvoncek"></span></a>
+        <a href="#"><img src="{{ icons[1] }}" alt="Panacik" style="width: 24px;height: 24px"></a>
         <ul class="dropdown">
           <li><a href="/reservations">Rezervácie</a></li>
           {% if role == 'manager' %}
-            <li><a href="/reports">Reporty</a></li>
+            <li><a href="/manager/reports">Reporty</a></li>
           {% endif %}
           <li>
             <a href="/settings">
-              <span class="icon"><img src="{{ icons[2] }}" style="width: 24px;height: 24px;" alt="Zvoncek"></span>
+              <img src="{{ icons[2] }}" alt="Koliesko" style="width: 24px;height: 24px">
               <p>Nastavenia</p>
             </a>
           </li>

@@ -9,20 +9,20 @@
 {% block body %}
 <div class="main-content">
   <div class="sign-div">
-    <h1>Prihlás sa</h1>
+    <img src="../../static/sources/images/logo.svg" alt="GAMO" id="gamo-logo">
     <form action="/sign-in" method="POST">
       <div class="sign-in-input">
         <label>
           <p>Email</p>
-          <input type="email" id="sign-in-email-input" name="email" required>
+          <input type="email" id="sign-in-email" name="email" required>
         </label>
         <label>
           <p>Heslo</p>
-          <input type="password" id="sign-in-password-input" name="password" required>
+          <input type="password" id="sign-in-password" name="password" required>
         </label>
       </div>
       <div class="signin-button">
-        <input type="submit" id="signin-button" value="Prihlás sa">
+        <input type="submit" id="sign-in-button" value="Prihlás sa">
       </div>
       <div class="sign-in-error">
         {% if data %}

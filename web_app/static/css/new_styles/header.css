@@ -3,8 +3,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 20px;
-    background-color: #e0e0e0;
-    color: white;
+    background-color: #bc2026;
 }
 
 .main-header input {
@@ -16,4 +15,10 @@
 .main-header .icons {
     display: flex;
     gap: 10px;
+}
+
+#gamo-img {
+    background-color: white;
+    padding: 7px;
+    border-radius: 5px;
 }
