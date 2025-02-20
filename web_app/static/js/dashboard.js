@@ -33,6 +33,7 @@ function renderCalendar(dates) {
       start: event.time_from,
       end: event.time_to,
       color:event.color,
+      car_id: event.car_id
     })),
 
     views: {
@@ -44,7 +45,8 @@ function renderCalendar(dates) {
           return { start, end };
         },
         buttonText: 'Mesiac',
-        classNames: ['time-grid-month']
+        classNames: ['time-grid-month'],
+        dateIncrement: { months: 1 }
       },
       timeGridWeek: {
         buttonText: 'Týždeň'
@@ -59,26 +61,37 @@ function renderCalendar(dates) {
         buttonText: 'Dnes'
       }
     },
+
+    customButtons: {
+      next: {
+        click: function() {
+          calendar.next();
+          const view = calendar.view;
+          const month = view.currentStart.getMonth() + 1;
+          get_leases(month);
+          calendar.update();
+        }
+      }
+    }
+
   });
 
   return calendar;
 }
 
-function get_leases(){
-  const month = new Date().getMonth() + 1;
-  console.log(month);
-  fetch('/manager/get_monthly_leases', {method: 'POST', body: JSON.stringify({ month:  month})})
+function get_leases(month){
+  fetch('/manager/get_monthly_leases', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({'month': month},
+      )})
   .then(res => res.json())
   .then(data => {
     console.log(data)
     for (let lease of data){
       lease.color = getRandomColor();
     }
-    console.log(JSON.stringify(data, null, 2));
-    const calendar = renderCalendar(data);
-    console.log('render calendar');
-    calendar.render();
-    document.getElementsByClassName('fc-timegrid-axis-cushion fc-scrollgrid-shrink-cushion fc-scrollgrid-sync-inner').innerText = `Celý deň`;
+    return data
   })
 }
 
@@ -92,9 +105,11 @@ function getRandomColor() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-  console.log('get data')
   get_session_data();
-  console.log('get leases');
-  get_leases();
-  console.log('done');
+  const month = new Date().getMonth() + 1;
+  var data = get_leases(month);
+  console.log(data);
+  const calendar = renderCalendar(data);
+  calendar.render();
+  document.getElementsByClassName('fc-timegrid-axis-cushion fc-scrollgrid-shrink-cushion fc-scrollgrid-sync-inner').innerText = `Celý deň`;
 });

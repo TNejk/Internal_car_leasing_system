@@ -86,11 +86,13 @@ def get_user_leases():
   data = request_user_leases(session['username'], session['role'])
   return jsonify(data)
 
-@app.route('/manager/get_monthly_leases', methods=['GET', 'POST'])
+@app.route('/manager/get_monthly_leases', methods=['POST'])
 @require_role('manager')
 @check_token()
 def get_monthly_leases():
-  data = request_monthly_leases(session['role'])
+  data = request.get_json()
+  month = data['month']
+  data = request_monthly_leases(month)
   return jsonify(data)
 
 @app.route(f'/manager/reports', methods=['GET', 'POST'])
