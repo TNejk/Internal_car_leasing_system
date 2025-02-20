@@ -760,7 +760,7 @@ def lease_car():
         except ValueError as e:
           raise ValueError(f"Invalid datetime format: {string}") from e
           
-  def get_sk_date():
+  def get_sk_date_str():
       # Ensure the datetime is in UTC before converting
       dt_obj = datetime.now()
       utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
@@ -776,7 +776,7 @@ def lease_car():
         return True
 
     
-  today = datetime.strptime(get_sk_date(), "%Y-%m-%d %H:%M:%S")
+  today = datetime.strptime(get_sk_date_str(), "%Y-%m-%d %H:%M:%S")
   try:
       if convert_to_datetime(timeto) < today:
           return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti.\n Dnes: {today}, \nDO:{timeto}"}
@@ -809,6 +809,9 @@ def lease_car():
     try:
       # /app/reports/'2025-01-21 17:51:44exc_ICLS_report.csv' -> 2025-01-21 18:53:46
 
+    
+
+
       split_date = latest_file.split("-")
       spl_year = split_date[0].removeprefix("/app/reports/")
       spl_month = split_date[1]
@@ -820,10 +823,21 @@ def lease_car():
       
       #timeof = timeof.strftime("%Y-%m-%d %H:%M:%S")
       if int(cur_year) == int(spl_year) and int(cur_month) == int(spl_month):
-        # Here check if its the same day, if not create a new sheet and write to it
-        # Then when writing same day, find the last sheet and write to that one
+
+
         wb = openpyxl.load_workbook(latest_file)
-        ws = wb.active
+        
+        # If a sheet name has been made before compare it with today, if its not equal create a new worksheet with the new days number
+        all_sheets = wb.sheetnames
+        if len(all_sheets) >0:
+          cur_day = convert_to_datetime(get_sk_date_str())
+          if int(all_sheets[-1]) == cur_day.day:
+            # Select the last sheet, that should correspond to the current day
+            ws = wb[wb.sheetnames[-1]]
+          else: 
+            ws = wb.create_sheet(f"{cur_day.day}")
+
+
         data = [["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL", "NULL", "NULL"]]
         for row in data:
           ws.append(row)
@@ -850,7 +864,7 @@ def lease_car():
               vertical='center'
           )
           wb = Workbook()
-          ws = wb.active
+          ws = wb.create_sheet(f"{convert_to_datetime(get_sk_date_str()).day}")
           #email_ft = Font(bold=True, color="B22222")
           filler = ["","","","","","","",""]
           data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL"]]
@@ -903,7 +917,7 @@ def lease_car():
           header_alignment = Alignment(horizontal='center',vertical='center')
 
           wb = Workbook()
-          ws = wb.active
+          ws = wb.create_sheet(f"{convert_to_datetime(get_sk_date_str()).day}")
           filler = ["","","","","","","",""]
           data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "TYP","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient,"NULL","NULL","NULL"]]
           for row in data:
