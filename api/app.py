@@ -673,6 +673,27 @@ def cancel_lease():
 
   return {"cancelled": True}
 
+@app.route('/get_monthly_leases', methods = ['POST'])
+@jwt_required()
+def get_monthly_leases():
+  data = request.get_json()
+  role = data["role"]
+
+  if role != "manager":
+    return jsonify({'msg': "Only manager can get monthly leases!"})
+  else:
+    try:
+      month = data["month"]
+      conn, cur = connect_to_db()
+      stmt = "SELECT start_of_lease, time_of_return FROM lease WHERE EXTRACT(MONTH FROM start_of_lease)::int = $s)"
+
+      cur.execute(stmt, (month,))
+      res = cur.fetchall()
+
+      conn.close()
+      return jsonify(res)
+    except Exception as e:
+      return jsonify(msg= f"Error getting monthly leases: {e}")
 
 @app.route('/file', methods = ['GET'])
 @jwt_required()
