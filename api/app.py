@@ -885,6 +885,7 @@ def lease_car():
               vertical='center'
           )
           wb = Workbook()
+          del wb["Sheet"]
           ws = wb.create_sheet(f"{convert_to_datetime(get_sk_date_str()).day}")
           #email_ft = Font(bold=True, color="B22222")
           filler = ["","","","","","","",""]
@@ -920,8 +921,6 @@ def lease_car():
           #     for cell in row:
           #         cell.font = Data_ft
           # Set row height for data rows (from row 4 to the last row)
-          for row in range(4, ws.max_row + 1):
-              ws.row_dimensions[row].height = 25  # set desired height for data rows
           wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_EXCEL_ICLS_report.xlsx")
 
     except Exception as e: #? ONLY HAPPENDS IF THE DIRECTORY IS EMPTY, SO LIKE ONCE
@@ -938,6 +937,7 @@ def lease_car():
           header_alignment = Alignment(horizontal='center',vertical='center')
 
           wb = Workbook()
+          del wb["Sheet"]
           ws = wb.create_sheet(f"{convert_to_datetime(get_sk_date_str()).day}")
           filler = ["","","","","","","",""]
           data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "TYP","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient,"NULL","NULL","NULL"]]
@@ -966,8 +966,6 @@ def lease_car():
           #     for cell in row:
           #         cell.font = Data_ft
                   # Set row height for data rows (from row 4 to the last row)
-          for row in range(4, ws.max_row + 1):
-              ws.row_dimensions[row].height = 30  # set desired height for data rows
           wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_NW_ICLS_report.xlsx")
 
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
