@@ -334,6 +334,7 @@ def get_car_list():
 # The allowed dates return here is kinda retarted, it would be better to just return a list of start > stop dates that the user would then generate locally
 # But i dont feel like doing it, so a MONSTER json has been created, enjoy :)
 #
+#?  22/02/2025, I did indeed feel like doing it after all :O
 @app.route('/get_full_car_info', methods=['POST', 'OPTIONS'])
 @jwt_required()
 def get_full_car_info():
@@ -696,33 +697,8 @@ def get_monthly_leases():
     except Exception as e:
       return jsonify(msg= f"Error getting monthly leases: {e}")
 
-@app.route('/file', methods = ['GET'])
-@jwt_required()
-def atempetdates():
-    #latest_file = get_latest_file(f"{os.getcwd()}/reports")
-
-    path = f"{os.getcwd()}/reports/ICLS_report.csv"
-    
-    # if latest_file:
-    #   with open(latest_file, "a+") as report:
-    #     report.write("Posadasdasdasdasdasdznámka")
-    # else:
-
-    # Herer chjeck if the if stsetametns are the problem 
-    # if so then i may be fucked
-    er = "sdssdd"
-    if er == "sdsd":
-      with open(path, "+a") as new_report:
-        new_report.write("NWE RPTORT NEW RPTORT")
-    else:
-      with open(path, "+a") as new_report:
-        new_report.write("TOOT JE DRUHA VEC")
-
-    return {"stauts": True}
 
 
-# Add a notofication call after leasing, to the manager
-# fix private rides
 @app.route('/lease_car', methods = ['POST'])
 @jwt_required()
 def lease_car():
@@ -755,6 +731,7 @@ def lease_car():
   # kys
   # And yes i know i could use a strptime and make it better, but guess waht? I am wokring on this shit for FREE on a saturday so i dont give a fuck
   # 2025-02-02 21:04:48+01        | 2025-02-20 21:04:00+01
+  #! The commented dates may be in the wrong format, i dont care enough to recheck, but the +01 timezone awareness may be wrong idk
   tmp_of = timeof.split(" ")
   dates =  tmp_of[0].split("-")
   # 02-20-2025 21:40:00+01
@@ -766,14 +743,6 @@ def lease_car():
   # 02-20-2025 21:40:00+01
   form_timeto = f"{dates[2]}-{dates[1]}-{dates[0]} {tmp_to[1]}"
 
-  # for some fucking reason this function converts my good looking date format into a datermot of NOW, give it a 20/02 and it spits out the current date
-  # def convert_to_datetime(string):
-  # dt_timeto = convert_to_datetime(timeto)
-  # dt_timeof = convert_to_datetime(timeof)
-  # # For some reason if i compare these two like this, time to becomes the value from get_sk_date()
-  # # Even if i put it into a parentheses
-  # # Fuck me thats wierd, loclly on the pc it does not happen tho
-  #! FIXED!!!
   def convert_to_datetime(string):
       try:
           # Parse string, handling timezone if present

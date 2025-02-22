@@ -9,7 +9,10 @@ from openpyxl import Workbook
 import pytz
 
 class writer():
-
+    '''
+    Class that handles writing and creating excel reports. 
+    Contains only write_report()
+    '''
     def convert_to_datetime(self, string):
         try:
             # Parse string, handling timezone if present
@@ -22,7 +25,7 @@ class writer():
             except ValueError as e:
                 raise ValueError(f"Invalid datetime format: {string}") from e
 
-    def get_sk_date(self):
+    def _get_sk_date(self):
         bratislava_tz = pytz.timezone('Europe/Bratislava')
         # Ensure the datetime is in UTC before converting
         dt_obj = datetime.now()
@@ -30,7 +33,7 @@ class writer():
         bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
         return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
 
-    def get_sk_date_str(self):
+    def _get_sk_date_str(self):
         # Ensure the datetime is in UTC before converting
         bratislava_tz = pytz.timezone('Europe/Bratislava')
         dt_obj = datetime.now()
@@ -38,7 +41,7 @@ class writer():
         bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
         return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
 
-    def compare_timeof(self, a_timeof, today):
+    def _compare_timeof(self, a_timeof, today):
         timeof = self.convert_to_datetime(string=a_timeof)
         diff = today - timeof
         # If the lease from date is a minute behind the current date, dont allow the lease
@@ -46,7 +49,7 @@ class writer():
         if (diff.total_seconds()/60) >= 2:
             return True
 
-    def get_latest_file(self, folder_path, use_modification_time=True):
+    def _get_latest_file(self, folder_path, use_modification_time=True):
         try:
             if not os.path.exists(folder_path):
                 raise FileNotFoundError(f"The folder '{folder_path}' does not exist.")
@@ -75,12 +78,23 @@ class writer():
             return None
 
 
-    def write_report(self, recipient, car_name, stk, drive_type, timeof, timeto):
+    def write_report(self, recipient:str , car_name:str, stk:str, drive_type:str, timeof:str, timeto:str):
         """
-        Writes to a csv lease file about a new lease being made, if no such file exists it creates it.
+        Tries to write to an existing excel file located at os.getcwd()/reports
+        If no file exists it will create it and name it in the format: {CURRENT_DATE}_NW_ICLS_report.xlsx else {CURRENT_DATE}_EXCEL_ICLS_report.xlsx \n
         
-        If a report is too old it creates a new one each month. 
-        ex: '2025-01-21 15:37:00ICLS_report.csv'
+        If and error occurs during creation it will also produce an error log for the current day in the directory /reports .  \n
+        
+        The function itself checks if a new month/day has begun.\n
+        If a new month began a new excel file is made and written to. \n
+        If a new day began a new worksheet is made witht he days value as its name in the latest excel file in the directory /reports.
+
+        recipient:  str, who has leased the car 
+        car_name:   str, which car had been leased 
+        stk:        str, cars STK 
+        drive_type: str, concataned string of Gas, Shifter_type (Diesel, Automatic) 
+        timeof:     str, date format: %Y-%m-%d %H:%M:%S or %Y-%m-%d %H:%M 
+        timeto:     str, date format: %Y-%m-%d %H:%M:%S or %Y-%m-%d %H:%M 
         """
         # To fix the wierd seconds missing error, i will just get rid of the seconds manually
         if timeof.count(":") > 1:
