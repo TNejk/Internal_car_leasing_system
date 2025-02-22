@@ -13,7 +13,7 @@ class writer():
     Class that handles writing and creating excel reports. 
     Contains only write_report()
     '''
-    def convert_to_datetime(self, string):
+    def __convert_to_datetime(self, string):
         try:
             # Parse string, handling timezone if present
             dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
@@ -25,7 +25,7 @@ class writer():
             except ValueError as e:
                 raise ValueError(f"Invalid datetime format: {string}") from e
 
-    def _get_sk_date(self):
+    def __get_sk_date(self):
         bratislava_tz = pytz.timezone('Europe/Bratislava')
         # Ensure the datetime is in UTC before converting
         dt_obj = datetime.now()
@@ -33,7 +33,7 @@ class writer():
         bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
         return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
 
-    def _get_sk_date_str(self):
+    def __get_sk_date_str(self):
         # Ensure the datetime is in UTC before converting
         bratislava_tz = pytz.timezone('Europe/Bratislava')
         dt_obj = datetime.now()
@@ -41,7 +41,7 @@ class writer():
         bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
         return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
 
-    def _compare_timeof(self, a_timeof, today):
+    def __compare_timeof(self, a_timeof, today):
         timeof = self.convert_to_datetime(string=a_timeof)
         diff = today - timeof
         # If the lease from date is a minute behind the current date, dont allow the lease
@@ -49,7 +49,7 @@ class writer():
         if (diff.total_seconds()/60) >= 2:
             return True
 
-    def _get_latest_file(self, folder_path, use_modification_time=True):
+    def __get_latest_file(self, folder_path, use_modification_time=True):
         try:
             if not os.path.exists(folder_path):
                 raise FileNotFoundError(f"The folder '{folder_path}' does not exist.")
@@ -105,7 +105,7 @@ class writer():
             timeto = timeto[:-3]
 
         
-        latest_file = self.get_latest_file(f"{os.getcwd()}/reports")
+        latest_file = self.__get_latest_file(f"{os.getcwd()}/reports")
 
         # Use year and month to check if a new excel spreadsheet needs to be created
         # '2025-01-21 15:37:00ICLS_report.csv'  '2025-01-21 15:37:26_ICLS_report.csv'
@@ -116,7 +116,7 @@ class writer():
             spl_month = split_date[1]
 
             # "%Y-%m-%d %H:%M:%S"
-            current_date = self.get_sk_date().split("-")
+            current_date = self.__get_sk_date().split("-")
             cur_year = current_date[0]
             cur_month = current_date[1]
             
@@ -126,7 +126,7 @@ class writer():
                 # If a sheet name has been made before compare it with today, if its not equal create a new worksheet with the new days number
                 all_sheets = wb.sheetnames
                 if len(all_sheets) >0:
-                    cur_day = self.convert_to_datetime(self.get_sk_date_str())
+                    cur_day = self.__convert_to_datetime(self.__get_sk_date_str())
                 if int(all_sheets[-1]) == cur_day.day:
                     # Select the last sheet, that should correspond to the current day
                     ws = wb[wb.sheetnames[-1]]
@@ -161,7 +161,7 @@ class writer():
                 )
                 wb = Workbook()
                 del wb["Sheet"]
-                ws = wb.create_sheet(f"{self.convert_to_datetime(self.get_sk_date_str()).day}")
+                ws = wb.create_sheet(f"{self.__convert_to_datetime(self.__get_sk_date_str()).day}")
                 #email_ft = Font(bold=True, color="B22222")
                 filler = ["","","","","","","",""]
                 data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL"]]
@@ -196,10 +196,10 @@ class writer():
                 #     for cell in row:
                 #         cell.font = Data_ft
                 # Set row height for data rows (from row 4 to the last row)
-                wb.save(f"{os.getcwd()}/reports/{self.get_sk_date()}_EXCEL_ICLS_report.xlsx")
+                wb.save(f"{os.getcwd()}/reports/{self.__get_sk_date()}_EXCEL_ICLS_report.xlsx")
 
         except Exception as e: #? ONLY HAPPENDS IF THE DIRECTORY IS EMPTY, SO LIKE ONCE
-            with open(f"{os.getcwd()}/reports/{self.get_sk_date()}_ERRORt.txt", "a+") as file:
+            with open(f"{os.getcwd()}/reports/{self.__get_sk_date()}_ERRORt.txt", "a+") as file:
                 file.write(f"{e}")
 
             # Define styles
@@ -213,7 +213,7 @@ class writer():
 
             wb = Workbook()
             del wb["Sheet"]
-            ws = wb.create_sheet(f"{self.convert_to_datetime(self.get_sk_date_str()).day}")
+            ws = wb.create_sheet(f"{self.__convert_to_datetime(self.__get_sk_date_str()).day}")
             filler = ["","","","","","","",""]
             data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "TYP","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient,"NULL","NULL","NULL"]]
             for row in data:
@@ -241,4 +241,4 @@ class writer():
             #     for cell in row:
             #         cell.font = Data_ft
                     # Set row height for data rows (from row 4 to the last row)
-            wb.save(f"{os.getcwd()}/reports/{self.get_sk_date()}_NW_ICLS_report.xlsx")
+            wb.save(f"{os.getcwd()}/reports/{self.__get_sk_date()}_NW_ICLS_report.xlsx")
