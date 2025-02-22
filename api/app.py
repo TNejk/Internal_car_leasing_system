@@ -329,6 +329,48 @@ def get_car_list():
         cur.close()
         conn.close()  
 
+@app.route('/decommision_car', methods= ['POST'])
+@jwt_required()
+def decommision():
+  data = request.get_json()
+  car_name = data["car_name"]
+
+  claims = get_jwt()
+  role = claims.get('role', None)
+
+  if role != "manager":
+    return {"status": False, "msg": "Unathorized"}, 401
+  
+
+  query = "update car set status = 'service' where name = %s"
+  conn, cur = connect_to_db()  
+  cur.execute(query)
+  
+  conn.commit()
+  conn.close()
+  return {"status": True, "msg": f"Car {car_name} was decommisioned!"}
+
+
+@app.route('/activate_car', methods= ['POST'])
+@jwt_required()
+def activate_car():
+  data = request.get_json()
+  car_name = data["car_name"]
+
+  claims = get_jwt()
+  role = claims.get('role', None)
+
+  if role != "manager":
+    return {"status": False, "msg": "Unathorized"}, 401
+  
+
+  query = "update car set status = 'stand_by' where name = %s"
+  conn, cur = connect_to_db()  
+  cur.execute(query)
+  
+  conn.commit()
+  conn.close()
+  return {"status": True, "msg": f"Car {car_name} was activated!"}
 
 # Warning!!!
 # The allowed dates return here is kinda retarted, it would be better to just return a list of start > stop dates that the user would then generate locally
@@ -355,7 +397,7 @@ def get_full_car_info():
   
     car = data.get("car_id")
     if not car or car == 'none':
-        return jsonify({'error': 'The "car_id" parameter is missing or invalid'}), 400
+        return jsonify({'error': 'The "carid" parameter is missing or invalid'}), 500
 
     query = "SELECT * FROM car WHERE id_car = %s;"
     cur.execute(query, (car,))
@@ -422,9 +464,9 @@ def get_full_car_info():
 @app.route('/list_reports', methods = ['POST'])
 @jwt_required()
 def list_reports():
-  data = request.get_json()
-  email = data["email"]
-  role = data["role"]
+  claims = get_jwt()
+  email = claims.get('sub', None)
+  role = claims.get('role', None)
 
   conn, curr = connect_to_db()
 
@@ -776,9 +818,12 @@ def lease_car():
   con, cur = connect_to_db()
 
   # user is a list within a list [[]] to access it use double [0][1,2,3,4]
-  cur.execute("select * from car where name = %s", (car_name,))
-  car_data = cur.fetchall()
- 
+  try:
+    cur.execute("select * from car where name = %s and not status = 'service'", (car_name,))
+    car_data = cur.fetchall()
+  except:
+    return {"status": False, "private": False, "msg": "Auto je momentálne nedostupné."}
+
   drive_type = f"{car_data[0][9]}, {car_data[0][10]}"
   car_id = car_data[0][0]
 
