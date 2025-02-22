@@ -854,7 +854,7 @@ def lease_car():
     if private == True:
       if jwt_role != "manager" or jwt_role != "admin":
         # Just need to create a requst row, a new lease is only created and activated after being approved in the approve_request route
-        cur.execute("insert into request(start_of_request, end_of_request, status, id_car, id_driver) values (%s, %s, %s, %s, %s)", (timeof, timeto, True, car_data[0][0], username))
+        cur.execute("insert into request(start_of_request, end_of_request, status, id_car, id_driver) values (%s, %s, %s, %s, %s)", (timeof, timeto, True, car_data[0][0], user[0][0]))
         con.commit()
 
         message = messaging.Message(
