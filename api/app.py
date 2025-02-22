@@ -180,6 +180,8 @@ def modify_token():
     conn.close()
     return jsonify(msg="JWT revoked")
 
+
+
 # ONLY ICLS GAMO CAN REGISTETR PEOPLE
 @app.route('/register', methods = ['POST'])
 @jwt_required()
@@ -685,11 +687,7 @@ def get_monthly_leases():
     try:
       month = data["month"]
       conn, cur = connect_to_db()
-      stmt = """ 
-            SELECT l.start_of_lease AS time_from, l.time_of_return AS time_to, l.id_car AS car_id, c.name AS car_name
-            FROM lease l JOIN car c ON l.id_car = c.id_car
-            WHERE EXTRACT(MONTH FROM start_of_lease)::int = %s AND time_of_return is not null
-            """
+      stmt = "SELECT start_of_lease, time_of_return FROM lease WHERE EXTRACT(MONTH FROM start_of_lease)::int = $s)"
 
       cur.execute(stmt, (month,))
       res = cur.fetchall()
@@ -740,7 +738,10 @@ def lease_car():
   stk = str(data["stk"])
   private = data["is_private"]
 
-
+  claims = get_jwt()  # Get the entire payload
+  
+  jwt_role = claims.get('role', None)
+  return {"status": False, "private": False, "msg": f"{jwt_role}"}
 
   # Try to dezinfect timeof from the .2342212 number horseshit
   timeof = data["timeof"]
@@ -878,10 +879,10 @@ def lease_car():
           Data_ft = Font(size=17)  # New font for data cells
 
           Header_border = Border(
-              left=Side(border_style="thick", color='FF000000'),
-              right=Side(border_style="thick", color='FF000000'),
-              top=Side(border_style="thick", color='FF000000'),
-              bottom=Side(border_style="thick", color='FF000000')
+              left=Side(border_style="medium", color='FF000000'),
+              right=Side(border_style="medium", color='FF000000'),
+              top=Side(border_style="medium", color='FF000000'),
+              bottom=Side(border_style="medium", color='FF000000')
           )
 
           header_alignment = Alignment(
@@ -937,7 +938,7 @@ def lease_car():
           Header_fill = PatternFill("solid", "00CCFFFF")
           Header_ft = Font(bold=True, color="000000", size=20)
           Data_ft = Font(size=17)  # New font for data cells
-          Header_border = Border(left=Side(border_style="thick", color='FF000000'),right=Side(border_style="thick", color='FF000000'),top=Side(border_style="thick", color='FF000000'),bottom=Side(border_style="thick", color='FF000000'))
+          Header_border = Border(left=Side(border_style="medium", color='FF000000'),right=Side(border_style="medium", color='FF000000'),top=Side(border_style="medium", color='FF000000'),bottom=Side(border_style="medium", color='FF000000'))
           header_alignment = Alignment(horizontal='center',vertical='center')
 
           wb = Workbook()
