@@ -13,3 +13,5 @@
 - When you get the Error: pg_config executable not found. error while downloading psycopg2 library, you need to download these sources:\
 apt install postgresql libpq-dev\sudo apt install build-essential\sudo apt install python3-dev and try downloading psycopg2 again. 
 It should work now **muah**
+
+- Try to use datetime objects where available, i did not at first and now i regret it, if you have the time try to refactor it
