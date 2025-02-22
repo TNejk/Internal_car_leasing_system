@@ -7,6 +7,7 @@ import psycopg2
 from flask_mail import Mail, Message
 from flask import Flask, request, jsonify, send_from_directory
 import requests
+from api.excel_writer import write_report
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from flask_cors import CORS, cross_origin
 from functools import wraps
@@ -63,14 +64,6 @@ def connect_to_db():
   except psycopg2.Error as e:
     return None, str(e)
 
-# def send_email(msg: str) -> bool:
-#   	return requests.post(
-#   		"https://api.mailgun.net/v3/sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org/messages",
-#   		auth=("api", mail_api_key),
-#   		data={"from": "ICLS <mailgun@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org>",
-#   			"to": ["iclsgamo@gmail.com", "mailgun@sandbox82ff4f07bb7b40a188f61b4766eff128.mailgun.org"],
-#   			"subject": "Rezervácia auta",
-#   			"text": "Zamestnanec: {user} \n Auto: {auto}, \n Čas od: {timeof}, \n Čas do: {timeto}"})
 
 def get_reports_paths(folder_path):
     try:
@@ -540,9 +533,10 @@ def allowed_dates():
 @jwt_required()
 def get_leases():
   conn, curr = connect_to_db()
-  data = request.get_json()
-  email = data["email"]
-  role = data["role"]
+  
+  claims = get_jwt()
+  email = claims.get('sub', None)
+  role = claims.get('role', None)
   
   bratislava_tz = pytz.timezone('Europe/Bratislava')
   # IF YOU ARE A USER RETURN ONLY FOR YOUR EMAIL
@@ -631,6 +625,8 @@ def get_leases():
         "shaft": i[12]
 
       })
+
+    conn.close()
     return {"active_leases": leases}, 200
   
   except Exception as e:
@@ -642,8 +638,9 @@ def get_leases():
 def cancel_lease():
   # make a sql statement that updates the table lease and sets it stauts to false where you will filter the result by the driver, car, and order by id_lease descending limit 1
   data = request.get_json()
-  email = data["email"]
-
+  claims = get_jwt()
+  email = claims.get('sub', None)
+  
   recipient = ""
   if data["recipient"]:
      recipient = data["recipient"]
@@ -679,7 +676,9 @@ def cancel_lease():
 @jwt_required()
 def get_monthly_leases():
   data = request.get_json()
-  role = data["role"]
+  
+  claims = get_jwt()
+  role = claims.get('role', None)
 
   if role != "manager":
     return jsonify({'msg': "Only manager can get monthly leases!"})
@@ -730,18 +729,18 @@ def lease_car():
   data =  request.get_json()
 
   # for whom the lease is 
-  username = str(data["username"])
   recipient = data["recipient"]
-
-  role = str(data["role"])
   car_name  = str(data["car_name"])
   stk = str(data["stk"])
   private = data["is_private"]
 
-  claims = get_jwt()  # Get the entire payload
-  
+  claims = get_jwt()  # JWT data
+  # Replaced user given username,role for a JWT gotten one to prevent fraud
+  username = claims.get('sub', None)
   jwt_role = claims.get('role', None)
-  return {"status": False, "private": False, "msg": f"{jwt_role}"}
+  
+  if username is None or jwt_role is None:
+    return {"status": False, "private": False, "msg": f"JWT token incomplete? whaaa"}
 
   # Try to dezinfect timeof from the .2342212 number horseshit
   timeof = data["timeof"]
@@ -774,6 +773,7 @@ def lease_car():
   # # For some reason if i compare these two like this, time to becomes the value from get_sk_date()
   # # Even if i put it into a parentheses
   # # Fuck me thats wierd, loclly on the pc it does not happen tho
+  #! FIXED!!!
   def convert_to_datetime(string):
       try:
           # Parse string, handling timezone if present
@@ -786,23 +786,16 @@ def lease_car():
         except ValueError as e:
           raise ValueError(f"Invalid datetime format: {string}") from e
           
-  def get_sk_date_str():
-      # Ensure the datetime is in UTC before converting
-      dt_obj = datetime.now()
-      utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
-      bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
-      return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
   
   def compare_timeof(a_timeof, today):
+    # This gives the user 2 minutes to make a reservation, before being time blocked by leasing into the past
     timeof = convert_to_datetime(string=a_timeof)
     diff = today - timeof
-    # If the lease from date is a minute behind the current date, dont allow the lease
-    # This gives the user 2 minutes to make a reservation, before being time blocked by leasing into the past
     if (diff.total_seconds()/60) >= 2:
         return True
 
     
-  today = datetime.strptime(get_sk_date_str(), "%Y-%m-%d %H:%M:%S")
+  today = datetime.strptime(get_sk_date(), "%Y-%m-%d %H:%M:%S")
   try:
       if convert_to_datetime(timeto) < today:
           return {"status": False, "private": False, "msg": f"Nemožno rezervovať do minulosti.\n Dnes: {today}, \nDO:{timeto}"}
@@ -813,183 +806,6 @@ def lease_car():
 
   con, cur = connect_to_db()
 
-  def write_report(recipient, car_name, stk, drive_type, timeof, timeto):
-    """
-    Writes to a csv lease file about a new lease being made, if no such file exists it creates it.
-    
-    If a report is too old it creates a new one each month. 
-    ex: '2025-01-21 15:37:00ICLS_report.csv'
-    """
-    # To fix the wierd seconds missing error, i will just get rid of the seconds manually
-    if timeof.count(":") > 1:
-      timeof = timeof[:-3]
-    
-    if timeto.count(":") > 1:
-      timeto = timeto[:-3]
-
-    
-    latest_file = get_latest_file(f"{os.getcwd()}/reports")
-
-    # Use year and month to check if a new excel spreadsheet needs to be created
-    # '2025-01-21 15:37:00ICLS_report.csv'  '2025-01-21 15:37:26_ICLS_report.csv'
-    try:
-      # /app/reports/'2025-01-21 17:51:44exc_ICLS_report.csv' -> 2025-01-21 18:53:46
-
-    
-
-
-      split_date = latest_file.split("-")
-      spl_year = split_date[0].removeprefix("/app/reports/")
-      spl_month = split_date[1]
-
-      # "%Y-%m-%d %H:%M:%S"
-      current_date = get_sk_date().split("-")
-      cur_year = current_date[0]
-      cur_month = current_date[1]
-      
-      #timeof = timeof.strftime("%Y-%m-%d %H:%M:%S")
-      if int(cur_year) == int(spl_year) and int(cur_month) == int(spl_month):
-
-
-        wb = openpyxl.load_workbook(latest_file)
-        
-        # If a sheet name has been made before compare it with today, if its not equal create a new worksheet with the new days number
-        all_sheets = wb.sheetnames
-        if len(all_sheets) >0:
-          cur_day = convert_to_datetime(get_sk_date_str())
-          if int(all_sheets[-1]) == cur_day.day:
-            # Select the last sheet, that should correspond to the current day
-            ws = wb[wb.sheetnames[-1]]
-          else: 
-            ws = wb.create_sheet(f"{cur_day.day}")
-
-
-        data = [["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL", "NULL", "NULL"]]
-        for row in data:
-          ws.append(row)
-
-        wb.save(latest_file)
-
-      else:
-          # Define styles
-          red_flag_ft = Font(bold=True, color="B22222")
-          red_flag_fill = PatternFill("solid", "B22222")
-          Header_fill = PatternFill("solid", "00CCFFFF")
-          Header_ft = Font(bold=True, color="000000", size=20)
-          Data_ft = Font(size=17)  # New font for data cells
-
-          Header_border = Border(
-              left=Side(border_style="medium", color='FF000000'),
-              right=Side(border_style="medium", color='FF000000'),
-              top=Side(border_style="medium", color='FF000000'),
-              bottom=Side(border_style="medium", color='FF000000')
-          )
-
-          header_alignment = Alignment(
-              horizontal='center',
-              vertical='center'
-          )
-          wb = Workbook()
-          del wb["Sheet"]
-          ws = wb.create_sheet(f"{convert_to_datetime(get_sk_date_str()).day}")
-          #email_ft = Font(bold=True, color="B22222")
-          filler = ["","","","","","","",""]
-          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL"]]
-
-          for row in data:
-              ws.append(row)
-              # Format red flag cell (B3)
-          red_flag_cell = ws["B3"]
-          red_flag_cell.font = red_flag_ft
-          red_flag_cell.fill = red_flag_fill
-          red_flag_cell.border = Header_border
-          email_cell = ws["B3"]
-          #email_cell.font = email_ft
-
-          # Set row height for header row
-          ws.row_dimensions[3].height = 35
-
-          # Set column widths for data columns
-          for col in ["C", "D", "E", "F", "G", "H", "I", "J","K"]:
-              ws.column_dimensions[col].width = 23
-
-          # Format header row (C3:J3)
-          for row_cells in ws["C3:K3"]:
-              for cell in row_cells:
-                  cell.font = Header_ft
-                  cell.alignment = header_alignment
-                  cell.fill = Header_fill
-                  cell.border = Header_border
-
-          # Format data rows (from row 4 onwards, columns C-J)
-          # for row in ws.iter_rows(min_row=4, min_col=3, max_col=10):
-          #     for cell in row:
-          #         cell.font = Data_ft
-          # Set row height for data rows (from row 4 to the last row)
-          wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_EXCEL_ICLS_report.xlsx")
-
-    except Exception as e: #? ONLY HAPPENDS IF THE DIRECTORY IS EMPTY, SO LIKE ONCE
-          with open(f"{os.getcwd()}/reports/{get_sk_date()}_ERRORt.txt", "a+") as file:
-             file.write(f"{e}")
-
-          # Define styles
-          red_flag_ft = Font(bold=True, color="B22222")
-          red_flag_fill = PatternFill("solid", "B22222")
-          Header_fill = PatternFill("solid", "00CCFFFF")
-          Header_ft = Font(bold=True, color="000000", size=20)
-          Data_ft = Font(size=17)  # New font for data cells
-          Header_border = Border(left=Side(border_style="medium", color='FF000000'),right=Side(border_style="medium", color='FF000000'),top=Side(border_style="medium", color='FF000000'),bottom=Side(border_style="medium", color='FF000000'))
-          header_alignment = Alignment(horizontal='center',vertical='center')
-
-          wb = Workbook()
-          del wb["Sheet"]
-          ws = wb.create_sheet(f"{convert_to_datetime(get_sk_date_str()).day}")
-          filler = ["","","","","","","",""]
-          data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "TYP","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient,"NULL","NULL","NULL"]]
-          for row in data:
-              ws.append(row)
-              # Format red flag cell (B3)
-          red_flag_cell = ws["B3"]
-          red_flag_cell.font = red_flag_ft
-          red_flag_cell.fill = red_flag_fill
-          red_flag_cell.border = Header_border
-          email_cell = ws["B3"]
-          # Set row height for header row
-          ws.row_dimensions[3].height = 35
-          # Set column widths for data columns
-          for col in ["C", "D", "E", "F", "G", "H", "I", "J", "K"]:
-              ws.column_dimensions[col].width = 23
-          # Format header row (C3:J3)
-          for row_cells in ws["C3:K3"]:
-              for cell in row_cells:
-                  cell.font = Header_ft
-                  cell.alignment = header_alignment
-                  cell.fill = Header_fill
-                  cell.border = Header_border
-          # Format data rows (from row 4 onwards, columns C-J)
-          # for row in ws.iter_rows(min_row=4, min_col=3, max_col=10):
-          #     for cell in row:
-          #         cell.font = Data_ft
-                  # Set row height for data rows (from row 4 to the last row)
-          wb.save(f"{os.getcwd()}/reports/{get_sk_date()}_NW_ICLS_report.xlsx")
-
-  # user is a list within a list [[]] to access it use double [0][1,2,3,4]
-  cur.execute("select * from car where name = %s", (car_name,))
-  
-  car_data = cur.fetchall()
-  
-  drive_type = f"{car_data[0][9]}, {car_data[0][10]}"
-  # Check if a lease conflicts time wise with another
-  # SQL FORMAT:  2025-01-01 16:10:00+01 | 2025-01-10 15:15:00+01 
-  #   "timeof": "2025-01-21 20:10:00+01",
-  #   "timeto": "2025-02-10 11:14:00+01"
-  # USER ROLE CHECKER
-  cur.execute("select id_car from car where name = %s", (car_name,))
-  car_id = cur.fetchall()[0][0]
-
-  cur.execute("select * from driver where email = %s and role = %s", (username, role,))
-  user = cur.fetchall()
-  
   # Check for the leased car if it has available date range to lease from
   cur.execute("""
     SELECT id_lease start_of_lease, end_of_lease FROM lease 
@@ -1005,13 +821,26 @@ def lease_car():
   conflicting_leases = cur.fetchall()
   if len(conflicting_leases) > 0:
      return {"status": False, "private": False, "msg": f"Zabratý dátum (hodina typujem)"}
+
+
+  # user is a list within a list [[]] to access it use double [0][1,2,3,4]
+  cur.execute("select * from car where name = %s", (car_name,))
+  car_data = cur.fetchall()
+ 
+  drive_type = f"{car_data[0][9]}, {car_data[0][10]}"
+  car_id = car_data[0][0]
+
+  cur.execute("select * from driver where email = %s and role = %s", (username, jwt_role,))
+  user = cur.fetchall()
+  
+
   
   # If the user is leasing for himself
   if recipient ==  username:
     if private == True:
-      if user[0][3] != "manager" or user[0][3] != "admin":
+      if jwt_role != "manager" or jwt_role != "admin":
         # Just need to create a requst row, a new lease is only created and activated after being approved in the approve_request route
-        cur.execute("insert into request(start_of_request, end_of_request, status, id_car, id_driver) values (%s, %s, %s, %s, %s)", (timeof, timeto, True, car_data[0][0], user[0][0]))
+        cur.execute("insert into request(start_of_request, end_of_request, status, id_car, id_driver) values (%s, %s, %s, %s, %s)", (timeof, timeto, True, car_data[0][0], username))
         con.commit()
 
         message = messaging.Message(
@@ -1056,20 +885,16 @@ def lease_car():
     #!!!!!!!!!!!!
     write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
     #send_email(msg="Auto bolo rezervovane!")
-
     return {"status": True, "private": private}
 
   # If the user leasing is a manager allow him to order lease for other users
-  elif user[0][3]  == "manager":
+  elif jwt_role  == "manager":
     try:
       # If the manager is leasing a car for someone else check if the recipeint exists and lease for his email
       try:
         cur.execute("select id_driver from driver where email = %s", (recipient,)) # NO need to check for role here!!!
         id_recipient = cur.fetchall()
-        if private == False:
-          cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s,  %s, %s, %s)", (car_data[0][0], id_recipient[0][0], timeof, timeto, True, False))
-        else:
-          cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s,  %s, %s, %s)", (car_data[0][0], id_recipient[0][0], timeof, timeto, True, True))
+        cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s,  %s, %s, %s)", (car_data[0][0], id_recipient[0][0], timeof, timeto, True, private))
 
       except:
         return {"status": False, "private": False, "msg": f"Error has occured! 111"}, 500
@@ -1080,7 +905,7 @@ def lease_car():
       #!!!!!!!!!!!!!!!!!!!!!!  POZOR OTAZNIK NEZNAMY SYMBOL JE NEW LINE CHARACTER OD TIALTO: http://www.unicode-symbol.com/u/0085.html
       message = messaging.Message(
                 notification=messaging.Notification(
-                title=f"Upozornenie o leasingu auta: {car_name}!",
+                title=f"Nová rezervácia auta: {car_name}!",
                 body=f"""email: {recipient} \n Od: {timeof[:-4]} \n Do: {timeto}"""
             ),
                 topic="manager"
@@ -1103,12 +928,11 @@ def lease_car():
 @app.route('/get_requests', methods = ['POST'])
 @jwt_required()
 def get_requests():
-  data = request.get_json()
-  email = data["email"]
-  role = data["role"]
 
-  if not data:
-     return {"msg": "No Data."}, 501
+  claims = get_jwt()
+  email = claims.get('sub', None)
+  role = claims.get('role', None)
+
   # triewd to do a role != admin/manager but did not work lmao
   # idk how to make it not be nested sry
   if role == "manager" or role =="admin":
@@ -1178,14 +1002,18 @@ def approve_requests():
      return {"msg": "No Data."}, 400
 
   approval = data["approval"]
-  email = data["email"]
-  role = data["role"]
+
 
   request_id = data["request_id"]
   timeof = data["timeof"]
   timeto = data["timeto"]
   car_name = data["id_car"]
-  
+
+
+  claims = get_jwt()
+  email = claims.get('sub', None)
+  role = claims.get('role', None)
+
   conn, curr = connect_to_db()
 
   curr.execute("select id_car from car where name = %s", (car_name,))
@@ -1238,31 +1066,13 @@ def return_car():
       
       csv_file_path = get_latest_file(f"{os.getcwd()}/reports")
 
-      # rows = []
-      # with open(csv_file_path, mode='r', newline='\n', encoding='utf-8') as file:
-      #     reader = csv.DictReader(file)
-      #     fieldnames = reader.fieldnames
-      #     for row in reader:
-      #         rows.append(row)
-      # # email,auto,stk,cas_od,cas_do,odovzdanie,meskanie,note
-      # # cas_od: 2025-02-02 20:50 
-      # # Find the row with the matching recipient email and update the specified columns
-      # # cas_do: 2025-02-01 16:00
-      # for row in rows:
-      #     if row['cas_od'] == timeof and row["cas_do"] == timeto:
-      #         row['odovzdanie'] = return_date
-      #         row['meskanie'] = meskanie
-      #         row['note'] = new_note
-      #         break
-
-      # # Write the updated rows back to the CSV file
-      # with open(csv_file_path, mode='w', newline='\n', encoding='utf-8') as file:
-      #     writer = csv.DictWriter(file, fieldnames=fieldnames)
-      #     writer.writeheader()
-      #     writer.writerows(rows)
-
       wb = openpyxl.load_workbook(csv_file_path)
-      sheet1 = wb.active
+      sheet_names = wb.sheetnames
+      if len(sheet_names) >0:
+        sheet1 = wb[sheet_names[-1]]
+      else:
+        sheet1 = wb.active()
+
 
       # Loop over all rows in the worksheet
       # ["","Čas od", "Čas do", "Auto", "SPZ","Email", "Odovzdanie", "Meškanie", "Poznámka"]
@@ -1278,7 +1088,7 @@ def return_car():
           if time_of_return_cell.value == "NULL":
 
               if exc_timeof == timeof and exc_timeto == timeto:
-                  time_of_return_cell.value = tor
+                  time_of_return_cell.value = return_date
                   late_return_cell.value = meskanie
                   note_cell.value = new_note
 
