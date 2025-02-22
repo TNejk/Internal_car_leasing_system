@@ -806,6 +806,16 @@ def lease_car():
 
   con, cur = connect_to_db()
 
+  # user is a list within a list [[]] to access it use double [0][1,2,3,4]
+  cur.execute("select * from car where name = %s", (car_name,))
+  car_data = cur.fetchall()
+ 
+  drive_type = f"{car_data[0][9]}, {car_data[0][10]}"
+  car_id = car_data[0][0]
+
+  cur.execute("select * from driver where email = %s and role = %s", (username, jwt_role,))
+  user = cur.fetchall()
+  
   # Check for the leased car if it has available date range to lease from
   cur.execute("""
     SELECT id_lease start_of_lease, end_of_lease FROM lease 
@@ -821,20 +831,10 @@ def lease_car():
   conflicting_leases = cur.fetchall()
   if len(conflicting_leases) > 0:
      return {"status": False, "private": False, "msg": f"Zabratý dátum (hodina typujem)"}
-
-
-  # user is a list within a list [[]] to access it use double [0][1,2,3,4]
-  cur.execute("select * from car where name = %s", (car_name,))
-  car_data = cur.fetchall()
- 
-  drive_type = f"{car_data[0][9]}, {car_data[0][10]}"
-  car_id = car_data[0][0]
-
-  cur.execute("select * from driver where email = %s and role = %s", (username, jwt_role,))
-  user = cur.fetchall()
   
-
+  # Init excel writer to use later 
   exc_writer = writer()
+  
   # If the user is leasing for himself
   if recipient ==  username:
     if private == True:
