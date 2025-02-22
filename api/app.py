@@ -7,7 +7,7 @@ import psycopg2
 from flask_mail import Mail, Message
 from flask import Flask, request, jsonify, send_from_directory
 import requests
-from api.excel_writer import write_report
+from excel_writer import writer
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from flask_cors import CORS, cross_origin
 from functools import wraps
@@ -834,7 +834,7 @@ def lease_car():
   user = cur.fetchall()
   
 
-  
+  exc_writer = writer()
   # If the user is leasing for himself
   if recipient ==  username:
     if private == True:
@@ -860,7 +860,7 @@ def lease_car():
           con.commit()
         except Exception as e:
           return {"status": False, "private": False, "msg": f"Error has occured! 113"}, 500
-        write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
+        exc_writer.write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
         return {"status": True, "private": True}
 
 
@@ -883,7 +883,7 @@ def lease_car():
     messaging.send(message)
 
     #!!!!!!!!!!!!
-    write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
+    exc_writer.write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
     #send_email(msg="Auto bolo rezervovane!")
     return {"status": True, "private": private}
 
@@ -916,7 +916,7 @@ def lease_car():
     con.close()
 
     #!!!  
-    write_report(recipient, car_name,stk, drive_type, form_timeof, form_timeto)
+    exc_writer.write_report(recipient, car_name,stk, drive_type, form_timeof, form_timeto)
     #send_email(msg="Auto bolo rezervovane!")
     return {"status": True, "private": private}
       
