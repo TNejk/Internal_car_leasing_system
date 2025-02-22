@@ -89,6 +89,7 @@ class writer():
         If a new month began a new excel file is made and written to. \n
         If a new day began a new worksheet is made witht he days value as its name in the latest excel file in the directory /reports.
 
+        Arguments:
         recipient:  str, who has leased the car 
         car_name:   str, which car had been leased 
         stk:        str, cars STK 
@@ -104,7 +105,7 @@ class writer():
             timeto = timeto[:-3]
 
         
-        latest_file = self._get_latest_file(f"{os.getcwd()}/reports")
+        latest_file = self.get_latest_file(f"{os.getcwd()}/reports")
 
         # Use year and month to check if a new excel spreadsheet needs to be created
         # '2025-01-21 15:37:00ICLS_report.csv'  '2025-01-21 15:37:26_ICLS_report.csv'
@@ -115,7 +116,7 @@ class writer():
             spl_month = split_date[1]
 
             # "%Y-%m-%d %H:%M:%S"
-            current_date = self._get_sk_date().split("-")
+            current_date = self.get_sk_date().split("-")
             cur_year = current_date[0]
             cur_month = current_date[1]
             
@@ -125,7 +126,7 @@ class writer():
                 # If a sheet name has been made before compare it with today, if its not equal create a new worksheet with the new days number
                 all_sheets = wb.sheetnames
                 if len(all_sheets) >0:
-                    cur_day = self._convert_to_datetime(self._get_sk_date_str())
+                    cur_day = self.convert_to_datetime(self.get_sk_date_str())
                 if int(all_sheets[-1]) == cur_day.day:
                     # Select the last sheet, that should correspond to the current day
                     ws = wb[wb.sheetnames[-1]]
@@ -160,7 +161,7 @@ class writer():
                 )
                 wb = Workbook()
                 del wb["Sheet"]
-                ws = wb.create_sheet(f"{self._convert_to_datetime(self._get_sk_date_str()).day}")
+                ws = wb.create_sheet(f"{self.convert_to_datetime(self.get_sk_date_str()).day}")
                 #email_ft = Font(bold=True, color="B22222")
                 filler = ["","","","","","","",""]
                 data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL"]]
@@ -195,10 +196,10 @@ class writer():
                 #     for cell in row:
                 #         cell.font = Data_ft
                 # Set row height for data rows (from row 4 to the last row)
-                wb.save(f"{os.getcwd()}/reports/{self._get_sk_date()}_EXCEL_ICLS_report.xlsx")
+                wb.save(f"{os.getcwd()}/reports/{self.get_sk_date()}_EXCEL_ICLS_report.xlsx")
 
         except Exception as e: #? ONLY HAPPENDS IF THE DIRECTORY IS EMPTY, SO LIKE ONCE
-            with open(f"{os.getcwd()}/reports/{self._get_sk_date()}_ERRORt.txt", "a+") as file:
+            with open(f"{os.getcwd()}/reports/{self.get_sk_date()}_ERRORt.txt", "a+") as file:
                 file.write(f"{e}")
 
             # Define styles
@@ -212,7 +213,7 @@ class writer():
 
             wb = Workbook()
             del wb["Sheet"]
-            ws = wb.create_sheet(f"{self._convert_to_datetime(self._get_sk_date_str()).day}")
+            ws = wb.create_sheet(f"{self.convert_to_datetime(self.get_sk_date_str()).day}")
             filler = ["","","","","","","",""]
             data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "TYP","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient,"NULL","NULL","NULL"]]
             for row in data:
@@ -240,4 +241,4 @@ class writer():
             #     for cell in row:
             #         cell.font = Data_ft
                     # Set row height for data rows (from row 4 to the last row)
-            wb.save(f"{os.getcwd()}/reports/{self._get_sk_date()}_NW_ICLS_report.xlsx")
+            wb.save(f"{os.getcwd()}/reports/{self.get_sk_date()}_NW_ICLS_report.xlsx")
