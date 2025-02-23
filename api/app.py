@@ -776,13 +776,14 @@ def lease_car():
   #! The commented dates may be in the wrong format, i dont care enough to recheck, but the +01 timezone awareness may be wrong idk
   tmp_of = timeof.split(" ")
   dates =  tmp_of[0].split("-")
-  # 02-20-2025 21:40:00+01
+
+  # 2025-02-25 21:04:00+01 --->> 25-02-2025 21:04
   form_timeof = f"{dates[2]}-{dates[1]}-{dates[0]} {tmp_of[1]}"
 
   # Chnage time to date format
   tmp_to = timeto.split(" ")
   dates =  tmp_to[0].split("-")
-  # 02-20-2025 21:40:00+01
+  # 25-02-2025 10:44
   form_timeto = f"{dates[2]}-{dates[1]}-{dates[0]} {tmp_to[1]}"
 
   def convert_to_datetime(string):
@@ -1072,11 +1073,10 @@ def return_car():
   def edit_csv_row(timeof,timeto, return_date, meskanie, new_note):
       # Get rid of the seconds, cuz python sometimes cuts them off on one date and that fucks up the editing proces
       # So just get rid of them yourself
-      if timeof.count(":") > 1:
-        timeof = timeof[:-3]
-    
-      if timeto.count(":") > 1:
-        timeto = timeto[:-3]
+
+      #excel timeof = "25-02-2025 21:04"
+      #excel timeto = "25-02-2025 21:04"
+
       
       csv_file_path = get_latest_file(f"{os.getcwd()}/reports")
 
@@ -1092,11 +1092,11 @@ def return_car():
       # ["","Čas od", "Čas do", "Auto", "SPZ","Email", "Odovzdanie", "Meškanie", "Poznámka"]
       for row in range(3, sheet1.max_row + 1):
           # Get the values from the cells in the current row
-          exc_timeof = sheet1.cell(row=row, column=1).value
-          exc_timeto = sheet1.cell(row=row, column=2).value
-          time_of_return_cell = sheet1.cell(row=row, column=7)
-          late_return_cell = sheet1.cell(row=row, column=8)
-          note_cell = sheet1.cell(row=row, column=9)
+          exc_timeof = sheet1.cell(row=row, column=3).value
+          exc_timeto = sheet1.cell(row=row, column=4).value
+          time_of_return_cell = sheet1.cell(row=row, column=8)
+          late_return_cell = sheet1.cell(row=row, column=9)
+          note_cell = sheet1.cell(row=row, column=10)
           
             # To avoid duplicates when returing, as dates could collide probalby idk fuck my stupid chungus life 
           if time_of_return_cell.value == "NULL":
@@ -1167,18 +1167,18 @@ def return_car():
       late_return = "False"
       # Str + datetime.datetime
       
-      tor_as_datetime = datetime.strptime(tor, "%Y-%m-%d %H:%M:%S.%f%z")
+      tor_as_datetime = datetime.strptime(tor, "%d-%m-%Y %H:%M:%S.%f%z")
       # Now you can compare the two datetime objects
       if tor_as_datetime < res[0][2]:
           late_return = "True"
       else:
           late_return = "False"
 
-      str_timeof = res[0][1].strftime("%Y-%m-%d %H:%M:%S")
-      str_timeto = res[0][2].strftime("%Y-%m-%d %H:%M:%S")
+      str_timeof = res[0][1].strftime("%d-%m-%Y %H:%M")
+      str_timeto = res[0][2].strftime("%d-%m-%Y %H:%M")
 
       # Get rid of the miliseconds
-      tor = tor_as_datetime.strftime("%Y-%m-%d %H:%M:%S")
+      tor = tor_as_datetime.strftime("%d-%m-%Y %H:%M") 
       # Update report, open as csv object, look for row where time_from ,time_to, id_car, id_driver is the same and update the return&-time, meskanie and note values
       edit_csv_row(timeof=str_timeof, timeto=str_timeto, return_date=tor, meskanie=late_return, new_note= note)
 
