@@ -1087,10 +1087,11 @@ def return_car():
 
       wb = openpyxl.load_workbook(csv_file_path)
       sheet_names = wb.sheetnames
+
       if len(sheet_names) >1:
         sheet1 = wb[sheet_names[-1]]
       else:
-        sheet1 = wb.active()
+        sheet1 = wb.active
 
       dt_timeof = convert_to_datetime(timeof)
       dt_timeto = convert_to_datetime(timeto)
