@@ -13,17 +13,7 @@ class writer():
     Class that handles writing and creating excel reports. 
     Contains only write_report()
     '''
-    def __convert_to_datetime(self, string) -> datetime:
-        try:
-            # Parse string, handling timezone if present
-            dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
-            return dt_obj
-        except: #? Ok now bear with me, it may look stupid, be stupid and make me look stupid, but it works :) Did i mention how much i hate dates
-            try:
-                dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
-                return dt_obj
-            except ValueError as e:
-                raise ValueError(f"Invalid datetime format: {string}") from e
+
 
     def __get_sk_date(self) -> str:
         bratislava_tz = pytz.timezone('Europe/Bratislava')
@@ -99,7 +89,17 @@ class writer():
 
         
         """
-
+        def convert_to_datetime(string) -> datetime:
+            try:
+                # Parse string, handling timezone if present
+                dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
+                return dt_obj
+            except: #? Ok now bear with me, it may look stupid, be stupid and make me look stupid, but it works :) Did i mention how much i hate dates
+                try:
+                    dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
+                    return dt_obj
+                except ValueError as e:
+                    raise ValueError(f"Invalid datetime format: {string}") from e
                 # Define styles
         red_flag_ft = Font(bold=True, color="B22222")
         red_flag_fill = PatternFill("solid", "B22222")
@@ -147,11 +147,10 @@ class writer():
                 # If a sheet name has been made before compare it with today, if its not equal create a new worksheet with the new days number
                 all_sheets = wb.sheetnames
                 
-                cur_day = self.__convert_to_datetime(self.__get_sk_date_str())
-                # if len(all_sheets) == 0: #! If no sheets exist, create a one named by the current day number
-                #     cur_day = self.__convert_to_datetime(self.__get_sk_date_str())
+                tm = self.__get_sk_date()
+                cur_day = convert_to_datetime(tm).day
 
-                if int(all_sheets[-1]) == cur_day.day: #! The same day 
+                if int(all_sheets[-1]) == cur_day: #! The same day 
                     # Select the last sheet, that should correspond to the current day
                     ws = wb[wb.sheetnames[-1]]
                     data = [["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL", "NULL", "NULL"]]
