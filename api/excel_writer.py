@@ -146,8 +146,8 @@ class writer():
                 wb = openpyxl.load_workbook(latest_file)
                 # If a sheet name has been made before compare it with today, if its not equal create a new worksheet with the new days number
                 all_sheets = wb.sheetnames
-                if len(all_sheets) >0: #! If no sheets exist, create a one named by the current day number
-                    cur_day = self.__convert_to_datetime(self.__get_sk_date_str()).day
+                if len(all_sheets) <= 0: #! If no sheets exist, create a one named by the current day number
+                    cur_day = self.__convert_to_datetime(self.__get_sk_date_str())
                 if int(all_sheets[-1]) == cur_day.day: #! The same day 
                     # Select the last sheet, that should correspond to the current day
                     ws = wb[wb.sheetnames[-1]]
