@@ -1076,17 +1076,24 @@ def return_car():
 
       #excel timeof = "25-02-2025 21:04"
       #excel timeto = "25-02-2025 21:04"
-
+      def convert_to_datetime(string) -> datetime:
+        try:
+          dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
+          return dt_obj
+        except ValueError as e:
+            raise ValueError(f"Invalid datetime format: {string}") from e
       
       csv_file_path = get_latest_file(f"{os.getcwd()}/reports")
 
       wb = openpyxl.load_workbook(csv_file_path)
       sheet_names = wb.sheetnames
-      if len(sheet_names) >0:
+      if len(sheet_names) >1:
         sheet1 = wb[sheet_names[-1]]
       else:
         sheet1 = wb.active()
 
+      dt_timeof = convert_to_datetime(timeof)
+      dt_timeto = convert_to_datetime(timeto)
 
       # Loop over all rows in the worksheet
       # ["","Čas od", "Čas do", "Auto", "SPZ","Email", "Odovzdanie", "Meškanie", "Poznámka"]
@@ -1097,14 +1104,19 @@ def return_car():
           time_of_return_cell = sheet1.cell(row=row, column=8)
           late_return_cell = sheet1.cell(row=row, column=9)
           note_cell = sheet1.cell(row=row, column=10)
+
+          debug  = sheet1.cell(row=row, column=15)
+          debug.value = "debug ran"
+
           
-            # To avoid duplicates when returing, as dates could collide probalby idk fuck my stupid chungus life 
+          # To avoid duplicates when returing, as dates could collide probalby idk fuck my stupid chungus life 
           if time_of_return_cell.value == "NULL":
 
-              if exc_timeof == timeof and exc_timeto == timeto:
+              if convert_to_datetime(exc_timeof) == dt_timeof and convert_to_datetime(exc_timeto) == dt_timeto:
                   time_of_return_cell.value = return_date
                   late_return_cell.value = meskanie
                   note_cell.value = new_note
+                  
 
       # Save changes to the workbook
       wb.save(csv_file_path)
