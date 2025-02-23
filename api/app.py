@@ -1104,9 +1104,9 @@ def return_car():
           # Get the values from the cells in the current row
           exc_timeof = sheet1.cell(row=row, column=3).value
           exc_timeto = sheet1.cell(row=row, column=4).value
-          time_of_return_cell = sheet1.cell(row=row, column=8)
-          late_return_cell = sheet1.cell(row=row, column=9)
-          note_cell = sheet1.cell(row=row, column=10)
+          time_of_return_cell = sheet1.cell(row=row, column=9)
+          late_return_cell = sheet1.cell(row=row, column=10)
+          note_cell = sheet1.cell(row=row, column=11)
 
           debug  = sheet1.cell(row=row, column=15)
           debug.value = "debug ran"
