@@ -13,7 +13,7 @@ class writer():
     Class that handles writing and creating excel reports. 
     Contains only write_report()
     '''
-    def __convert_to_datetime(self, string):
+    def __convert_to_datetime(self, string) -> datetime:
         try:
             # Parse string, handling timezone if present
             dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
@@ -25,7 +25,7 @@ class writer():
             except ValueError as e:
                 raise ValueError(f"Invalid datetime format: {string}") from e
 
-    def __get_sk_date(self):
+    def __get_sk_date(self) -> str:
         bratislava_tz = pytz.timezone('Europe/Bratislava')
         # Ensure the datetime is in UTC before converting
         dt_obj = datetime.now()
@@ -33,7 +33,7 @@ class writer():
         bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
         return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
 
-    def __get_sk_date_str(self):
+    def __get_sk_date_str(self) -> str:
         # Ensure the datetime is in UTC before converting
         bratislava_tz = pytz.timezone('Europe/Bratislava')
         dt_obj = datetime.now()
@@ -41,7 +41,7 @@ class writer():
         bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
         return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
 
-    def __compare_timeof(self, a_timeof, today):
+    def __compare_timeof(self, a_timeof, today) -> bool:
         timeof = self.convert_to_datetime(string=a_timeof)
         diff = today - timeof
         # If the lease from date is a minute behind the current date, dont allow the lease
@@ -147,8 +147,9 @@ class writer():
                 # If a sheet name has been made before compare it with today, if its not equal create a new worksheet with the new days number
                 all_sheets = wb.sheetnames
                 
-                if len(all_sheets) == 0: #! If no sheets exist, create a one named by the current day number
-                    cur_day = self.__convert_to_datetime(self.__get_sk_date_str())
+                cur_day = self.__convert_to_datetime(self.__get_sk_date_str())
+                # if len(all_sheets) == 0: #! If no sheets exist, create a one named by the current day number
+                #     cur_day = self.__convert_to_datetime(self.__get_sk_date_str())
 
                 if int(all_sheets[-1]) == cur_day.day: #! The same day 
                     # Select the last sheet, that should correspond to the current day
