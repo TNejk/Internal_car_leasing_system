@@ -13,7 +13,17 @@ class writer():
     Class that handles writing and creating excel reports. 
     Contains only write_report()
     '''
-
+    def __convert_to_datetime(self, string) -> datetime:
+        try:
+            # Parse string, handling timezone if present
+            dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
+            return dt_obj
+        except: #? Ok now bear with me, it may look stupid, be stupid and make me look stupid, but it works :) Did i mention how much i hate dates
+            try:
+                dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
+                return dt_obj
+            except ValueError as e:
+                raise ValueError(f"Invalid datetime format: {string}") from e
 
     def __get_sk_date(self) -> str:
         bratislava_tz = pytz.timezone('Europe/Bratislava')
@@ -32,7 +42,7 @@ class writer():
         return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
 
     def __compare_timeof(self, a_timeof, today) -> bool:
-        timeof = self.convert_to_datetime(string=a_timeof)
+        timeof = self.__convert_to_datetime(string=a_timeof)
         diff = today - timeof
         # If the lease from date is a minute behind the current date, dont allow the lease
         # This gives the user 2 minutes to make a reservation, before being time blocked by leasing into the past
@@ -89,17 +99,7 @@ class writer():
 
         
         """
-        def convert_to_datetime(string) -> datetime:
-            try:
-                # Parse string, handling timezone if present
-                dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
-                return dt_obj
-            except: #? Ok now bear with me, it may look stupid, be stupid and make me look stupid, but it works :) Did i mention how much i hate dates
-                try:
-                    dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
-                    return dt_obj
-                except ValueError as e:
-                    raise ValueError(f"Invalid datetime format: {string}") from e
+
                 # Define styles
         red_flag_ft = Font(bold=True, color="B22222")
         red_flag_fill = PatternFill("solid", "B22222")
@@ -148,7 +148,7 @@ class writer():
                 all_sheets = wb.sheetnames
                 
                 tm = self.__get_sk_date()
-                cur_day = convert_to_datetime(tm).day
+                cur_day = self.__convert_to_datetime(tm).day
 
                 if int(all_sheets[-1]) == cur_day: #! The same day 
                     # Select the last sheet, that should correspond to the current day
@@ -195,7 +195,7 @@ class writer():
             else:
                 wb = Workbook()
                 del wb["Sheet"]
-                ws = wb.create_sheet(f"{self.convert_to_datetime(self.__get_sk_date_str()).day}")
+                ws = wb.create_sheet(f"{self.__convert_to_datetime(self.__get_sk_date_str()).day}")
                 #email_ft = Font(bold=True, color="B22222")
                 filler = ["","","","","","","",""]
                 data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL"]]
@@ -247,7 +247,7 @@ class writer():
 
             wb = Workbook()
             del wb["Sheet"]
-            ws = wb.create_sheet(f"{self.convert_to_datetime(self.__get_sk_date_str()).day}")
+            ws = wb.create_sheet(f"{self.__convert_to_datetime(self.__get_sk_date_str()).day}")
             filler = ["","","","","","","",""]
             data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "TYP","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient,"NULL","NULL","NULL"]]
             for row in data:
