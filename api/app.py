@@ -1078,10 +1078,12 @@ def return_car():
       #excel timeto = "25-02-2025 21:04"
       def convert_to_datetime(string) -> datetime:
         try:
-          dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
+          dt_obj = datetime.strptime(string, "%d-%m-%Y %H:%M")
           return dt_obj
         except ValueError as e:
             raise ValueError(f"Invalid datetime format: {string}") from e
+        
+
       
       csv_file_path = get_latest_file(f"{os.getcwd()}/reports")
 
