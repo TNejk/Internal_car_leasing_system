@@ -195,7 +195,7 @@ class writer():
             else:
                 wb = Workbook()
                 del wb["Sheet"]
-                ws = wb.create_sheet(f"{self.__convert_to_datetime(self.__get_sk_date_str()).day}")
+                ws = wb.create_sheet(f"{self.convert_to_datetime(self.__get_sk_date_str()).day}")
                 #email_ft = Font(bold=True, color="B22222")
                 filler = ["","","","","","","",""]
                 data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL"]]
@@ -247,7 +247,7 @@ class writer():
 
             wb = Workbook()
             del wb["Sheet"]
-            ws = wb.create_sheet(f"{self.__convert_to_datetime(self.__get_sk_date_str()).day}")
+            ws = wb.create_sheet(f"{self.convert_to_datetime(self.__get_sk_date_str()).day}")
             filler = ["","","","","","","",""]
             data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "TYP","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient,"NULL","NULL","NULL"]]
             for row in data:
