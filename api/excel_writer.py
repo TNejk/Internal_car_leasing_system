@@ -190,8 +190,6 @@ class writer():
 
                     wb.save(latest_file)
 
-
-
             else:
                 wb = Workbook()
                 del wb["Sheet"]
