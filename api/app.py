@@ -1185,16 +1185,19 @@ def return_car():
       tor_as_datetime = datetime.strptime(tor, "%Y-%m-%d %H:%M:%S.%f%z")
 
       # Now you can compare the two datetime objects
-      if tor_as_datetime < res[0][2]:
-          late_return = "True"
-      else:
-          late_return = "False"
 
       str_timeof = res[0][1].strftime("%d-%m-%Y %H:%M")
       str_timeto = res[0][2].strftime("%d-%m-%Y %H:%M")
-
       # Get rid of the miliseconds
       tor = tor_as_datetime.strftime("%d-%m-%Y %H:%M")
+      
+      if tor_as_datetime < res[0][2]:
+          late_return = "False"
+      else:
+          late_return = "True"
+
+
+
       # Update report, open as csv object, look for row where time_from ,time_to, id_car, id_driver is the same and update the return&-time, meskanie and note values
       edit_csv_row(timeof=str_timeof, timeto=str_timeto, return_date=tor, meskanie=late_return, new_note= note)
 
