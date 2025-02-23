@@ -96,7 +96,28 @@ class writer():
         drive_type: str, concataned string of Gas, Shifter_type (Diesel, Automatic) 
         timeof:     str, date format: %Y-%m-%d %H:%M:%S or %Y-%m-%d %H:%M 
         timeto:     str, date format: %Y-%m-%d %H:%M:%S or %Y-%m-%d %H:%M 
+
+        
         """
+
+                # Define styles
+        red_flag_ft = Font(bold=True, color="B22222")
+        red_flag_fill = PatternFill("solid", "B22222")
+        Header_fill = PatternFill("solid", "00CCFFFF")
+        Header_ft = Font(bold=True, color="000000", size=20)
+        Data_ft = Font(size=17)  # New font for data cells
+
+        Header_border = Border(
+            left=Side(border_style="medium", color='FF000000'),
+            right=Side(border_style="medium", color='FF000000'),
+            top=Side(border_style="medium", color='FF000000'),
+            bottom=Side(border_style="medium", color='FF000000')
+        )
+
+        header_alignment = Alignment(
+            horizontal='center',
+            vertical='center'
+        )
         # To fix the wierd seconds missing error, i will just get rid of the seconds manually
         if timeof.count(":") > 1:
             timeof = timeof[:-3]
@@ -125,40 +146,51 @@ class writer():
                 wb = openpyxl.load_workbook(latest_file)
                 # If a sheet name has been made before compare it with today, if its not equal create a new worksheet with the new days number
                 all_sheets = wb.sheetnames
-                if len(all_sheets) >0:
-                    cur_day = self.__convert_to_datetime(self.__get_sk_date_str())
-                if int(all_sheets[-1]) == cur_day.day:
+                if len(all_sheets) >0: #! If no sheets exist, create a one named by the current day number
+                    cur_day = self.__convert_to_datetime(self.__get_sk_date_str()).day
+                if int(all_sheets[-1]) == cur_day.day: #! The same day 
                     # Select the last sheet, that should correspond to the current day
                     ws = wb[wb.sheetnames[-1]]
-                else: 
+                    data = [["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL", "NULL", "NULL"]]
+                    for row in data:
+                        ws.append(row)
+
+                    wb.save(latest_file)
+                else: #! A new day had begun
+                    # You need to recreate the header and data formating, as a new worksheet would be empty
+                    # Also add the filler column values and stuff, save to the existing file
                     ws = wb.create_sheet(f"{cur_day.day}")
 
+                    filler = ["","","","","","","",""]
+                    data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL"]]
 
-                data = [["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL", "NULL", "NULL"]]
-                for row in data:
-                    ws.append(row)
+                    for row in data:
+                        ws.append(row)
 
-                wb.save(latest_file)
+                    red_flag_cell = ws["B3"]
+                    red_flag_cell.font = red_flag_ft
+                    red_flag_cell.fill = red_flag_fill
+                    red_flag_cell.border = Header_border
+                    
+                    # Set row height for header row
+                    ws.row_dimensions[3].height = 35
+                    # Set column widths for data columns
+                    for col in ["C", "D", "E", "F", "G", "H", "I", "J", "K"]:
+                        ws.column_dimensions[col].width = 23
+                    # Format header row (C3:J3)
+                    for row_cells in ws["C3:K3"]:
+                        for cell in row_cells:
+                            cell.font = Header_ft
+                            cell.alignment = header_alignment
+                            cell.fill = Header_fill
+                            cell.border = Header_border
+
+
+                    wb.save(latest_file)
+
+
 
             else:
-                # Define styles
-                red_flag_ft = Font(bold=True, color="B22222")
-                red_flag_fill = PatternFill("solid", "B22222")
-                Header_fill = PatternFill("solid", "00CCFFFF")
-                Header_ft = Font(bold=True, color="000000", size=20)
-                Data_ft = Font(size=17)  # New font for data cells
-
-                Header_border = Border(
-                    left=Side(border_style="medium", color='FF000000'),
-                    right=Side(border_style="medium", color='FF000000'),
-                    top=Side(border_style="medium", color='FF000000'),
-                    bottom=Side(border_style="medium", color='FF000000')
-                )
-
-                header_alignment = Alignment(
-                    horizontal='center',
-                    vertical='center'
-                )
                 wb = Workbook()
                 del wb["Sheet"]
                 ws = wb.create_sheet(f"{self.__convert_to_datetime(self.__get_sk_date_str()).day}")
