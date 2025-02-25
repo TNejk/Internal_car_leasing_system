@@ -148,7 +148,8 @@ class writer():
                 all_sheets = wb.sheetnames
                 
                 tm = self.__get_sk_date()
-                cur_day = self.__convert_to_datetime(tm).day
+                # This should be a day but it does not work for some reason, just returns an integer
+                cur_day = self.__convert_to_datetime(tm)
 
                 if int(all_sheets[-1]) == cur_day: #! The same day 
                     # Select the last sheet, that should correspond to the current day
