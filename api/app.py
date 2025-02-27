@@ -861,7 +861,7 @@ def lease_car():
         message = messaging.Message(
                   notification=messaging.Notification(
                   title=f"Žiadosť o súkromnu jazdu!",
-                  body=f"""email: {username} \n Od: {timeof} \n Do: {timeto}"""
+                  body=f"""email: {username} \n Od: {form_timeof} \n Do: {form_timeto}"""
               ),
                   topic="manager"
               )
@@ -891,7 +891,7 @@ def lease_car():
     message = messaging.Message(
               notification=messaging.Notification(
               title=f"Upozornenie o leasingu auta: {car_name}!",
-              body=f"""email: {recipient} \n Od: {timeof} \n Do: {timeto}"""
+              body=f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}"""
           ),
               topic="manager"
           )
@@ -921,7 +921,7 @@ def lease_car():
       message = messaging.Message(
                 notification=messaging.Notification(
                 title=f"Nová rezervácia auta: {car_name}!",
-                body=f"""email: {recipient} \n Od: {timeof[:-4]} \n Do: {timeto}"""
+                body=f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}"""
             ),
                 topic="manager"
             )
