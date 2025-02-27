@@ -1107,11 +1107,7 @@ def return_car():
           time_of_return_cell = sheet1.cell(row=row, column=9)
           late_return_cell = sheet1.cell(row=row, column=10)
           note_cell = sheet1.cell(row=row, column=11)
-
-          debug  = sheet1.cell(row=row, column=15)
-          debug.value = "debug ran"
-
-          
+ 
           # To avoid duplicates when returing, as dates could collide probalby idk fuck my stupid chungus life 
           if time_of_return_cell.value == "NULL":
 
