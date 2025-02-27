@@ -149,9 +149,9 @@ class writer():
                 
                 tm = self.__get_sk_date()
                 # This should be a day but it does not work for some reason, just returns an integer
-                cur_day = self.__convert_to_datetime(tm)
+                cur_date = self.__convert_to_datetime(tm)
 
-                if int(all_sheets[-1]) == cur_day: #! The same day 
+                if int(all_sheets[-1]) == cur_date.day: #! The same day 
                     # Select the last sheet, that should correspond to the current day
                     ws = wb[wb.sheetnames[-1]]
                     data = [["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL", "NULL", "NULL"]]
@@ -162,7 +162,7 @@ class writer():
                 else: #! A new day had begun
                     # You need to recreate the header and data formating, as a new worksheet would be empty
                     # Also add the filler column values and stuff, save to the existing file
-                    ws = wb.create_sheet(f"{cur_day.day}")
+                    ws = wb.create_sheet(f"{cur_date.day}")
 
                     filler = ["","","","","","","",""]
                     data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL"]]
