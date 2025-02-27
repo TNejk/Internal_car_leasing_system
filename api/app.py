@@ -483,8 +483,10 @@ def list_reports():
 @app.route('/get_report/<path:filename>', methods=['GET'])  # Changed to <path:filename> and explicit methods
 @jwt_required()
 def get_reports(filename):
-    email = request.args.get('email')
-    role = request.args.get('role')
+    claims = get_jwt()
+    email = claims.get('sub', None)
+    role = claims.get('role', None)
+
     
     # Validate parameters
     if not email or not role:
