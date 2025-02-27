@@ -229,7 +229,7 @@ class writer():
                 #     for cell in row:
                 #         cell.font = Data_ft
                 # Set row height for data rows (from row 4 to the last row)
-                wb.save(f"{os.getcwd()}/reports/{self.__get_sk_date().replace(" ", "_")}_EXCEL_ICLS_report.xlsx")
+                wb.save(f"{os.getcwd()}/reports/{self.__get_sk_date()}_EXCEL_ICLS_report.xlsx")
 
         except Exception as e: #? ONLY HAPPENDS IF THE DIRECTORY IS EMPTY, SO LIKE ONCE
             with open(f"{os.getcwd()}/reports/{self.__get_sk_date()}_ERRORt.txt", "a+") as file:
@@ -274,4 +274,4 @@ class writer():
             #     for cell in row:
             #         cell.font = Data_ft
                     # Set row height for data rows (from row 4 to the last row)
-            wb.save(f"{os.getcwd()}/reports/{self.__get_sk_date().replace(" ", "_")}_NW_ICLS_report.xlsx")
+            wb.save(f"{os.getcwd()}/reports/{self.__get_sk_date()}_NW_ICLS_report.xlsx")
