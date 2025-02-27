@@ -74,7 +74,7 @@ def get_reports_paths(folder_path):
                     try:
                         # Extract datetime from filename
                         timestamp_str = entry.name.split('_', 1)[0]
-                        file_date = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+                        file_date = datetime.strptime(timestamp_str, "%Y-%m-%d_%H:%M:%S")
                         files.append((file_date, entry.path))
                     except (ValueError, IndexError) as e:
                         # Skip files with invalid format
