@@ -131,18 +131,23 @@ class writer():
         # Use year and month to check if a new excel spreadsheet needs to be created
         # '2025-01-21 15:37:00ICLS_report.csv'  '2025-01-21 15:37:26_ICLS_report.csv'
         try:
-            # /app/reports/'2025-01-21 17:51:44exc_ICLS_report.csv' -> 2025-01-21 18:53:46
-            split_date = latest_file.split("-")
-            spl_year = split_date[0].removeprefix("/app/reports/")
-            spl_month = split_date[1]
+            #! New: 2025-02-27 09:13:38_NW_ICLS_report.xlsx -> 2025-01-21 18:53:46
 
-            # "%Y-%m-%d %H:%M:%S"
-            current_date = self.__get_sk_date().split("-")
-            cur_year = current_date[0]
-            cur_month = current_date[1]
+            split_date = latest_file.split("_")
+            str_date = split_date[0] #!  2025-02-27 09:13:38
+
+            file_dt_date = self.__convert_to_datetime(str_date)
+            file_year = file_dt_date.year
+            file_month = file_dt_date.month
+
+            current_date = self.__convert_to_datetime(self.__get_sk_date())
+            cur_year = current_date.year
+            cur_month = current_date.month
+            
+            
             
             #timeof = timeof.strftime("%Y-%m-%d %H:%M:%S")
-            if int(cur_year) == int(spl_year) and int(cur_month) == int(spl_month):
+            if file_year == cur_year and file_month == cur_month:
                 wb = openpyxl.load_workbook(latest_file)
                 # If a sheet name has been made before compare it with today, if its not equal create a new worksheet with the new days number
                 all_sheets = wb.sheetnames
