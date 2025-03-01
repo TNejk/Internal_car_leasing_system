@@ -73,7 +73,8 @@ while True:
     
             manager_message = messaging.Message(
                     notification=messaging.Notification(
-                        title=f"Zamestnanec {email[0]} nestihol odovzdať auto včas {car_name}."
+                        title= "Neskoré odovzdanie auta!",
+                        body=f"Zamestnanec {email[0]} nestihol odovzdať auto: {car_name}."
                     ),
                     topic = "late_returns"
                 )
