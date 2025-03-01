@@ -134,11 +134,14 @@ class writer():
             #! New: 2025-02-27 09:13:38_NW_ICLS_report.xlsx -> 2025-01-21 18:53:46
 
             split_date = latest_file.split("_")
-            str_date = split_date[0] #!  2025-02-27 09:13:38
+            str_date = split_date[0].replace("/app/reports/", "")  #!  2025-02-27 09:13:38
+
+            # Invalid datetime format: /app/reports/2025-03-01 20:49:40
 
             file_dt_date = self.__convert_to_datetime(str_date)
             file_year = file_dt_date.year
             file_month = file_dt_date.month
+
 
             current_date = self.__convert_to_datetime(self.__get_sk_date())
             cur_year = current_date.year
