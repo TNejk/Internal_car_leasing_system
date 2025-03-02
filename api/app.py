@@ -64,7 +64,20 @@ def connect_to_db():
   except psycopg2.Error as e:
     return None, str(e)
 
-
+def __convert_to_datetime(self, string) -> datetime:
+    """ 
+    Date string: "%Y-%m-%d %H:%M:%S" / "%Y-%m-%d %H:%M
+    """
+    try:
+        # Parse string, handling timezone if present
+        dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
+        return dt_obj
+    except: #? Ok now bear with me, it may look stupid, be stupid and make me look stupid, but it works :) Did i mention how much i hate dates
+        try:
+            dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
+            return dt_obj
+        except ValueError as e:
+            raise ValueError(f"Invalid datetime format: {string}") from e
 def get_reports_paths(folder_path):
     try:
         files = []
@@ -329,26 +342,54 @@ def get_car_list():
         cur.close()
         conn.close()  
 
+
 @app.route('/decommision_car', methods= ['POST'])
 @jwt_required()
-def decommision():
+def decommission():
   data = request.get_json()
-  car_name = data["car_name"]
-
+  
+  # Authentication check
   claims = get_jwt()
   role = claims.get('role', None)
-
   if role != "manager":
-    return {"status": False, "msg": "Unathorized"}, 401
-  
+      return {"status": False, "msg": "Unauthorized"}, 401
 
-  query = "update car set status = 'service' where name = %s"
-  conn, cur = connect_to_db()  
-  cur.execute(query)
-  
-  conn.commit()
-  conn.close()
-  return {"status": True, "msg": f"Car {car_name} was decommisioned!"}
+  # Input validation
+  try:
+      car_name = data["car_name"]
+      time_of = __convert_to_datetime(data["timeof"])
+      time_to = __convert_to_datetime(data["timeto"])
+  except KeyError as e:
+      return {"status": False, "msg": f"Missing required field: {e}"}, 400
+  except ValueError as e:
+      return {"status": False, "msg": f"Invalid datetime format: {e}"}, 400
+
+  try:
+      conn, cur = connect_to_db()
+
+      car_update_query = "UPDATE car SET status = 'service' WHERE name = %s"
+      cur.execute(car_update_query, (car_name,))
+
+      #! Ooooo didint know you could do that
+      lease_update_query = """
+          UPDATE lease 
+          SET status = 'cancelled' 
+          WHERE start_of_lease > %s AND end_of_lease < %s
+      """
+
+      cur.execute(lease_update_query, (time_of, time_to))
+      conn.commit()
+
+      return {
+          "status": True,
+          "msg": f"Decommissioned {car_name}."
+      }, 200
+
+  except Exception as e: # This is also cool, you can rollback changes if an error occured
+      if conn:
+          conn.rollback()
+      return {"status": False, "msg": f"Chyba pri jebani auta idk"}, 500
+
 
 
 @app.route('/activate_car', methods= ['POST'])
@@ -370,6 +411,15 @@ def activate_car():
   
   conn.commit()
   conn.close()
+
+  message = messaging.Message(
+          notification=messaging.Notification(
+          title=f"Auto {car_name} je k dispozíci!",
+          body=f"""Je možné znova auto rezervovať v aplikácií."""
+      ),
+          topic="system"
+      )
+  messaging.send(message)
   return {"status": True, "msg": f"Car {car_name} was activated!"}
 
 # Warning!!!
