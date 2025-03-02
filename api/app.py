@@ -408,7 +408,7 @@ def activate_car():
 
   query = "update car set status = 'stand_by' where name = %s"
   conn, cur = connect_to_db()  
-  cur.execute(query)
+  cur.execute(query, (car_name, ))
   
   conn.commit()
   conn.close()
