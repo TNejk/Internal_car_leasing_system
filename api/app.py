@@ -367,7 +367,7 @@ def decommission():
   try:
       conn, cur = connect_to_db()
 
-      car_update_query = "UPDATE car SET status = 'service' WHERE name = %s"
+      car_update_query = "UPDATE car SET status = 'service' WHERE name = %s and not status = 'service'"
       cur.execute(car_update_query, (car_name,))
 
       #! Ooooo didint know you could do that
