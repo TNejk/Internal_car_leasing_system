@@ -716,7 +716,13 @@ def get_leases():
           AND (%(ft_timeof)s IS NULL OR l.start_of_lease >= %(ft_timeof)s)
           AND (%(ft_timeto)s IS NULL OR l.end_of_lease <= %(ft_timeto)s);
     """    
-    curr.execute(query)
+    params = {
+    'ft_email': ft_email,
+    'ft_car': ft_car,
+    'ft_timeof': ft_timeof,
+    'ft_timeto': ft_timeto
+    }
+    curr.execute(query, params)
 
   def convert_to_bratislava_timezone(dt_obj):
       bratislava_tz = pytz.timezone('Europe/Bratislava')
