@@ -357,7 +357,8 @@ def decommission():
   # Input validation
   try:
       car_name = data["car_name"]
-      time_of = __convert_to_datetime(data["timeof"])
+      # TODO: Replace timeof with todays date, as i no longer require time_of
+      time_of = __convert_to_datetime(get_sk_date())
       time_to = __convert_to_datetime(data["timeto"])
   except KeyError as e:
       return {"status": False, "msg": f"Missing required field: {e}"}, 400
@@ -388,7 +389,7 @@ def decommission():
   except Exception as e: # This is also cool, you can rollback changes if an error occured
       if conn:
           conn.rollback()
-      return {"status": False, "msg": f"Chyba pri jebani auta idk {e}"}, 500
+      return {"status": False, "msg": f"Decomission error: {e}"}, 500
 
 
 
