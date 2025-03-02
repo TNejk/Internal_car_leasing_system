@@ -423,6 +423,8 @@ def activate_car():
   messaging.send(message)
   return {"status": True, "msg": f"Car {car_name} was activated!"}
 
+
+
 # Warning!!!
 # The allowed dates return here is kinda retarted, it would be better to just return a list of start > stop dates that the user would then generate locally
 # But i dont feel like doing it, so a MONSTER json has been created, enjoy :)
@@ -630,12 +632,30 @@ def allowed_dates():
 def get_leases():
   conn, curr = connect_to_db()
   
+  data = request.get_json()
+
+  # No fucking way this works
+  # what the fuck python ????
+  ft_email = None if (data["email"] == "") else data["email"] 
+  ft_car = None if (data["car_name"] == "") else data["car_name"]
+  
+  ft_timeof = None if (data["timeof"] == "") else data["timeof"]
+  ft_timeto = None if (data["timeto"] == "") else data["timeto"]
+
+  if ft_timeof is not None and ft_timeto is None:
+     return jsonify(msg=  f"Chýba konečný dátum rozsahu."), 500
+  
+  if ft_timeof is None and ft_timeto is not None:
+     return jsonify(msg=  f"Chýba začiatočný dátum rozsahu."), 500
+  
+     
+
   claims = get_jwt()
   email = claims.get('sub', None)
   role = claims.get('role', None)
   
   bratislava_tz = pytz.timezone('Europe/Bratislava')
-  # IF YOU ARE A USER RETURN ONLY FOR YOUR EMAIL
+
   if role == "user":
     query  = """
         SELECT 
@@ -662,9 +682,14 @@ def get_leases():
             l.status = TRUE AND d.email = %s; 
     """
     curr.execute(query, (email,))
+
   elif role == "manager": 
+    # These are all voluntary!!!
+    # These have to be NULL, they cannot be ""
+
+    #? This checks each filter variable, if empty ignore it, if not apply its rule
     query  = """
-        SELECT 
+       SELECT 
           d.email AS driver_email,
           d.role AS driver_role,
           c.name AS car_name,
@@ -679,13 +704,17 @@ def get_leases():
           c.gas,
           c.drive_type
         FROM 
-            lease l
+          lease l
         JOIN 
-            driver d ON l.id_driver = d.id_driver
+          driver d ON l.id_driver = d.id_driver
         JOIN 
-            car c ON l.id_car = c.id_car
+          car c ON l.id_car = c.id_car
         WHERE 
-            l.status = TRUE; 
+          l.status = TRUE
+          AND (%(ft_email)s IS NULL OR d.email = %(ft_email)s)
+          AND (%(ft_car)s IS NULL OR c.name = %(ft_car)s)
+          AND (%(ft_timeof)s IS NULL OR l.start_of_lease >= %(ft_timeof)s)
+          AND (%(ft_timeto)s IS NULL OR l.end_of_lease <= %(ft_timeto)s);
     """    
     curr.execute(query)
 
@@ -719,7 +748,6 @@ def get_leases():
         "spz": i[10],
         "gas": i[11],
         "shaft": i[12]
-
       })
 
     conn.close()
