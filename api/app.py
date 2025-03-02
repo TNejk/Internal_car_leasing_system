@@ -377,7 +377,7 @@ def decommission():
           WHERE start_of_lease > %s AND end_of_lease < %s
       """
 
-      cur.execute(lease_update_query, (time_of, time_to))
+      cur.execute(lease_update_query, (time_of, time_to, ))
       conn.commit()
 
       return {
@@ -388,7 +388,7 @@ def decommission():
   except Exception as e: # This is also cool, you can rollback changes if an error occured
       if conn:
           conn.rollback()
-      return {"status": False, "msg": f"Chyba pri jebani auta idk"}, 500
+      return {"status": False, "msg": f"Chyba pri jebani auta idk {e}"}, 500
 
 
 
