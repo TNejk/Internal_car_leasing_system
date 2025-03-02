@@ -64,7 +64,7 @@ def connect_to_db():
   except psycopg2.Error as e:
     return None, str(e)
 
-def __convert_to_datetime(self, string) -> datetime:
+def __convert_to_datetime(string) -> datetime:
     """ 
     Date string: "%Y-%m-%d %H:%M:%S" / "%Y-%m-%d %H:%M
     """
