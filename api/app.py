@@ -373,7 +373,7 @@ def decommission():
       #! Ooooo didint know you could do that
       lease_update_query = """
           UPDATE lease 
-          SET status = 'cancelled' 
+          SET status = FALSE 
           WHERE start_of_lease > %s AND end_of_lease < %s
       """
 
