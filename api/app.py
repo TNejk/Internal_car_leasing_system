@@ -304,7 +304,7 @@ def get_car_list():
           location = request.args.get('location', 'none')
           if location != 'none':
               query = """
-                  SELECT id_car, name, status, url 
+                  SELECT id_car, name, status, url, stk 
                   FROM car 
                   ORDER BY 
                       CASE 
@@ -321,7 +321,7 @@ def get_car_list():
               cur.execute(query, (location,))
           else:
               query = """
-                  SELECT id_car, name, status, url
+                  SELECT id_car, name, status, url, stk
                   FROM car
                   ORDER BY 
                       CASE 
