@@ -474,7 +474,7 @@ def get_full_car_info():
     decom_timeto = ""
     if res[0][3] != "stand_by":
        dec_query = "SELECT time_to FROM decommissioned_cars WHERE car_name = %s"
-       cur.execute(dec_query, (res[0][1])) 
+       cur.execute(dec_query, (res[0][1],)) 
        decom_timeto = cur.fetchone()[0]
 
     
