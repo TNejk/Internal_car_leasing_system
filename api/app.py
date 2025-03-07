@@ -364,7 +364,7 @@ def decommission():
   except KeyError as e:
       return {"status": False, "msg": f"Missing required field: {e}"}, 400
   except ValueError as e:
-      return {"status": False, "msg": f"Invalid datetime format: {e}"}, 400
+      return {"status": False, "msg": f"{e}"}, 400
 
   try:
       conn, cur = connect_to_db()
