@@ -373,7 +373,7 @@ def decommission():
       cur.execute(car_update_query, (car_name,))
 
       # Add a decomission request to the DB
-      car_decomission_query = "INSERT INTO decommisioned_cars(status, car_name, email, time_to, requested_at) values (%s, %s, %s, %s, %s)"
+      car_decomission_query = "INSERT INTO decommisioned_cars(status, car_name, email, time_to, requested_at) values (%s, %s, %s, %s)"
       cur.execute(car_decomission_query, (True, car_name, time_to, time_of, ))
       
       lease_update_query = """
