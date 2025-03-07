@@ -439,6 +439,7 @@ def activate_car():
 # But i dont feel like doing it, so a MONSTER json has been created, enjoy :)
 #
 #?  22/02/2025, I did indeed feel like doing it after all :O
+# TODO: For the ove of god make this into a json not a fucking index guessing game jesus christ
 @app.route('/get_full_car_info', methods=['POST', 'OPTIONS'])
 @jwt_required()
 def get_full_car_info():
@@ -468,9 +469,15 @@ def get_full_car_info():
     if not res:
         return jsonify({'error': 'No car found with the given ID'}), 404
 
+    # res[3] = status
+    # res[1] = car name string
+    decom_timeto = ""
+    if res[3] != "stand_by":
+       dec_query = "SELECT time_to FROM decommissioned_cars WHERE car_name = %s"
+       cur.execute(dec_query, (res[1])) 
+       decom_timeto = cur.fetchall()[0]
+
     
-    # TODO: this
-    #! Here add the check for under_review, as if its true than we need to protect the date range from other users scooping it out 
     query = "SELECT start_of_lease, end_of_lease FROM lease WHERE id_car = %s AND status = %s;"
     cur.execute(query, (car, True, ))
 
@@ -512,7 +519,12 @@ def get_full_car_info():
     if len(parse_lease_dates(requests)) > 0:
       lease_dates.extend(parse_lease_dates(requests))
     
-    response = jsonify({"car_details": res, "notallowed_dates": lease_dates})
+    response = jsonify(
+       {
+        "car_details": res, 
+        "decommission_time": decom_timeto, 
+        "notallowed_dates": lease_dates
+       })
     return response, 200
 
 
