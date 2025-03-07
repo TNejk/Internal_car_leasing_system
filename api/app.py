@@ -405,10 +405,14 @@ def activate_car():
   if role != "manager":
     return {"status": False, "msg": "Unathorized"}, 401
   
-
+  # Update car status, so its visible to the user again
   query = "update car set status = 'stand_by' where name = %s"
   conn, cur = connect_to_db()  
   cur.execute(query, (car_name, ))
+
+  # Update decommision status so it wont trigger the notificator again
+  dec_query = "UPDATE decommisioned_car SET status = FALSE where car_name = %s"
+  cur.execute(dec_query, (car_name, ))
   
   conn.commit()
   conn.close()

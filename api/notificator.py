@@ -23,6 +23,14 @@ firebase_admin.initialize_app(cred)
 
 print("Notificator started.")
 
+def get_sk_date() -> str:
+    bratislava_tz = pytz.timezone('Europe/Bratislava')
+    # Ensure the datetime is in UTC before converting
+    dt_obj = datetime.now()
+    utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
+    bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
+    return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
+
 def sleep_replacement(seconds):
     start_time = time.time()  # Record the current time
     while time.time() - start_time < seconds:
@@ -34,6 +42,28 @@ while True:
     db_con = psycopg2.connect(dbname=db_name, user=db_user, host=db_host, port=db_port, password=db_pass)
     cur = db_con.cursor()
     now = datetime.now(tz).replace(microsecond=0)
+
+    str_today = get_sk_date()
+    obj_today = datetime.strptime(str_today, "%Y-%m-%d %H:%M:%S")
+    
+    # TODO: add into a TRY CATCH BLOCK!
+    decom_cars_query = """
+    SELECT car_name, email, time_to from decommissioned_cars WHERE status = TRUE AND time_to < %s 
+    """
+    cur.execute(decom_cars_query, (obj_today))
+    activable_cars = cur.fetchall()
+
+    # Turn off the decomission request status and send a notification for the car
+    for i in activable_cars:
+        cur.execute("UPDATE car SET status = 'stand_by' WHERE name = %s", (i[0], ))
+        
+        message = messaging.Message(
+        notification=messaging.Notification(
+        title=f"Auto {i[0]} je k dispozíci!",
+        body=f"""Je možné znova auto rezervovať v aplikácií. :D"""),topic="system")
+
+        messaging.send(message)
+    db_con.commit()
 
 
     # Late returns
