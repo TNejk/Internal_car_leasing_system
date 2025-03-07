@@ -472,10 +472,10 @@ def get_full_car_info():
     # res[3] = status
     # res[1] = car name string
     decom_timeto = ""
-    if res[3] != "stand_by":
+    if res[0][3] != "stand_by":
        dec_query = "SELECT time_to FROM decommissioned_cars WHERE car_name = %s"
-       cur.execute(dec_query, (res[1])) 
-       decom_timeto = cur.fetchall()[0]
+       cur.execute(dec_query, (res[0][1])) 
+       decom_timeto = cur.fetchone[0]
 
     
     query = "SELECT start_of_lease, end_of_lease FROM lease WHERE id_car = %s AND status = %s;"
