@@ -51,7 +51,7 @@ while True:
     decom_cars_query = """
     SELECT car_name, email, time_to from decommissioned_cars WHERE status = TRUE AND time_to < %s 
     """
-    cur.execute(decom_cars_query, (obj_today))
+    cur.execute(decom_cars_query, (obj_today,))
     activable_cars = cur.fetchall()
 
     # Turn off the decomission request status and send a notification for the car
@@ -88,7 +88,7 @@ while True:
             car_name = cur.fetchall()[0]
             # send notif to the email topic and the
             str_mess = "Skončil sa limit na vrátenie auta, prosím odovzdajte auto v aplikácií!"
-            
+
             #! email.replace("@", "_")
             message = messaging.Message(
                                 notification=messaging.Notification(
