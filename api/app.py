@@ -451,6 +451,14 @@ def get_full_car_info():
       response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
       return response, 200
 
+
+    bratislava_tz = pytz.timezone('Europe/Bratislava')
+    def convert_to_bratislava_timezone(dt_obj):
+      # Ensure the datetime is in UTC before converting
+      utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
+      bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
+      return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
+    
     conn, cur = connect_to_db()
     data = request.get_json()
 
@@ -475,7 +483,7 @@ def get_full_car_info():
     if res[0][3] != "stand_by":
        dec_query = "SELECT time_to FROM decommissioned_cars WHERE car_name = %s"
        cur.execute(dec_query, (res[0][1],)) 
-       decom_timeto = cur.fetchone()[0]
+       decom_timeto = convert_to_bratislava_timezone(cur.fetchone()[0])
 
     
     query = "SELECT start_of_lease, end_of_lease FROM lease WHERE id_car = %s AND status = %s;"
@@ -497,12 +505,7 @@ def get_full_car_info():
     #         "Thu, 12 Dec 2024 17:01:22 GMT"
     #     ]
     # ]
-    bratislava_tz = pytz.timezone('Europe/Bratislava')
-    def convert_to_bratislava_timezone(dt_obj):
-      # Ensure the datetime is in UTC before converting
-      utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
-      bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
-      return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
+
 
     def parse_lease_dates(resu):
         lease_dates = []
