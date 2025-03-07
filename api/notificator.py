@@ -10,6 +10,7 @@ import pytz
 from pytz import timezone as tz
 
 
+
 db_host = os.getenv('DB_HOST')
 db_port = os.getenv('DB_PORT')
 db_user = os.getenv('POSTGRES_USER')
@@ -87,10 +88,8 @@ while True:
             car_name = cur.fetchall()[0]
             # send notif to the email topic and the
             str_mess = "Skončil sa limit na vrátenie auta, prosím odovzdajte auto v aplikácií!"
-
-            #TODO: PRED POSLANIM SA MUSIM ZBAVIT @ V EMAILE KEDZE TO NENI PLATNY TOPIC, NAHRAD HO _
+            
             #! email.replace("@", "_")
-
             message = messaging.Message(
                                 notification=messaging.Notification(
                                 title="Prekrocenie limitu na odovzdanie auta",
