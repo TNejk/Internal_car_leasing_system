@@ -57,6 +57,7 @@ while True:
     # Turn off the decomission request status and send a notification for the car
     for i in activable_cars:
         cur.execute("UPDATE car SET status = 'stand_by' WHERE name = %s", (i[0], ))
+        cur.execute("UPDATE decommissioned_cars SET status = FALSE WHERE car_name = %s", (i[0],))
         
         message = messaging.Message(
         notification=messaging.Notification(
