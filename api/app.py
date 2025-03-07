@@ -373,7 +373,7 @@ def decommission():
       cur.execute(car_update_query, (car_name,))
 
       # Add a decomission request to the DB
-      car_decomission_query = "INSERT INTO decommisioned_cars(status, car_name, email, time_to, requested_at) values (%s, %s, %s, %s)"
+      car_decomission_query = "INSERT INTO decommissioned_cars(status, car_name, email, time_to, requested_at) values (%s, %s, %s, %s)"
       cur.execute(car_decomission_query, (True, car_name, time_to, time_of, ))
       
       lease_update_query = """
@@ -415,7 +415,7 @@ def activate_car():
   cur.execute(query, (car_name, ))
 
   # Update decommision status so it wont trigger the notificator again
-  dec_query = "UPDATE decommisioned_cars SET status = FALSE where car_name = %s"
+  dec_query = "UPDATE decommissioned_cars SET status = FALSE where car_name = %s"
   cur.execute(dec_query, (car_name, ))
   
   conn.commit()
