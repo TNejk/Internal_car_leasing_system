@@ -1143,43 +1143,66 @@ def approve_requests():
 
   conn, curr = connect_to_db()
 
-  curr.execute("select id_car from car where name = %s", (car_name,))
-  car = curr.fetchall()
-  if not car:
-    return {"status": False, "msg": "Car does not exist."}
-  car_id = car[0][0]
+  try:
+    curr.execute("select id_car, name from car where name = %s", (car_name,))
+    car = curr.fetchall()
+    if not car:
+      return {"status": False, "msg": "Car does not exist."}
+    car_id = car[0][0]
 
-  # Only allow managers to lease for other people
-  curr.execute("select id_driver from driver where email = %s and role = %s", (email, role, ))
-  managers = curr.fetchall()
-  if len(managers) == 0:
-    return {"status": False, "msg": "Unauthorized request!"}, 400
+    # Only allow managers to lease for other people
+    curr.execute("select id_driver from driver where email = %s and role = %s", (email, role, ))
+    managers = curr.fetchall()
+    if len(managers) == 0:
+      return {"status": False, "msg": "Unauthorized request!"}, 400
 
-  # Check if the perosn you are leasing for exists, if so get his ID as we need it to make a lease 
-  curr.execute("select id_driver from driver where email = %s", (reciever,))
-  user = curr.fetchall()
-  if len(user) == 0:
-    return {"status": False, "msg": "Unauthorized request!"}, 400
+    # Check if the perosn you are leasing for exists, if so get his ID as we need it to make a lease 
+    curr.execute("select id_driver from driver where email = %s", (reciever,))
+    user = curr.fetchall()
+    if len(user) == 0:
+      return {"status": False, "msg": "Unauthorized request!"}, 400
 
 
+    rep_email = reciever.replace("@", "_")
+    if approval == True:
+      # Create a lease and change the requests statust o false
+      try:
+        curr.execute("update request set status = FALSE where id_request = %s ", (request_id, ))
+        curr.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s, %s, %s,%s)", (car_id, user[0][0], timeof, timeto, True, True))
+        
 
-  if approval == True:
-    # Create a lease and change the requests statust o false
-    try:
+        message = messaging.Message(
+            notification=messaging.Notification(
+            title=f"Vaša rezervácia bola prijatá!",
+            body=f"""Súkromná rezervácia auta: {car[0][1]}"""
+        ),
+            topic= rep_email
+        )
+        messaging.send(message)
+      except Exception as e:
+        return {"status": False, "msg": f"Error approving, {e}"}, 400
+    
+    elif approval == False:
+
+      # Just deactivaet the request, dont create a lease
       curr.execute("update request set status = FALSE where id_request = %s ", (request_id, ))
-      curr.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s, %s, %s,%s)", (car_id, user[0][0], timeof, timeto, True, True))
-    except Exception as e:
-      return {"status": False, "msg": f"Error approving, {e}"}, 400
+
+      message = messaging.Message(
+          notification=messaging.Notification(
+          title=f"Súkromná rezervácia nebola prijatá!",
+          body=f"""Súkromná rezervácia auta: {car[0][1]}.\nBola odmietnutá."""
+      ),
+          topic= rep_email
+      )
+      messaging.send(message)
+
+    conn.commit()
+    conn.close()
+
+    return {"status": True, "msg": "Success"}, 200
   
-  elif approval == False:
-    # Just deactivaet the request, dont create a lease
-    curr.execute("update request set status = FALSE where id_request = %s ", (request_id, ))
-
-
-  conn.commit()
-  conn.close()
-
-  return {"status": True, "msg": "Success"}, 200
+  except Exception as e:
+      return {"status": False, "msg": f"Nastala chyba! {e}"}
 
 
 
