@@ -1135,7 +1135,8 @@ def approve_requests():
   timeto = data["timeto"]
   car_name = data["id_car"]
 
-
+  reciever = data["reciever"]
+  # This is for the amanger 
   claims = get_jwt()
   email = claims.get('sub', None)
   role = claims.get('role', None)
@@ -1148,10 +1149,19 @@ def approve_requests():
     return {"status": False, "msg": "Car does not exist."}
   car_id = car[0][0]
 
-  curr.execute("select id_driver from driver where email = %s and role = %s", (email, role,))
+  # Only allow managers to lease for other people
+  curr.execute("select id_driver from driver where email = %s and role = %s", (email, role, ))
+  managers = curr.fetchall()
+  if len(managers) == 0:
+    return {"status": False, "msg": "Unauthorized request!"}, 400
+
+  # Check if the perosn you are leasing for exists, if so get his ID as we need it to make a lease 
+  curr.execute("select id_driver from driver where email = %s", (reciever,))
   user = curr.fetchall()
   if len(user) == 0:
-    return {"status": False, "msg": "No such user exists!"}, 400
+    return {"status": False, "msg": "Unauthorized request!"}, 400
+
+
 
   if approval == True:
     # Create a lease and change the requests statust o false
