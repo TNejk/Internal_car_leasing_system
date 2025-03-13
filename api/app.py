@@ -268,8 +268,14 @@ def login():
 
 @app.route('/get_users', methods=['GET'])
 @jwt_required()
-
 def get_users():
+    claims = get_jwt()
+    email = claims.get('sub', None)
+    role = claims.get('role', None)
+    
+    if role != "manager" or role != "admin":
+       return {"error": "Unauthorized"}, 400
+
     conn, cur = connect_to_db()
     try:
         cur.execute('SELECT email, role FROM driver;')
@@ -352,7 +358,8 @@ def decommission():
   claims = get_jwt()
   email = claims.get('sub', None)
   role = claims.get('role', None)
-  if role != "manager":
+
+  if role != "manager" or role != "admin":
       return {"status": False, "msg": "Unauthorized"}, 401
 
   # Input validation
@@ -407,7 +414,7 @@ def activate_car():
   claims = get_jwt()
   role = claims.get('role', None)
 
-  if role != "manager":
+  if role != "manager" or role != "admin":
     return {"status": False, "msg": "Unathorized"}, 401
   
   # Update car status, so its visible to the user again
@@ -547,6 +554,9 @@ def list_reports():
 
   conn, curr = connect_to_db()
 
+  if role != "manager" or role != "admin":
+     return {"msg": "Unathorized"}
+
   curr.execute("select id_driver from driver where email = %s and role = %s", (email, role))
   res =  curr.fetchall()
   if len(res) <1:
@@ -568,6 +578,9 @@ def get_reports(filename):
     # Validate parameters
     if not email or not role:
         return {"msg": "Missing email or role parameters"}, 400
+    
+    if role != "manager" or role != "admin":
+        return {"msg": "Unauthorized"}, 400
 
     try:
         conn, curr = connect_to_db()
@@ -707,7 +720,7 @@ def get_leases():
     """
     curr.execute(query, (email,))
 
-  elif role == "manager": 
+  elif role == "manager" or role == "admin": 
     # These are all voluntary!!!
     # These have to be NULL, they cannot be ""
 
@@ -794,7 +807,8 @@ def cancel_lease():
   data = request.get_json()
   claims = get_jwt()
   email = claims.get('sub', None)
-  
+  role = claims.get('role', None)
+
   recipient = ""
   if data["recipient"]:
      recipient = data["recipient"]
@@ -803,6 +817,12 @@ def cancel_lease():
 
   car_name = data["car_name"]
 
+  # Only managers and admins can cancel other peoples rides
+  # A normal user should not be able to cancel another ones ride using postman for example
+  if recipient != email:
+     if role != "manager" or role != "admin":
+        return {"cancelled": False}, 400
+ 
   conn, cur = connect_to_db()
   
   try:
@@ -813,18 +833,21 @@ def cancel_lease():
     cur.execute("select id_car from car where name = %s", (car_name,))
     id_car = cur.fetchall()[0][0]
   except Exception as e:
-    return jsonify(msg= f"Error cancelling lease!, {e}")
+    return jsonify(msg= f"Error cancelling lease!, {e}"), 500
   
   try:
     cur.execute("UPDATE lease SET status = false WHERE id_lease = (SELECT id_lease FROM lease WHERE id_driver = %s AND id_car = %s  AND status = true ORDER BY id_lease DESC LIMIT 1)", (id_name, id_car))
     cur.execute("update car set status = %s where id_car = %s", ("stand_by", id_car))
   except Exception as e:
-    return jsonify(msg= f"Error cancelling lease!, {e}")
+    return jsonify(msg= f"Error cancelling lease!, {e}"), 500
 
   conn.commit()
   conn.close()
 
-  return {"cancelled": True}
+  return {"cancelled": True}, 200
+
+
+
 
 @app.route('/get_monthly_leases', methods = ['POST'])
 @jwt_required()
@@ -834,8 +857,8 @@ def get_monthly_leases():
   claims = get_jwt()
   role = claims.get('role', None)
 
-  if role != "manager":
-    return jsonify({'msg': "Only manager can get monthly leases!"})
+  if role != "manager" or role != "admin":
+    return jsonify({'msg': "Not enough clearance!"}), 400
   else:
     try:
       month = data["month"]
@@ -1014,7 +1037,7 @@ def lease_car():
     return {"status": True, "private": private}
 
   # If the user leasing is a manager allow him to order lease for other users
-  elif jwt_role  == "manager":
+  elif jwt_role  == "manager" or jwt_role == "admin":
     try:
       # If the manager is leasing a car for someone else check if the recipeint exists and lease for his email
       try:
@@ -1150,17 +1173,21 @@ def approve_requests():
       return {"status": False, "msg": "Car does not exist."}
     car_id = car[0][0]
 
-    # Only allow managers to lease for other people
+
+    # This is broken
+    if role != "manager" or role != "admin":
+      return {"status": False, "msg": "Unauthorized request!"}, 400
+      
     curr.execute("select id_driver from driver where email = %s and role = %s", (email, role, ))
     managers = curr.fetchall()
     if len(managers) == 0:
-      return {"status": False, "msg": "Unauthorized request!"}, 400
+      return {"status": False, "msg": "User does not exist!"}, 400
 
     # Check if the perosn you are leasing for exists, if so get his ID as we need it to make a lease 
     curr.execute("select id_driver from driver where email = %s", (reciever,))
     user = curr.fetchall()
     if len(user) == 0:
-      return {"status": False, "msg": "Unauthorized request!"}, 400
+      return {"status": False, "msg": "Recipient does not exist!"}, 400
 
 
     rep_email = reciever.replace("@", "_")
