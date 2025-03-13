@@ -1,3 +1,4 @@
+import base64
 import csv
 import os
 import hashlib
@@ -265,6 +266,63 @@ def login():
   finally:
     cur.close()
     conn.close()
+
+
+# Only ICLS GAMO can create new cars and such
+
+@app.route('/create_car', methods = ['POST'])
+@jwt_required()
+def create_car():
+  claims = get_jwt()
+  email = claims.get('sub', None)
+  role = claims.get('role', None)
+
+  if role != "admin":
+     return {"status": False, "msg": {"Unathorized"}}, 400
+  
+  car_name = ""
+  car_spz  = ""
+  gas      = ""
+  drive_tp = ""
+  image    = None
+  url      = "" 
+  
+  # Check for all the needed data
+  try:
+      data = request.get_json()
+      car_name  = data["car_name"]
+      car_spz   = data["spz"]
+      gas       = data["gas"]
+      drive_tp  = data["drive_type"]
+
+      image     = data["image"]
+      image_ext = data["image_extension"]
+  except:
+     return {"status": False, "msg": "Missing parameters."}
+  
+  # Try to save the image i was given, the image should be in base64 format
+  try:
+    photo_data = base64.b64decode(image)
+    
+    # TODO: Add a correct path here or smth idk fuck off
+    with open(f"{car_name}.{image_ext}", "wb") as file:
+        file.write(photo_data)
+
+  except: 
+    return {"status": False, "msg": "Error saving car image."}
+  
+  try:
+    # Insert into car table all the data
+    conn, cur = connect_to_db()
+    query = "INSERT INTO car (name, spz, gas, drive_type, url) VALUES (%s, %s, %s, %s, %s)"
+    cur.execute(query, (car_name, car_spz, gas, drive_tp, url, ))
+    
+    return {"status": True, "msg": "Auto bolo vytvorené."}
+  except Exception as e:
+      return {"status": False, "msg": f"An error has occured: {e}"}, 500
+  
+
+
 
 @app.route('/get_users', methods=['GET'])
 @jwt_required()
