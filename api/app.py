@@ -292,6 +292,7 @@ def create_car():
       data = request.get_json()
       car_name  = data["car_name"]
       car_spz   = data["spz"]
+      location = data["location"]
       gas       = data["gas"]
       drive_tp  = data["drive_type"]
 
@@ -305,7 +306,7 @@ def create_car():
     photo_data = base64.b64decode(image)
     
     # TODO: Add a correct path here or smth idk fuck off
-    with open(f"{car_name}.{image_ext}", "wb") as file:
+    with open(f"/app/images/{car_name}.{image_ext}", "wb") as file:
         file.write(photo_data)
 
   except: 
@@ -314,9 +315,15 @@ def create_car():
   try:
     # Insert into car table all the data
     conn, cur = connect_to_db()
-    query = "INSERT INTO car (name, spz, gas, drive_type, url) VALUES (%s, %s, %s, %s, %s)"
-    cur.execute(query, (car_name, car_spz, gas, drive_tp, url, ))
-    
+    #* FOR NOW url is placeholder
+    _url = "https://fl.gamo.sosit-wh.net/images/placeholder.png"
+    _type = "personal"
+    _health = "good"
+    _usage_metric = 0
+
+    query = "INSERT INTO car (name, type, status, health, usage_metric, location, url, stk, gas, drive_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s, %s,)"
+    cur.execute(query, (car_name, _type, _health, _usage_metric, location, url, car_spz, gas, drive_tp,))
+
     return {"status": True, "msg": "Auto bolo vytvorené."}
   except Exception as e:
       return {"status": False, "msg": f"An error has occured: {e}"}, 500
