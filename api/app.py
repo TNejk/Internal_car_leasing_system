@@ -303,7 +303,9 @@ def create_car():
   
   # Try to save the image i was given, the image should be in base64 format
   try:
-    photo_data = base64.b64decode(image + b'==')
+
+    #! ADD PADDING TO THE END
+    photo_data = base64.b64decode(image + '==')
     
     # TODO: Add a correct path here or smth idk fuck off
     with open(f"/app/images/{car_name}.{image_ext}", "wb") as file:
