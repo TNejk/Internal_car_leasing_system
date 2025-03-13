@@ -269,11 +269,12 @@ def login():
 @app.route('/get_users', methods=['GET'])
 @jwt_required()
 def get_users():
+  # Authentication check
     claims = get_jwt()
     email = claims.get('sub', None)
     role = claims.get('role', None)
     
-    if role != "manager" or role != "admin":
+    if role != "manager" and role != "admin":
        return {"error": "Unauthorized"}, 400
 
     conn, cur = connect_to_db()
@@ -359,7 +360,7 @@ def decommission():
   email = claims.get('sub', None)
   role = claims.get('role', None)
 
-  if role != "manager" or role != "admin":
+  if role != "manager" and role != "admin":
       return {"status": False, "msg": "Unauthorized"}, 401
 
   # Input validation
@@ -414,7 +415,7 @@ def activate_car():
   claims = get_jwt()
   role = claims.get('role', None)
 
-  if role != "manager" or role != "admin":
+  if role != "manager" and role != "admin":
     return {"status": False, "msg": "Unathorized"}, 401
   
   # Update car status, so its visible to the user again
@@ -554,7 +555,7 @@ def list_reports():
 
   conn, curr = connect_to_db()
 
-  if role != "manager" or role != "admin":
+  if role != "manager" and role != "admin":
      return {"msg": "Unathorized"}
 
   curr.execute("select id_driver from driver where email = %s and role = %s", (email, role))
@@ -579,7 +580,7 @@ def get_reports(filename):
     if not email or not role:
         return {"msg": "Missing email or role parameters"}, 400
     
-    if role != "manager" or role != "admin":
+    if role != "manager" and role != "admin":
         return {"msg": "Unauthorized"}, 400
 
     try:
@@ -820,7 +821,7 @@ def cancel_lease():
   # Only managers and admins can cancel other peoples rides
   # A normal user should not be able to cancel another ones ride using postman for example
   if recipient != email:
-     if role != "manager" or role != "admin":
+     if role != "manager" and role != "admin":
         return {"cancelled": False}, 400
  
   conn, cur = connect_to_db()
@@ -857,7 +858,7 @@ def get_monthly_leases():
   claims = get_jwt()
   role = claims.get('role', None)
 
-  if role != "manager" or role != "admin":
+  if role != "manager" and role != "admin":
     return jsonify({'msg': "Not enough clearance!"}), 400
   else:
     try:
@@ -1174,8 +1175,8 @@ def approve_requests():
     car_id = car[0][0]
 
 
-    # This is broken
-    if role != "manager" or role != "admin":
+
+    if role != "manager" and role != "admin":
       return {"status": False, "msg": "Unauthorized request!"}, 400
       
     curr.execute("select id_driver from driver where email = %s and role = %s", (email, role, ))
