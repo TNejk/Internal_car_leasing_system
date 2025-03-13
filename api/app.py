@@ -326,6 +326,8 @@ def create_car():
 
     query = "INSERT INTO car (name, type, status, health, usage_metric, location, url, stk, gas, drive_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s, %s)"
     cur.execute(query, (car_name, _type, status,_health, _usage_metric, location, url, car_spz, gas, drive_tp,))
+    conn.commit()
+    conn.close()
 
     return {"status": True, "msg": "Auto bolo vytvorené."}
   except Exception as e:
