@@ -309,8 +309,8 @@ def create_car():
     with open(f"/app/images/{car_name}.{image_ext}", "wb") as file:
         file.write(photo_data)
 
-  except: 
-    return {"status": False, "msg": "Error saving car image."}
+  except Exception as e: 
+    return {"status": False, "msg": f"Error saving car image. {e}"}
   
   try:
     # Insert into car table all the data
