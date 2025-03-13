@@ -278,7 +278,7 @@ def create_car():
   role = claims.get('role', None)
 
   if role != "admin":
-     return {"status": False, "msg": {"Unathorized"}}, 400
+     return {"status": False, "msg": "Unathorized"}, 400
   
   car_name = ""
   car_spz  = ""
