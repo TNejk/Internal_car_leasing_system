@@ -334,6 +334,12 @@ def create_car():
       return {"status": False, "msg": f"An error has occured: {e}"}, 500
   
 
+
+# Only the admin should be able to do this ig
+# the password check may not be really all that important? As technically you simply cannot get a json token with the admin role,
+# Since you know, its under a cryptographic pwassword or smth idk im just typing this so it makes sound and the people here think i am doing something and i cannot be available to them, so yeah
+# hard owrky or hardly working
+# thats a physiloshpy  
 @app.route('/delete_car', methods=['POST'])
 @jwt_required()
 def del_cars():
@@ -345,6 +351,9 @@ def del_cars():
 
     if role != "admin":
        return {"status": False, "msg": "Unathorized"}, 400
+    
+    if car_name == "":
+       return {"status": False, "msg": "Missing parameters!"}, 500
     
     try:
       conn, cur = connect_to_db()
@@ -364,8 +373,11 @@ def del_users():
     email = data["email"]
 
     if role != "admin":
-       return {"status": False, "msg": "Unathorized"}, 400
-    
+       return {"status": False, "msg": "Unauthorized"}, 400
+
+    if email == "":
+       return {"status": False, "msg": "Missing parameters!"}, 500
+           
     try:
       conn, cur = connect_to_db()
       cur.execute("DELETE FROM driver WHERE email = %s", (email, ))
@@ -373,6 +385,7 @@ def del_users():
       conn.close()
     except Exception as e:
        return {"status": False, "msg": f"An error has occured in deleting a user: {e}"}
+
 
 @app.route('/get_users', methods=['GET'])
 @jwt_required()
