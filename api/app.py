@@ -334,7 +334,45 @@ def create_car():
       return {"status": False, "msg": f"An error has occured: {e}"}, 500
   
 
+@app.route('/delete_car', methods=['POST'])
+@jwt_required()
+def del_cars():
+    claims = get_jwt()
+    role = claims.get('role', None)
+    
+    data = request.get_json()
+    car_name = data["car_name"]
 
+    if role != "admin":
+       return {"status": False, "msg": "Unathorized"}, 400
+    
+    try:
+      conn, cur = connect_to_db()
+      cur.execute("DELETE FROM car WHERE name = %s", (car_name, ))
+      conn.commit()
+      conn.close()
+    except Exception as e:
+       return {"status": False, "msg": f"An error has occured in deleting a car: {e}"}
+
+@app.route('/delete_user', methods=['POST'])
+@jwt_required()
+def del_users():
+    claims = get_jwt()
+    role = claims.get('role', None)
+    
+    data = request.get_json()
+    email = data["email"]
+
+    if role != "admin":
+       return {"status": False, "msg": "Unathorized"}, 400
+    
+    try:
+      conn, cur = connect_to_db()
+      cur.execute("DELETE FROM driver WHERE email = %s", (email, ))
+      conn.commit()
+      conn.close()
+    except Exception as e:
+       return {"status": False, "msg": f"An error has occured in deleting a user: {e}"}
 
 @app.route('/get_users', methods=['GET'])
 @jwt_required()
