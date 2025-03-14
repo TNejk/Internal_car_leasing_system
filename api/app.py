@@ -360,6 +360,7 @@ def del_cars():
       cur.execute("DELETE FROM car WHERE name = %s", (car_name, ))
       conn.commit()
       conn.close()
+      return {"status": True, "msg": "User succesfully deleted!"}, 200
     except Exception as e:
        return {"status": False, "msg": f"An error has occured in deleting a car: {e}"}
 
@@ -383,6 +384,7 @@ def del_users():
       cur.execute("DELETE FROM driver WHERE email = %s", (email, ))
       conn.commit()
       conn.close()
+      return {"status": True, "msg": "Car succesfully deleted!"}, 200
     except Exception as e:
        return {"status": False, "msg": f"An error has occured in deleting a user: {e}"}
 
