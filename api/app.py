@@ -1044,8 +1044,8 @@ def lease_car():
     dates =  tmp_to[0].split("-")
     # 25-02-2025 10:44
     form_timeto = f"{dates[2]}-{dates[1]}-{dates[0]} {tmp_to[1]}"
-  except:
-     return {"status": False, "private": False, "msg": f"Incorrect date format: {form_timeof}"} 
+  except Exception as e :
+     return {"status": False, "private": False, "msg": f"Incorrect date format: {e}"} 
   
 
   def convert_to_datetime(string):
