@@ -360,7 +360,7 @@ def del_cars():
       cur.execute("DELETE FROM car WHERE name = %s", (car_name, ))
       conn.commit()
       conn.close()
-      return {"status": True, "msg": "User succesfully deleted!"}, 200
+      return {"status": True, "msg": "Car succesfully deleted!"}, 200
     except Exception as e:
        return {"status": False, "msg": f"An error has occured in deleting a car: {e}"}
 
@@ -384,7 +384,7 @@ def del_users():
       cur.execute("DELETE FROM driver WHERE email = %s", (email, ))
       conn.commit()
       conn.close()
-      return {"status": True, "msg": "Car succesfully deleted!"}, 200
+      return {"status": True, "msg": "User succesfully deleted!"}, 200
     except Exception as e:
        return {"status": False, "msg": f"An error has occured in deleting a user: {e}"}
 
@@ -1036,13 +1036,17 @@ def lease_car():
   dates =  tmp_of[0].split("-")
 
   # 2025-02-25 21:04:00+01 --->> 25-02-2025 21:04
-  form_timeof = f"{dates[2]}-{dates[1]}-{dates[0]} {tmp_of[1]}"
+  try: 
+    form_timeof = f"{dates[2]}-{dates[1]}-{dates[0]} {tmp_of[1]}"
 
-  # Chnage time to date format
-  tmp_to = timeto.split(" ")
-  dates =  tmp_to[0].split("-")
-  # 25-02-2025 10:44
-  form_timeto = f"{dates[2]}-{dates[1]}-{dates[0]} {tmp_to[1]}"
+    # Chnage time to date format
+    tmp_to = timeto.split(" ")
+    dates =  tmp_to[0].split("-")
+    # 25-02-2025 10:44
+    form_timeto = f"{dates[2]}-{dates[1]}-{dates[0]} {tmp_to[1]}"
+  except:
+     return {"status": False, "private": False, "msg": f"Incorrect date format: {form_timeof}"} 
+  
 
   def convert_to_datetime(string):
       try:
