@@ -1,5 +1,5 @@
-import sys, os
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+import sys, os, logging
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, Response
 sys.path.append('controllers')
 from check_token import check_token
 from require_role import require_role
@@ -60,7 +60,7 @@ def sign_up():
 @app.route('/manager/dashboard', methods=['GET', 'POST'])
 @require_role('manager')
 def manager_dashboard():
-  return render_template('dashboards/dashboard.html', icons = load_icons(), show_header=True, role = session.get('role'))
+  return render_template('dashboards/Mdashboard.html', icons = load_icons(), show_header=True, role = session.get('role'))
 
 @app.route('/lease', methods=['GET'])
 @require_role('user','manager')
@@ -95,22 +95,31 @@ def get_monthly_leases():
   data = request_monthly_leases(month)
   return jsonify(data)
 
-@app.route(f'/manager/reports', methods=['GET', 'POST'])
+@app.route(f'/manager/reports', methods=['GET'])
 @require_role('manager')
 @check_token()
 def reports():
   data = list_reports(session['username'], session['role'])
-  return render_template('dashboards/reports.html', icons = load_icons(), data=data, show_header=True)
+  for report in data:
+    report.append(url_for('static', filename='sources/images/open.svg'))
+    report.append(url_for('static', filename='sources/images/download.svg'))
 
-@app.route(f'/manager/get_report', methods=['GET', 'POST'])
+  return render_template('dashboards/reports.html', data = data, icons = load_icons(), show_header=True)
+
+
+@app.route('/manager/get_report', methods=['GET'])
 @require_role('manager')
 @check_token()
 def get_report_r():
-  report = request.args.get('report', None)
-  email = session['username']
-  role = session['role']
-  returned_report = get_report(email,role,report)
-  return returned_report
+  try:
+    data = request.args.get('report')
+    response = get_report(data)
+    return response
+
+  except Exception as e:
+    logging.error(f"Error in get_report_r: {str(e)}")
+    return {"msg": f"Server error: {str(e)}"}, 500
+
 
 @app.route('/get_session_data', methods=['POST'])
 @require_role('user','manager')

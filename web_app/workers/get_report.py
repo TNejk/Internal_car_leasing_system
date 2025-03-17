@@ -1,32 +1,17 @@
 import requests
 import re
-from flask import session, send_file
+from flask import session, send_file, Response
 
-
-def get_report(email, role, filename):
-  filename = filename.replace(' ', '%20')  # URL encode spaces
-  print(filename)
-
+def get_report(filename):
   headers = {'Authorization': 'Bearer ' + session.get('token')}
-  url = f'https://icls.sosit-wh.net/get_report/{filename}?email={email}&role={role}'
+  url = f'https://icls.sosit-wh.net/get_report/{filename}'
+  response = requests.get(url=url, headers=headers, stream=True)
 
-  request = requests.get(url=url, headers=headers, stream=True)
+  if response.status_code == 200:
+    return Response(
+      response.iter_content(chunk_size=8192),
+      content_type=response.headers.get('Content-Type', 'application/octet-stream'),
+      headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
 
-  if request.status_code == 200:
-    # Get filename from Content-Disposition header
-    content_disposition = request.headers.get('Content-Disposition', f'attachment; filename={filename}')
-    filename = content_disposition.split('=')[1].strip('"')
-
-    # Sanitize filename (replace problematic characters)
-    filename = re.sub(r'[<>:"/\\|?*]', '_', filename)
-
-    file_path = f"./{filename}"  # Ensure safe file path
-
-    # Write file in chunks
-    with open(file_path, "wb") as f:
-      for chunk in request.iter_content(chunk_size=8192):
-        f.write(chunk)
-
-    return send_file(file_path, as_attachment=True)
-
-  return "Failed to download file", 500
+  return f"Error {response.status_code}: {response.text}", response.status_code

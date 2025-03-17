@@ -6,22 +6,28 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/cards.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/modals.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/notifications.css') }}">
-<!--<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/reservations.css') }}">-->
 <title>ICLS - Reporty</title>
 {% endblock %}
 
 {% block body %}
 <div class="container">
-  {% if data|length == 0 %}
-    <div id="default-message">Neexistuje žiadny report</div>
-  {% else %}
-    {% for report in data %}
-      <a href="/get_report?report={{report}}">{{report}}</a>
-    {% endfor %}
-  {% endif %}
+  <div class="card-container" id="card-container">
+    {% if data|length < 1 %}
+      <div id="default-message">Neexistuje žiadny report</div>
+    {% else %}
+      {% for report in data %}
+        <div class="report-card">
+          <h3>{{ report[0] }}</h3>
+          <a href="/manager/get_report?report={{ report[0] }}">
+            <img src="{{ report[2] }}" alt="stiahnuť" >
+          </a>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
 </div>
-
 {% endblock %}
 
 {% block script %}
+<script src="{{ url_for('static', filename='js/reports.js' )}}"></script>
 {% endblock %}

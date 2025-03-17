@@ -15,7 +15,6 @@
   <div class="sidebar">
     <img src="{{ icons[1] }}" alt="{{ Pandrlác }}" style="width: 80px; height: 80px; border-radius: 50%;">
     <p>{{ username }}</p>
-    <button>Zmena hesla</button>
     <form action="/logout">
       <button>Odhlásenie</button>
     </form>
@@ -29,20 +28,24 @@
   </div>
   <div class="content">
     <div class="card-container" id="card-container">
-<!--      davam sem dynamicky v js karty-->
-      <div id="default-message" style="display: none;">Neexistuje žiadna rezervácia!</div>
+      <div id="default-message">Neexistuje žiadna rezervácia!</div>
     </div>
   </div>
 
   <div class="modal-backdrop" id="modal-backdrop" onclick="closeModalF()"></div>
-  <div class="modal" id="modal">
+  <div class="modal" id="modal-lease-details">
     <h2 id="modal-car-name"></h2>
     <p id="modal-time-from"></p>
     <p id="modal-time-to"></p>
+    <p id="modal-spz"></p>
     {% if role == 'manager' %}
       <p id="modal-user"></p>
     {% endif %}
-
+    <button id="finish-reservation-button">Odovzdaj auto</button>
+    <button id="scrap-reservation-button">Zruš rezerváciu</button>
+    <button id="close-modal">Zatvor</button>
+  </div>
+  <div class="modal" id="modal-return-car">
     <label for="card-health">Stav Auta:</label>
     <select id="card-health">
       <option value="good">Dobrý</option>
@@ -57,9 +60,8 @@
     </select>
     <label for="note">Poznámka</label>
     <input type="text" id="note" placeholder="">
-    <button id="finish-reservation-modal">Odovzdaj auto</button>
-    <button id="scrap-reservation-modal">Zruš rezerváciu</button>
-    <button id="close-modal">Zatvor</button>
+    <button id="return-car-button">Odovzdaj auto</button>
+    <button id="stop-return-button">Zruš</button>
   </div>
   <div id="modal-status" class="modal-status">
     <div id="modal-inner">

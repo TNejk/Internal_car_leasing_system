@@ -23,6 +23,7 @@ function fetchCarData(carId, token, user, useRole) {
     .then((response) => response.json())
     .then((data) => {
       renderDetails(data['car_details']);
+      console.log(data['notallowed_dates']);
       const calendar = renderCalendar(data['notallowed_dates']);
       document.getElementById('default-message').style.display = 'none';
       document.getElementById('car-details').style.display = 'flex';
@@ -103,7 +104,7 @@ function renderCalendar(dates) {
     events: dates.map((event) => ({
       title: 'Obsadené',
       start: event[0],
-      end: event[1],
+      end: event[1]
     })),
 
     select: function (info) {

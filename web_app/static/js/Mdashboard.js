@@ -10,17 +10,19 @@ function get_session_data() {
     });
 }
 
-function renderCalendar(dates) {
+async function renderCalendar() {
   const calendarEl = document.getElementById('calendar');
-  const today = new Date(); // Get today's date
+
+  let month = new Date().getMonth() + 1;
+  let dates = await get_leases(month);
 
   const calendar = new FullCalendar.Calendar(calendarEl, {
     height: 700,
     initialView: 'timeGridMonth',
     locale: 'sk',
-    // columnHeaderFormat: { day: 'numeric', month: 'numeric' },
     selectable: true,
     allDayText: 'Celý deň',
+    nowIndicator: true,
 
     headerToolbar: {
       left: 'prev,next today',
@@ -29,11 +31,11 @@ function renderCalendar(dates) {
     },
 
     events: dates.map((event) => ({
-      title: event.car_name,
-      start: event.time_from,
-      end: event.time_to,
-      color:event.color,
-      car_id: event.car_id
+      title: event[3],
+      start: event[0],
+      end: event[1],
+      extendedProps: {car_id: event[2]},
+      color: event[4]
     })),
 
     views: {
@@ -46,7 +48,8 @@ function renderCalendar(dates) {
         },
         buttonText: 'Mesiac',
         classNames: ['time-grid-month'],
-        dateIncrement: { months: 1 }
+        dateIncrement: { months: 1 },
+        columnHeaderFormat: { day: 'numeric', month: 'numeric' },
       },
       timeGridWeek: {
         buttonText: 'Týždeň'
@@ -56,49 +59,56 @@ function renderCalendar(dates) {
       },
       timeGridToday: {
         buttonText: 'Dnes'
-      },
-      today: {
-        buttonText: 'Dnes'
       }
     },
 
     customButtons: {
+      this: {
+        buttonText: 'Dnes',
+        click: function() {
+          calendar.today();
+        }
+      },
       next: {
         click: function() {
           calendar.next();
           const view = calendar.view;
           const month = view.currentStart.getMonth() + 1;
           get_leases(month);
-          calendar.update();
         }
       }
     }
 
   });
-
-  return calendar;
+  document.getElementsByClassName('fc-timegrid-axis-cushion fc-scrollgrid-shrink-cushion fc-scrollgrid-sync-inner').innerText = `Celý deň`;
+  console.log('kalendar renderovany');
+  calendar.render();
 }
 
-function get_leases(month){
+async function get_leases(month) {
   fetch('/manager/get_monthly_leases', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({'month': month},
-      )})
-  .then(res => res.json())
-  .then(data => {
-    console.log(data)
-    for (let lease of data){
-      lease.color = getRandomColor();
-    }
-    return data
+    )
   })
+    .then(res => res.json())
+    .then(data => {
+      for (let lease of data) {
+        lease.push(getRandomColor());
+        lease[0] = new Date(lease[0]).toISOString().replace('.000Z', '').replace('T', ' ');
+        lease[1] = new Date(lease[1]).toISOString().replace('.000Z', '').replace('T', ' ');
+      }
+      console.log('fetchnute data ready na return do renderCalendar')
+      console.log(data);
+      return data;
+    })
 }
 
 function getRandomColor() {
-  var letters = '0123456789ABCDEF';
-  var color = '#';
-  for (var i = 0; i < 6; i++) {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
     color += letters[Math.floor(Math.random() * 16)];
   }
   return color;
@@ -106,10 +116,5 @@ function getRandomColor() {
 
 document.addEventListener("DOMContentLoaded", function() {
   get_session_data();
-  const month = new Date().getMonth() + 1;
-  var data = get_leases(month);
-  console.log(data);
-  const calendar = renderCalendar(data);
-  calendar.render();
-  document.getElementsByClassName('fc-timegrid-axis-cushion fc-scrollgrid-shrink-cushion fc-scrollgrid-sync-inner').innerText = `Celý deň`;
+  renderCalendar();
 });
