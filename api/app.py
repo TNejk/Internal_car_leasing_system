@@ -987,7 +987,9 @@ def get_monthly_leases():
     try:
       month = data["month"]
       conn, cur = connect_to_db()
-      stmt = "SELECT start_of_lease, time_of_return FROM lease WHERE EXTRACT(MONTH FROM start_of_lease)::int = %s"
+      stmt = ("SELECT lease.start_of_lease, lease.time_of_return, car.name, driver.email "
+              "FROM lease LEFT JOIN car ON lease.id_car=car.id_car LEFT JOIN driver ON lease.id_driver = driver.id_driver "
+              "WHERE EXTRACT(MONTH FROM start_of_lease)::int = %s")
 
       cur.execute(stmt, (month,))
       res = cur.fetchall()
