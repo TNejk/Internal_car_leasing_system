@@ -22,7 +22,10 @@ function get_leases(){
   .then(data => {
     role = data.role;
 
-    fetch('/get_user_leases', {method: 'POST'})
+    fetch('/get_user_leases', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({car_name: '', email: '', timeof: '', timeto: ''})})
     .then(res => res.json())
     .then(data => {
       // Loop through `data` first, then check if each email exists in `userList`
@@ -32,8 +35,8 @@ function get_leases(){
         // Check if the option already exists in the select list
         for (let option of userList.options) {
           if (option.value === lease.email) {
-            exists = true;
-            break; // Stop checking if found
+        exists = true;
+        break; // Stop checking if found
           }
         }
 
@@ -53,83 +56,83 @@ function get_leases(){
           } else {
             const filteredData = data.filter(lease => lease.email === userList.value);
             render_cards(filteredData);
-          }
+            }
         } else {
           render_cards(data);
-        }
+          }
       }
     });
   })
 } // finished
 
 function render_cards(data){
-        // Get the container where cards will be added
-        const cardCont = document.getElementById('card-container');
-        cardCont.innerHTML = ''; // Clear existing cards
-        // Loop through each reservation in data
-        for (let lease of data) {
-          const formatter = new Intl.DateTimeFormat("sk-SK", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  // Get the container where cards will be added
+  const cardCont = document.getElementById('card-container');
+  cardCont.innerHTML = ''; // Clear existing cards
+  // Loop through each reservation in data
+  for(let lease of data) {
+    const formatter = new Intl.DateTimeFormat("sk-SK", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
-        // Assuming lease['time_from'] and lease['time_to'] are in the format "YYYY-MM-DD HH:MM:SS"
-        let from = lease['time_from'].replace(' ', 'T'); // Fix format
-        let to = lease['time_to'].replace(' ', 'T'); // Fix format
+    // Assuming lease['time_from'] and lease['time_to'] are in the format "YYYY-MM-DD HH:MM:SS"
+    let from = lease['time_from'].replace(' ', 'T'); // Fix format
+    let to = lease['time_to'].replace(' ', 'T'); // Fix format
 
-        // Convert to Date objects
-        from = new Date(from);
-        to = new Date(to);
+    // Convert to Date objects
+    from = new Date(from);
+    to = new Date(to);
 
-        // Format properly
-        from = formatter.format(from);
-        to = formatter.format(to);
+    // Format properly
+    from = formatter.format(from);
+    to = formatter.format(to);
 
-          // Create a new card element dynamically
-          const card = document.createElement('div');
-          card.classList.add('card');
-          card.onclick = function () {
-              openModal(lease);
-          };
-          card.id = 'card';
+    // Create a new card element dynamically
+    const card = document.createElement('div');
+    card.classList.add('card');
+    card.onclick = function () {
+      openModal(lease);
+    };
+    card.id = 'card';
 
-          // Create car image
-          const img = document.createElement('img');
-          img.src = lease.url;
-          img.alt = lease.car_name;
-          card.appendChild(img);
+    // Create car image
+    const img = document.createElement('img');
+    img.src = lease.url;
+    img.alt = lease.car_name;
+    card.appendChild(img);
 
-          // Create car name element
-          const carName = document.createElement('h2');
-          carName.innerText = lease.car_name;
-          card.appendChild(carName);
+    // Create car name element
+    const carName = document.createElement('h2');
+    carName.innerText = lease.car_name;
+    card.appendChild(carName);
 
-          const spz = document.createElement('h3');
-          spz.innerText = lease.spz;
-          card.appendChild(spz);
+    const spz = document.createElement('h3');
+    spz.innerText = lease.spz;
+    card.appendChild(spz);
 
-          // Create reservation time elements
-          const timeFrom = document.createElement('p');
-          timeFrom.innerText = `Od: ${from}`;
-          card.appendChild(timeFrom);
+    // Create reservation time elements
+    const timeFrom = document.createElement('p');
+    timeFrom.innerText = `Od: ${from}`;
+    card.appendChild(timeFrom);
 
-          const timeTo = document.createElement('p');
-          timeTo.innerText = `Do: ${to}`;
-          card.appendChild(timeTo);
+    const timeTo = document.createElement('p');
+    timeTo.innerText = `Do: ${to}`;
+    card.appendChild(timeTo);
 
-          // Add user info if role is manager
-          if (role === 'manager') {
-            const userInfo = document.createElement('p');
-            userInfo.innerText = `Objednal: ${lease.email}`;
-            card.appendChild(userInfo);
-          }
-          // Add card to the container
-          cardCont.appendChild(card);
-        }
+    // Add user info if role is manager
+    if (role === 'manager') {
+      const userInfo = document.createElement('p');
+      userInfo.innerText = `Objednal: ${lease.email}`;
+      card.appendChild(userInfo);
+    }
+      // Add card to the container
+    cardCont.appendChild(card);
+  }
 } // finished
 
 function finishReservation(){
@@ -145,29 +148,29 @@ function finishReservation(){
   fetch('/get_session_data', {method: 'POST'})
     .then(response => response.json())
     .then(data => {
-      let token = data.token;
-      const returnTime = formatDate();
-      const payload = {
-        'id_lease': leaseId,
-        'time_of_return': returnTime,
-        'note': note,
-        'location': location,
-        'health': health
-      };
-      fetch('https://icls.sosit-wh.net/return_car', {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer ' + token,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      }).then((response) => response.json())
-        .then((data) => {
-          closeModalF();
-          modalReturnCar.style.display = 'none';
-          reload(data);
-          get_leases();
-        }).catch((error) => console.error('Error fetching car details:', error));
+  let token = data.token;
+  const returnTime = formatDate();
+  const payload = {
+    'id_lease': leaseId,
+    'time_of_return': returnTime,
+    'note': note,
+    'location': location,
+    'health': health
+  };
+  fetch('https://icls.sosit-wh.net/return_car', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + token,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  }).then((response) => response.json())
+    .then((data) => {
+      closeModalF();
+      modalReturnCar.style.display = 'none';
+      reload(data);
+      get_leases();
+    }).catch((error) => console.error('Error fetching car details:', error));
     });} // finished
 
 function scrapReservation(){
@@ -175,22 +178,22 @@ function scrapReservation(){
   fetch('/get_session_data', {method: 'POST'})
     .then(response => response.json())
     .then(data => {
-      let token = data.token;
-      let email = data.username;
+  let token = data.token;
+  let email = data.username;
 
-      fetch('https://icls.sosit-wh.net/cancel_lease', {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer ' + token,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({"car_name": car, "recipient": email}),
-        }).then(response => response.json())
-          .then((data) => {
-            closeModalF();
-            reload(data);
-            get_leases();
-        })
+  fetch('https://icls.sosit-wh.net/cancel_lease', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + token,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({"car_name": car, "recipient": email}),
+    }).then(response => response.json())
+      .then((data) => {
+    closeModalF();
+    reload(data);
+    get_leases();
+    })
     });
 }
 

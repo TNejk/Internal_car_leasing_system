@@ -4,6 +4,7 @@
 <!--<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">-->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/notifications.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/calendar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/modals.css') }}">
 
 <title>ICLS - Gamo</title>
 {% endblock %}
@@ -11,7 +12,12 @@
 {% block body %}
 <div class="container">
   <div id="welcome-message"></div>
+  <div id="loading-message">
+    <h3 >Získavam dáta...</h3>
+  </div>
   <div id="calendar"></div>
+  <div class="modal-backdrop" id="modal-backdrop" onclick="closeModalF()"></div>
+  <div class="modal" id="modal-monthly"></div>
 </div>
 {% endblock %}
 

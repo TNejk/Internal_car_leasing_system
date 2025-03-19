@@ -36,7 +36,7 @@ def sign_in():
     result = sign_in_api(username, password, SALT)
     if result == 'success':
       if session.get('role') == 'user':
-        return redirect('/dashboard')
+        return redirect('/lease')
       elif session.get('role') == 'manager':
         return redirect('/manager/dashboard')
       elif session.get('role') == 'admin':
@@ -83,7 +83,8 @@ def reservations():
 @require_role('user', 'manager')
 @check_token()
 def get_user_leases():
-  data = request_user_leases(session['username'], session['role'])
+  filter = request.get_json()
+  data = request_user_leases(session['username'], session['role'], filter)
   return jsonify(data)
 
 @app.route('/manager/get_monthly_leases', methods=['POST'])
