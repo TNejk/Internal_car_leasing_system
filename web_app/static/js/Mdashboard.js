@@ -6,15 +6,13 @@ function get_session_data() {
     .then(res => res.json())
     .then(data => {
       email = data.username;
-      welcomeMessage.innerText = `Vytaj ${email}!`;
+      welcomeMessage.innerText = `Vitaj ${email}!`;
     });
 }
 
-async function renderCalendar() {
+function renderCalendar(dates) {
+  console.log(dates);
   const calendarEl = document.getElementById('calendar');
-
-  let month = new Date().getMonth() + 1;
-  let dates = await get_leases(month);
 
   const calendar = new FullCalendar.Calendar(calendarEl, {
     height: 700,
@@ -25,7 +23,6 @@ async function renderCalendar() {
     nowIndicator: true,
 
     headerToolbar: {
-      left: 'prev,next today',
       center: 'title',
       right: 'timeGridMonth,timeGridWeek,timeGridDay',
     },
@@ -68,24 +65,15 @@ async function renderCalendar() {
         click: function() {
           calendar.today();
         }
-      },
-      next: {
-        click: function() {
-          calendar.next();
-          const view = calendar.view;
-          const month = view.currentStart.getMonth() + 1;
-          get_leases(month);
-        }
       }
     }
 
   });
   document.getElementsByClassName('fc-timegrid-axis-cushion fc-scrollgrid-shrink-cushion fc-scrollgrid-sync-inner').innerText = `Celý deň`;
-  console.log('kalendar renderovany');
   calendar.render();
 }
 
-async function get_leases(month) {
+function get_leases(month) {
   fetch('/manager/get_monthly_leases', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -94,14 +82,14 @@ async function get_leases(month) {
   })
     .then(res => res.json())
     .then(data => {
+      console.log(data);
       for (let lease of data) {
         lease.push(getRandomColor());
         lease[0] = new Date(lease[0]).toISOString().replace('.000Z', '').replace('T', ' ');
         lease[1] = new Date(lease[1]).toISOString().replace('.000Z', '').replace('T', ' ');
       }
-      console.log('fetchnute data ready na return do renderCalendar')
-      console.log(data);
-      return data;
+      renderCalendar(data);
+
     })
 }
 
@@ -116,5 +104,6 @@ function getRandomColor() {
 
 document.addEventListener("DOMContentLoaded", function() {
   get_session_data();
-  renderCalendar();
+  const currentMonth = new Date().getMonth() + 1;
+  get_leases(currentMonth);
 });

@@ -7,9 +7,9 @@ def revoke_token():
     @wraps(func)
     def wrapper(*args, **kwargs):
       if 'token' in session:
-        response = requests.post(
+        requests.post(
           url='https://icls.sosit-wh.net/revoke_token',
-          headers={'Authorization': f'Bearer {session["token"]}'},)
+          headers={'Authorization': f'Bearer {session["token"]}'})
         session.pop('token', None)
         session.pop('username', None)
         session.pop('password', None)

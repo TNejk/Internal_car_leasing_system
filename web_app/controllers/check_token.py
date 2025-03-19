@@ -5,7 +5,7 @@ from functools import wraps
 from flask import abort, session, redirect, url_for
 from sign_in_api import sign_in_api
 
-SALT = os.getenv('SALT', '%2b%12%4/ZiN3Ga8VQjxm9.K2V3/.')  # Load from env or use default
+SALT = os.getenv('SALT')
 
 def check_token():
   def decorator(func):
