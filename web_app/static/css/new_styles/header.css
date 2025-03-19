@@ -1,24 +1,97 @@
+/* Main Hea der */
 .main-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px;
+    padding: 20px 30px;
     background-color: #bc2026;
 }
 
-.main-header input {
-    width: 50%;
-    padding: 5px;
-    margin: 0 15px;
-}
-
-.main-header .icons {
-    display: flex;
-    gap: 10px;
-}
-
+/* Logo Styling */
 #gamo-img {
-    background-color: white;
+    background-color: #fff;
     padding: 7px;
     border-radius: 5px;
+    /* Adjust size as needed */
+    height: 50px;
+    width: auto;
+}
+
+/* Icons Container */
+.main-header .icons ul {
+    display: flex;
+    list-style: none;
+    gap: 20px;
+}
+
+/* Icon List Items */
+.main-header .icons ul li {
+    position: relative;
+}
+
+
+/* Icon Links */
+.main-header .icons ul li a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.main-header .icons ul li a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Common dropdown styles */
+.main-header .icons ul li .dropdown {
+    position: absolute;
+    top: calc(100% + 5px); /* Adds a small gap to avoid accidental hover loss */
+    right: 0;
+    background-color: #fff;
+    min-width: 150px;
+    padding: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border-radius: 5px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+.main-header .icons ul li:hover > .dropdown,
+.main-header .icons ul li .dropdown:hover {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Show Dropdown on Hover */
+.main-header .icons ul li:hover .dropdown {
+    display: block;
+}
+
+/* Dropdown List Items */
+.main-header .icons ul li .dropdown li {
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+/* Dropdown Links */
+.main-header .icons ul li .dropdown li a {
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.main-header .icons ul li .dropdown li a:hover {
+    color: #bc2026;
+}
+
+/* Notification Default Message Styling */
+#notification-default {
+    color: #666;
+    font-size: 14px;
+    text-align: center;
+    padding: 5px;
 }

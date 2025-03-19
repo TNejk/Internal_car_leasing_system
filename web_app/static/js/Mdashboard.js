@@ -59,6 +59,10 @@ function showEventDetails(event){
   end.innerHTML = to;
   modalContent.appendChild(end);
 
+  const status = document.createElement('p');
+  status.innerHTML = event.extendedProps.status === true ? 'Aktívne' : 'Ukončené';
+  modalContent.appendChild(status);
+
   const exit = document.createElement('button');
   exit.innerHTML = 'Odísť';
   exit.onclick = function () {
@@ -89,11 +93,11 @@ function renderCalendar(dates) {
     },
 
     events: dates.map((event) => ({
-      title: event[2],
+      title: event[3],
       start: event[0],
       end: event[1],
-      extendedProps: {driver_email: event[3]},
-      color: event[4]
+      extendedProps: {driver_email: event[4], status: event[2],},
+      color: event[5]
     })),
 
     views: {
@@ -130,8 +134,6 @@ function renderCalendar(dates) {
     },
 
     eventClick: function(info) {
-      console.log(info.event.start);
-      console.log(info.event.end);
       showEventDetails(info.event);
     }
 
@@ -150,6 +152,7 @@ function get_leases(month) {
   })
     .then(res => res.json())
     .then(data => {
+      console.log(data);
       for (let lease of data) {
         lease.push(getRandomColor());
         lease[0] = new Date(lease[0]);

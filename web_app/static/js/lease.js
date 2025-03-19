@@ -44,6 +44,7 @@ function renderCalendar(dates) {
     height: 650,
     initialView: 'timeGrid7Day',
     locale: 'sk',
+    allDayText: 'Celý deň',
     selectable: true,
     selectOverlap: false,
     unselectAuto: true,
@@ -61,7 +62,27 @@ function renderCalendar(dates) {
       center: 'lease',
     },
 
+    views: {
+      timeGrid7Day: {
+        type: 'timeGrid',
+        duration: { days: 7 },
+        buttonText: 'Týždeň'
+      },
+      timeGridDay: {
+        buttonText: 'Deň'
+      },
+      timeGridToday: {
+        buttonText: 'Dnes'
+      }
+    },
+
     customButtons: {
+      this: {
+        buttonText: 'Dnes',
+        click: function() {
+          calendar.today();
+        }
+      },
       lease: {
         text: 'Rezervuj!',
         click: function () {
@@ -72,14 +93,6 @@ function renderCalendar(dates) {
           };
         },
       },
-    },
-
-    views: {
-      timeGrid7Day: {
-        type: 'timeGrid',
-        duration: { days: 7 },
-        buttonText: 'Týždeň'
-      }
     },
 
     validRange: {
@@ -124,6 +137,7 @@ function renderCalendar(dates) {
       };
     },
   });
+  document.getElementsByClassName('fc-timegrid-axis-cushion fc-scrollgrid-shrink-cushion fc-scrollgrid-sync-inner').innerText = `Celý deň`;
 
   return calendar;
 }

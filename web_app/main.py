@@ -14,8 +14,8 @@ from request_monthly_leases import request_monthly_leases
 sys.path.append('misc')
 from load_icons import load_icons
 
-SECRET_KEY = os.getenv('SECRET_KEY', "3ccef32a4991129e86b6f80611a3e1e5287475c27d7ab3a8e26d122862119c49")
-SALT = os.getenv('SALT', "%2b%12%4/ZiN3Ga8VQjxm9.K2V3/.")
+SECRET_KEY = os.getenv('SECRET_KEY')
+SALT = os.getenv('SALT')
 
 
 app = Flask(__name__)
@@ -44,19 +44,6 @@ def sign_in():
     else:
       return render_template('signs/sign_in.html', data=result, show_header=False)
 
-@app.route('/sign-up', methods=['GET', 'POST'])
-@revoke_token()
-def sign_up():
-  if request.method == 'GET':
-    error = 'Nesprávne meno alebo heslo!'
-    return render_template('signs/sign_in.html', error=error, show_header=False)
-  else:
-    data = request.get_json()
-    username = data['email']
-    password = data['password']
-    # sprav funkciu
-    return redirect('/dashboard')
-
 @app.route('/manager/dashboard', methods=['GET', 'POST'])
 @require_role('manager')
 def manager_dashboard():
@@ -76,15 +63,16 @@ def lease():
 @require_role('user','manager')
 @check_token()
 def reservations():
-  leases = request_user_leases(session['username'],session['role'])
+  filters = {'email': '', 'car_name': '', 'timeof': '', 'timeto': '', 'status': ''}
+  leases = request_user_leases(session['role'],filters)
   return render_template('dashboards/reservations.html', leases=leases, icons = load_icons(), username=session['username'], role=session['role'], show_header=True)
 
 @app.route('/get_user_leases', methods=['GET', 'POST'])
 @require_role('user', 'manager')
 @check_token()
 def get_user_leases():
-  filter = request.get_json()
-  data = request_user_leases(session['username'], session['role'], filter)
+  filters = request.get_json()
+  data = request_user_leases(session['role'], filters)
   return jsonify(data)
 
 @app.route('/manager/get_monthly_leases', methods=['POST'])
