@@ -803,6 +803,8 @@ def get_leases():
   ft_timeof = None if (data["timeof"] == "") else data["timeof"]
   ft_timeto = None if (data["timeto"] == "") else data["timeto"]
 
+  ft_status = None if (data["status"] == "") else data["status"]
+
   if ft_timeof is not None and ft_timeto is None:
      return jsonify(msg=  f"Chýba konečný dátum rozsahu."), 500
   
@@ -875,13 +877,15 @@ def get_leases():
           AND (%(ft_email)s IS NULL OR d.email = %(ft_email)s)
           AND (%(ft_car)s IS NULL OR c.name = %(ft_car)s)
           AND (%(ft_timeof)s IS NULL OR l.start_of_lease >= %(ft_timeof)s)
-          AND (%(ft_timeto)s IS NULL OR l.end_of_lease <= %(ft_timeto)s);
+          AND (%(ft_timeto)s IS NULL OR l.end_of_lease <= %(ft_timeto)s)
+          AND (%(ft_status)s IS NULL OR l.status = FALSE);
     """    
     params = {
     'ft_email': ft_email,
     'ft_car': ft_car,
     'ft_timeof': ft_timeof,
-    'ft_timeto': ft_timeto
+    'ft_timeto': ft_timeto,
+    'ft_status': ft_status,
     }
     curr.execute(query, params)
 
@@ -987,8 +991,8 @@ def get_monthly_leases():
     try:
       month = data["month"]
       conn, cur = connect_to_db()
-      stmt = ("SELECT lease.start_of_lease, lease.time_of_return, car.name, driver.email "
-              "FROM lease LEFT JOIN car ON lease.id_car=car.id_car LEFT JOIN driver ON lease.id_driver = driver.id_driver "
+      stmt = ("SELECT l.start_of_lease, l.time_of_return, l.status, c.name, d.email "
+              "FROM lease l LEFT JOIN car c ON l.id_car=c.id_car LEFT JOIN driver d ON l.id_driver = d.id_driver "
               "WHERE EXTRACT(MONTH FROM start_of_lease)::int = %s")
 
       cur.execute(stmt, (month,))
