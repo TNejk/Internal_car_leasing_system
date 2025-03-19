@@ -12,6 +12,7 @@ const returnCarButton = document.getElementById('return-car-button');
 const stopReturnButton = document.getElementById('stop-return-button');
 
 const userList = document.getElementById('user-list');
+const car = document.getElementById('car');
 
 let carName;
 let email;

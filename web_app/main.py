@@ -11,6 +11,8 @@ from request_user_leases import request_user_leases
 from list_reports import list_reports
 from get_report import get_report
 from request_monthly_leases import request_monthly_leases
+from get_all_users import get_all_users
+from get_all_cars import get_all_cars
 sys.path.append('misc')
 from load_icons import load_icons
 
@@ -108,6 +110,20 @@ def get_report_r():
   except Exception as e:
     logging.error(f"Error in get_report_r: {str(e)}")
     return {"msg": f"Server error: {str(e)}"}, 500
+
+@app.route('/get_users', methods=['POST'])
+@require_role('manager')
+@check_token()
+def get_users():
+  data = get_all_users()
+  return data
+
+@app.route('/get_cars', methods=['POST'])
+@require_role('manager')
+@check_token()
+def get_cars():
+  data = get_all_cars()
+  return data
 
 
 @app.route('/get_session_data', methods=['POST'])
