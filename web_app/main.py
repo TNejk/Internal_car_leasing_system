@@ -16,8 +16,8 @@ from get_all_cars import get_all_cars
 sys.path.append('misc')
 from load_icons import load_icons
 
-SECRET_KEY = os.getenv('SECRET_KEY')
-SALT = os.getenv('SALT')
+SECRET_KEY = os.getenv('SECRET_KEY', '3ccef32a4991129e86b6f80611a3e1e5287475c27d7ab3a8e26d122862119c49')
+SALT = os.getenv('SALT', '%2b%12%4/ZiN3Ga8VQjxm9.K2V3/.')
 
 
 app = Flask(__name__)

@@ -63,6 +63,11 @@ function showEventDetails(event){
   status.innerHTML = event.extendedProps.status === true ? 'Aktívne' : 'Ukončené';
   modalContent.appendChild(status);
 
+  const note = document.createElement('p');
+  note.innerHTML = event.extendedProps.note;
+  modalContent.appendChild(note);
+
+
   const exit = document.createElement('button');
   exit.innerHTML = 'Odísť';
   exit.onclick = function () {
@@ -96,8 +101,8 @@ function renderCalendar(dates) {
       title: event[3],
       start: event[0],
       end: event[1],
-      extendedProps: {driver_email: event[4], status: event[2],},
-      color: event[5]
+      extendedProps: {driver_email: event[4], status: event[2],note: event[5]},
+      color: event[6]
     })),
 
     views: {
