@@ -1374,6 +1374,21 @@ def return_car():
   data = request.get_json()
   if not data:
     return jsonify({'error': 'No data'}), 501
+    
+  damaged = ""
+  dirty   = ""
+  int_damage = ""
+  ext_damage = ""
+  collision  = ""
+
+  try:
+    damaged = data["damaged"]
+    dirty   = data["dirty"]
+    int_damage = data["int_damage"]
+    ext_damage = data["ext_damage"]
+    collision  = data["collision"]
+  except:
+     return {"status": False, "msg": "missing damage data"}, 400
   
   def edit_csv_row(timeof,timeto, return_date, meskanie, new_note):
       # Get rid of the seconds, cuz python sometimes cuts them off on one date and that fucks up the editing proces
@@ -1464,8 +1479,17 @@ def return_car():
         return jsonify({'error1': 'Jazda už neexistuje!'}), 501
 
       # Update the lease table
-      query = "UPDATE lease SET status = %s, time_of_return = %s, note = %s WHERE id_lease = %s;"
-      cur.execute(query, (False, tor, note, id_lease))
+      query = """UPDATE lease 
+                SET status = %s, 
+                time_of_return = %s, 
+                note = %s, 
+                car_health_check = %s,
+                dirty = %s,
+                exterior_damage = %s,
+                interior_damage = %s,
+                collision = %s
+                WHERE id_lease = %s;"""
+      cur.execute(query, (False, tor, note, id_lease, damaged, dirty, ext_damage, int_damage, collision, ))
 
       # Get the car ID
       query = "SELECT id_car FROM lease WHERE id_lease = %s;"
