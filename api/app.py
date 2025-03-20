@@ -420,6 +420,31 @@ def get_users():
         conn.close()
 
 
+@app.route('/get_cars', methods=['GET'])
+@jwt_required()
+def get_cars():
+  # Authentication check
+  claims = get_jwt()
+  email = claims.get('sub', None)
+  role = claims.get('role', None)
+
+  if role != "manager" and role != "admin":
+    return {"error": "Unauthorized"}, 400
+
+  conn, cur = connect_to_db()
+  try:
+    cur.execute('SELECT name FROM car;')
+    cars = cur.fetchall()
+
+    return {'cars': cars}
+  except Exception as e:
+
+    return {"error": str(e)}, 500
+  finally:
+    cur.close()
+    conn.close()
+
+
 #Order by reserved first, then by metric and filter by reserved cars by the provided email
 # Cars table does not have the email, you will have to get it from the leases table that combines the car and driver table together,
 @app.route('/get_car_list', methods=['GET'])
@@ -991,7 +1016,7 @@ def get_monthly_leases():
     try:
       month = data["month"]
       conn, cur = connect_to_db()
-      stmt = ("SELECT l.start_of_lease, l.time_of_return, l.status, c.name, d.email "
+      stmt = ("SELECT l.start_of_lease, COALESCE(l.time_of_return,l.end_of_lease), l.status, c.name, d.email, COALESCE(l.note,'') "
               "FROM lease l LEFT JOIN car c ON l.id_car=c.id_car LEFT JOIN driver d ON l.id_driver = d.id_driver "
               "WHERE EXTRACT(MONTH FROM start_of_lease)::int = %s")
 
