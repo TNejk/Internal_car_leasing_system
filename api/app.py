@@ -1514,7 +1514,7 @@ def return_car():
                 interior_damage = %s,
                 collision = %s
                 WHERE id_lease = %s;"""
-      cur.execute(query, (False, tor, note, id_lease, damaged, dirty, ext_damage, int_damage, collision, ))
+      cur.execute(query, (False, tor, note, damaged, dirty, ext_damage, int_damage, collision, id_lease, ))
 
       # Get the car ID
       query = "SELECT id_car FROM lease WHERE id_lease = %s;"
