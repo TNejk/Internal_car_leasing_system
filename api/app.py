@@ -828,7 +828,7 @@ def get_leases():
   ft_timeof = None if (data["timeof"] == "") else data["timeof"]
   ft_timeto = None if (data["timeto"] == "") else data["timeto"]
 
-  ft_status = None if (data["status"] == "") else data["status"]
+  ft_status = True if 'status' not in data or data['status'] is True else data["status"]
 
   if ft_timeof is not None and ft_timeto is None:
      return jsonify(msg=  f"Chýba konečný dátum rozsahu."), 500
@@ -898,19 +898,18 @@ def get_leases():
         JOIN 
           car c ON l.id_car = c.id_car
         WHERE 
-          l.status = TRUE
+          l.status = %(ft_status)s)
           AND (%(ft_email)s IS NULL OR d.email = %(ft_email)s)
           AND (%(ft_car)s IS NULL OR c.name = %(ft_car)s)
           AND (%(ft_timeof)s IS NULL OR l.start_of_lease >= %(ft_timeof)s)
-          AND (%(ft_timeto)s IS NULL OR l.end_of_lease <= %(ft_timeto)s)
-          AND (%(ft_status)s IS NULL OR l.status = FALSE);
+          AND (%(ft_timeto)s IS NULL OR l.end_of_lease <= %(ft_timeto)s);
     """    
     params = {
+    'ft_status': ft_status,
     'ft_email': ft_email,
     'ft_car': ft_car,
     'ft_timeof': ft_timeof,
     'ft_timeto': ft_timeto,
-    'ft_status': ft_status,
     }
     curr.execute(query, params)
 
