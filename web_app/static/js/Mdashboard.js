@@ -51,20 +51,40 @@ function showEventDetails(event){
   email.innerHTML = event.extendedProps.driver_email;
   modalContent.appendChild(email);
 
+  const startLabel = document.createElement('label');
+  startLabel.innerHTML = 'Od:';
+  startLabel.setAttribute('for', 'start');
+  modalContent.appendChild(startLabel);
+
   const start = document.createElement('p');
   start.innerHTML = from;
   modalContent.appendChild(start);
+
+  const endLabel = document.createElement('label');
+  endLabel.innerHTML = 'Do:';
+  endLabel.setAttribute('for', 'end');
+  modalContent.appendChild(endLabel);
 
   const end = document.createElement('p');
   end.innerHTML = to;
   modalContent.appendChild(end);
 
+  const statusLabel = document.createElement('label');
+  statusLabel.innerHTML = 'Status:';
+  statusLabel.setAttribute('for', 'status');
+  modalContent.appendChild(statusLabel);
+
   const status = document.createElement('p');
   status.innerHTML = event.extendedProps.status === true ? 'Aktívne' : 'Ukončené';
   modalContent.appendChild(status);
 
+  const noteLabel = document.createElement('label');
+  noteLabel.innerHTML = "Poznámka:";
+  noteLabel.setAttribute('for', 'note');
+  modalContent.appendChild(noteLabel);
+
   const note = document.createElement('p');
-  note.innerHTML = event.extendedProps.note;
+  note.innerHTML = event.extendedProps.note !== '' ? event.extendedProps.note : 'žiadna';
   modalContent.appendChild(note);
 
 
