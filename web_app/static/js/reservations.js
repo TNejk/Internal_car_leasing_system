@@ -12,10 +12,10 @@ const returnCarButton = document.getElementById('return-car-button');
 const stopReturnButton = document.getElementById('stop-return-button');
 
 const userList = document.getElementById('user-list');
-const car = document.getElementById('car');
+const carList = document.getElementById('car-list');
+const statusTrue = document.getElementById('status-true');
+const statusFalse = document.getElementById('status-false');
 
-let carName;
-let email;
 let timeof = new Date();
 let timeto = new Date()
 timeto.setFullYear(timeto.getFullYear() + 1);
@@ -32,35 +32,13 @@ function get_leases(){
     fetch('/get_user_leases', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({car_name: carName, email: email, timeof: timeof, timeto: timeto})})
+      body: JSON.stringify({car_name: carList.value, email: userList.value, timeof: timeof, timeto: timeto, istrue: statusTrue.checked, isfalse: statusFalse.checked}),})
     .then(res => res.json())
     .then(data => {
-      // Loop through `data` first, then check if each email exists in `userList`
-      if(role === 'manager'){
-        for (let lease of data) {
-          let exists = false;
-
-          // Check if the option already exists in the select list
-          for (let option of userList.options) {
-            if (option.value === lease.email) {
-          exists = true;
-          break; // Stop checking if found
-            }
-          }
-
-          // Add only if the email is not in the select list
-          if (!exists) {
-            const user = new Option(lease.email, lease.email);
-            userList.add(user);
-          }
-        }
-      }
-
-      if (data.length <= 0) {
         document.getElementById('default-message').style.display = 'block';
       }else {
         if (role === 'manager'){
-          if (userList.value === 'users'){
+          if (userList.value === ''){
             render_cards(data);
           } else {
             const filteredData = data.filter(lease => lease.email === userList.value);
@@ -321,4 +299,17 @@ catch {
 document.addEventListener('DOMContentLoaded', () => {
   get_leases();
   modalInner.style.display = 'none';
+
+  fetch('get_cars', {method: 'POST'}).then(res => res.json()).then(data => {
+    for (let car of data) {
+      const opt = new Option(car[0],car[0]);
+      carList.add(opt);
+    }
+  })
+  fetch('get_users', {method: 'POST'}).then(res=> res.json()).then(data => {
+    for (let user of data) {
+      const opt = new Option(user.email,user.email);
+      userList.add(opt);
+    }
+  })
 }) // finished

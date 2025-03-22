@@ -115,14 +115,14 @@ def get_report_r():
 @require_role('manager')
 @check_token()
 def get_users():
-  data = get_all_users()
+  data = get_all_users(session['username'],session['role'])
   return data
 
 @app.route('/get_cars', methods=['POST'])
 @require_role('manager')
 @check_token()
 def get_cars():
-  data = get_all_cars()
+  data = get_all_cars(session['username'],session['role'])
   return data
 
 
