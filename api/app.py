@@ -1579,16 +1579,16 @@ def return_car():
 
     conn.commit()
       # If manager cancelling for someone send him a notification 
-    if (role == "manager" or role == "admin") and (email != recipient):
-        msg_rec = recipient.replace("@" ,"_")
-        message = messaging.Message(
-          notification=messaging.Notification(
-          title=f"Vaša rezervácia bola zrušená!",
-          body=f"""Rezervácia pre auto: {car_name} bola zrušená."""
-        ),
-            topic=msg_rec
-        )
-        messaging.send(message)
+    # if (role == "manager" or role == "admin") and (email != recipient):
+    #     msg_rec = recipient.replace("@" ,"_")
+    #     message = messaging.Message(
+    #       notification=messaging.Notification(
+    #       title=f"Vaša rezervácia bola zrušená!",
+    #       body=f"""Rezervácia pre auto: {car_name} bola zrušená."""
+    #     ),
+    #         topic=msg_rec
+    #     )
+    #     messaging.send(message)
 
     return jsonify({'status': "returned"}), 200
 
