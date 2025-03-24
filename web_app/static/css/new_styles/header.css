@@ -47,7 +47,7 @@
 /* Common dropdown styles */
 .main-header .icons ul li .dropdown {
     position: absolute;
-    top: calc(100% + 5px); /* Adds a small gap to avoid accidental hover loss */
+    top: calc(100%); /* Adds a small gap to avoid accidental hover loss */
     right: 0;
     background-color: #fff;
     min-width: 150px;

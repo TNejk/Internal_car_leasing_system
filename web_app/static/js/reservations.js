@@ -11,48 +11,62 @@ const scrapReservationButton = document.getElementById('scrap-reservation-button
 const returnCarButton = document.getElementById('return-car-button');
 const stopReturnButton = document.getElementById('stop-return-button');
 
+
+const filters = document.getElementById('filters');
 const userList = document.getElementById('user-list');
 const carList = document.getElementById('car-list');
 const statusTrue = document.getElementById('status-true');
 const statusFalse = document.getElementById('status-false');
-
-let timeof = new Date();
-let timeto = new Date()
-timeto.setFullYear(timeto.getFullYear() + 1);
+const timeof = document.getElementById('timeof');
+const timeto = document.getElementById('timeto');
 
 let leaseId;
 let role;
 
-function get_leases(){
+function get_leases() {
   fetch('/get_session_data', {method: 'POST'})
-  .then(res => res.json())
-  .then(data => {
-    role = data.role;
-
-    fetch('/get_user_leases', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({car_name: carList.value, email: userList.value, timeof: timeof, timeto: timeto, istrue: statusTrue.checked, isfalse: statusFalse.checked}),})
     .then(res => res.json())
     .then(data => {
-        document.getElementById('default-message').style.display = 'block';
-      }else {
-        if (role === 'manager'){
-          if (userList.value === ''){
-            render_cards(data);
-          } else {
-            const filteredData = data.filter(lease => lease.email === userList.value);
-            render_cards(filteredData);
-            }
-        } else {
-          render_cards(data);
-          }
+      role = data.role;
+
+      let bd = {
+        car_name: carList.value,
+        email: userList.value,
+        timeof: timeof.value,
+        timeto: timeto.value,
+        istrue: statusTrue.checked,
+        isfalse: statusFalse.checked
       }
-    });
-  })
-} // finished
+
+      fetch('/get_user_leases', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(bd),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.length < 0) {
+            document.getElementById('default-message').style.display = 'block';
+          } else{
+            if (role === 'manager') {
+              if (userList.value === '') {
+                render_cards(data);
+              } else {
+                const filteredData = data.filter(lease => lease.email === userList.value);
+                render_cards(filteredData);
+              }
+            } else {
+              render_cards(data);
+            }
+          }
+
+        })
+    })
+}// finished
 
 function render_cards(data){
+
+  console.log(data);
   // Get the container where cards will be added
   const cardCont = document.getElementById('card-container');
   cardCont.innerHTML = ''; // Clear existing cards
@@ -86,6 +100,16 @@ function render_cards(data){
       openModal(lease);
     };
     card.id = 'card';
+    if (lease.status === false){
+      card.style.backgroundColor = '#bc2026';
+    }else if(lease.status === true){
+      const date = new Date().toISOString().replace('T', ' ').split('.')[0]
+      if (date < lease.time_from){
+        card.style.backgroundColor = 'orange';
+      }else {
+        card.style.backgroundColor = 'green';
+      }
+    }
 
     // Create car image
     const img = document.createElement('img');
@@ -213,6 +237,7 @@ function openModal(lease) {
   document.getElementById("modal-time-from").innerText = `Rezervované od:\n${from}`;
   document.getElementById("modal-time-to").innerText = `Rezervovaná do:\n${to}`;
   document.getElementById("modal-spz").innerText = `SPZ auta:\n${lease['spz']}`;
+  document.getElementById("modal-state").innerText = `Status:\n${lease['status'] === true ? 'Aktívny' : 'Ukončený'}`;
   stopReturnButton.value = lease['car_name'];
   if (role === 'manager') {
     document.getElementById("modal-user").innerText = `Objednal:\n${lease['email']}`;
@@ -282,19 +307,18 @@ function reload(data){
   modalBackdrop.style.display = 'block';
 } // finished
 
+try {
+  filters.addEventListener('click', function () {
+    get_leases();
+  })
+}finally {
+  console.log();
+}
+
 closeModalStatus.addEventListener('click', function() {
   modalBackdrop.style.display = "none";
   modalStatus.style.display = "none";
 }) // finished
-
-try{
-  userList.addEventListener('click', function () {
-  get_leases()
-  })
-}
-catch {
-  console.log();
-} // finished
 
 document.addEventListener('DOMContentLoaded', () => {
   get_leases();

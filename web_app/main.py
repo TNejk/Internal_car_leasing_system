@@ -16,8 +16,8 @@ from get_all_cars import get_all_cars
 sys.path.append('misc')
 from load_icons import load_icons
 
-SECRET_KEY = os.getenv('SECRET_KEY', '3ccef32a4991129e86b6f80611a3e1e5287475c27d7ab3a8e26d122862119c49')
-SALT = os.getenv('SALT', '%2b%12%4/ZiN3Ga8VQjxm9.K2V3/.')
+SECRET_KEY = os.getenv('SECRET_KEY')
+SALT = os.getenv('SALT')
 
 
 app = Flask(__name__)
@@ -90,13 +90,15 @@ def get_monthly_leases():
 @require_role('manager')
 @check_token()
 def reports():
-  data = list_reports(session['username'], session['role'])
-  for report in data:
-    report.append(url_for('static', filename='sources/images/open.svg'))
-    report.append(url_for('static', filename='sources/images/download.svg'))
+  return render_template('dashboards/reports.html', icons = load_icons(), show_header=True, role = session['role'])
 
-  return render_template('dashboards/reports.html', data = data, icons = load_icons(), show_header=True)
 
+@app.route('/manager/get_all_reports', methods=['GET'])
+@require_role('manager')
+@check_token()
+def get_all_reports():
+  data = list_reports(session['username'],session['role'])
+  return jsonify(data)
 
 @app.route('/manager/get_report', methods=['GET'])
 @require_role('manager')
