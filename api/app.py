@@ -862,7 +862,8 @@ def get_leases():
           l.private,
           c.stk,
           c.gas,
-          c.drive_type
+          c.drive_type,
+          l.status
         FROM 
             lease l
         JOIN 
@@ -893,7 +894,8 @@ def get_leases():
             l.private,
             c.stk,
             c.gas,
-            c.drive_type
+            c.drive_type,
+            l.status
         FROM 
             lease l
         JOIN 
@@ -950,7 +952,8 @@ def get_leases():
         "private": i[9], 
         "spz": i[10],
         "gas": i[11],
-        "shaft": i[12]
+        "shaft": i[12],
+        "status": i[13]
       })
 
     conn.close()
@@ -1000,6 +1003,18 @@ def cancel_lease():
     cur.execute("update car set status = %s where id_car = %s", ("stand_by", id_car))
   except Exception as e:
     return jsonify(msg= f"Error cancelling lease!, {e}"), 500
+  
+  # If manager cancelling for someone send him a notification 
+  if (role == "manager" or role == "admin") and (email != recipient):
+      msg_rec = recipient.replace("@" ,"_")
+      message = messaging.Message(
+        notification=messaging.Notification(
+        title=f"Vaša rezervácia bola zrušená!",
+        body=f"""Rezervácia pre auto: {car_name} bola zrušená."""
+      ),
+          topic=msg_rec
+      )
+      messaging.send(message)
 
   conn.commit()
   conn.close()
@@ -1406,7 +1421,11 @@ def return_car():
   data = request.get_json()
   if not data:
     return jsonify({'error': 'No data'}), 501
-    
+  
+  claims = get_jwt()
+  email = claims.get('sub', None)
+  role = claims.get('role', None)  
+  
   damaged = ""
   dirty   = ""
   int_damage = ""
@@ -1559,7 +1578,17 @@ def return_car():
       edit_csv_row(timeof=str_timeof, timeto=str_timeto, return_date=tor, meskanie=late_return, new_note= note)
 
     conn.commit()
-    
+      # If manager cancelling for someone send him a notification 
+    if (role == "manager" or role == "admin") and (email != recipient):
+        msg_rec = recipient.replace("@" ,"_")
+        message = messaging.Message(
+          notification=messaging.Notification(
+          title=f"Vaša rezervácia bola zrušená!",
+          body=f"""Rezervácia pre auto: {car_name} bola zrušená."""
+        ),
+            topic=msg_rec
+        )
+        messaging.send(message)
 
     return jsonify({'status': "returned"}), 200
 
