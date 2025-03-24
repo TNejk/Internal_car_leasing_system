@@ -445,11 +445,13 @@ def get_cars():
     conn.close()
 
 
-#Order by reserved first, then by metric and filter by reserved cars by the provided email
+# Order by reserved first, then by metric and filter by reserved cars by the provided email
 # Cars table does not have the email, you will have to get it from the leases table that combines the car and driver table together,
+#! Return cars, sort by usage metric first, other options: location, gas type, shift type
 @app.route('/get_car_list', methods=['GET'])
 @jwt_required()
 def get_car_list():
+  #! This is useless here, why have it?
   if request.method == 'GET':
       conn, cur = connect_to_db()
       if conn is None:
@@ -877,36 +879,38 @@ def get_leases():
     # These have to be NULL, they cannot be ""
 
     #? This checks each filter variable, if empty ignore it, if not apply its rule
-    query  = """
-       SELECT 
-          d.email AS driver_email,
-          d.role AS driver_role,
-          c.name AS car_name,
-          c.location AS car_location,
-          c.url AS car_url,
-          l.id_lease,
-          l.start_of_lease,
-          l.end_of_lease,
-          l.time_of_return,
-          l.private,
-          c.stk,
-          c.gas,
-          c.drive_type
+    query = """
+        SELECT 
+            d.email AS driver_email,
+            d.role AS driver_role,
+            c.name AS car_name,
+            c.location AS car_location,
+            c.url AS car_url,
+            l.id_lease,
+            l.start_of_lease,
+            l.end_of_lease,
+            l.time_of_return,
+            l.private,
+            c.stk,
+            c.gas,
+            c.drive_type
         FROM 
-          lease l
+            lease l
         JOIN 
-          driver d ON l.id_driver = d.id_driver
+            driver d ON l.id_driver = d.id_driver
         JOIN 
-          car c ON l.id_car = c.id_car
+            car c ON l.id_car = c.id_car
         WHERE 
-          ( %(ft_istrue)s = true AND l.status = true )
-          OR
-          ( %(ft_isfalse)s = true AND l.status = false )
-          AND (%(ft_email)s IS NULL OR d.email = %(ft_email)s)
-          AND (%(ft_car)s IS NULL OR c.name = %(ft_car)s)
-          AND (%(ft_timeof)s IS NULL OR l.start_of_lease >= %(ft_timeof)s)
-          AND (%(ft_timeto)s IS NULL OR l.end_of_lease <= %(ft_timeto)s);
-    """    
+            (
+                ( %(ft_istrue)s = true AND l.status = true )
+                OR 
+                ( %(ft_isfalse)s = true AND l.status = false )
+            )
+            AND ( %(ft_email)s IS NULL OR d.email = %(ft_email)s )
+            AND ( %(ft_car)s IS NULL OR c.name = %(ft_car)s )
+            AND ( %(ft_timeof)s IS NULL OR l.start_of_lease >= %(ft_timeof)s )
+            AND ( %(ft_timeto)s IS NULL OR l.end_of_lease <= %(ft_timeto)s );
+      """  
     params = {
       'ft_istrue': ft_istrue,
       'ft_isfalse': ft_isfalse,
