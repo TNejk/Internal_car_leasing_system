@@ -899,14 +899,16 @@ def get_leases():
         JOIN 
           car c ON l.id_car = c.id_car
         WHERE 
-          ( %(ft_istrue)s = true AND l.status = true )
-          OR
-          ( %(ft_isfalse)s = true AND l.status = false )
-          AND (%(ft_email)s IS NULL OR d.email = %(ft_email)s)
-          AND (%(ft_car)s IS NULL OR c.name = %(ft_car)s)
-          AND (%(ft_timeof)s IS NULL OR l.start_of_lease >= %(ft_timeof)s)
-          AND (%(ft_timeto)s IS NULL OR l.end_of_lease <= %(ft_timeto)s);
-    """    
+            (
+              ( %(ft_istrue)s = true AND l.status = true )
+              OR 
+              ( %(ft_isfalse)s = true AND l.status = false )
+            )
+            AND (%(ft_email)s IS NULL OR d.email = %(ft_email)s)
+            AND (%(ft_car)s IS NULL OR c.name = %(ft_car)s)
+            AND (%(ft_timeof)s IS NULL OR l.start_of_lease >= %(ft_timeof)s)
+            AND (%(ft_timeto)s IS NULL OR l.end_of_lease <= %(ft_timeto)s);
+            """    
     params = {
       'ft_istrue': ft_istrue,
       'ft_isfalse': ft_isfalse,
