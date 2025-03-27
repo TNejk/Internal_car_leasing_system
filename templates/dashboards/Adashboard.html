@@ -1,0 +1,188 @@
+{% extends 'base/base.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/header.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/admin.css') }}">
+<title>ICLS - Gamo</title>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  <aside class="sidebar">
+    <ul>
+      <li class="active" data-tab="users">Users</li>
+      <li data-tab="cars">Cars</li>
+    </ul>
+  </aside>
+
+  <main class="content">
+    <!-- Users Management Section -->
+    <section id="users" class="tab-content active">
+      <h2>Manage Users</h2>
+      <div class="user-actions">
+        <button id="register-user">Register New User</button>
+        <!-- User Form -->
+        <div class="form-container" id="user-form">
+          <form>
+            <div class="form-group">
+              <label for="user-name">Name</label>
+              <input type="text" id="user-name" placeholder="Enter name">
+            </div>
+            <div class="form-group">
+              <label for="user-email">Email</label>
+              <input type="email" id="user-email" placeholder="Enter email">
+            </div>
+            <div class="form-group">
+              <label for="user-password">Password</label>
+              <input type="password" id="user-password" placeholder="Enter password">
+            </div>
+            <div class="form-group">
+              <label for="user-role">Role</label>
+              <select id="user-role">
+                <option value="user">User</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="submit">Save User</button>
+              <button type="button" class="cancel">Cancel</button>
+            </div>
+          </form>
+        </div>
+        <!-- User List Table -->
+        <div class="user-list">
+          <h3>User List</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>John Doe</td>
+                <td>john@example.com</td>
+                <td>Manager</td>
+                <td>
+                  <button class="edit">Edit</button>
+                  <button class="remove">Remove</button>
+                </td>
+              </tr>
+              <!-- Additional user rows here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cars Management Section -->
+    <section id="cars" class="tab-content">
+      <h2>Manage Cars</h2>
+      <div class="car-actions">
+        <button id="add-car">Add New Car</button>
+        <!-- Car Form -->
+        <div class="form-container" id="car-form">
+          <form>
+            <div class="form-group">
+              <label for="car-name">Car Name</label>
+              <input type="text" id="car-name" placeholder="Enter car name">
+            </div>
+            <div class="form-group">
+              <label for="car-type">Type</label>
+              <select id="car-type">
+                <option value="cargo">Cargo</option>
+                <option value="personal">Personal</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="gas-type">Gas Type</label>
+              <select id="gas-type">
+                <option value="diesel">Diesel</option>
+                <option value="benzine">Benzine</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="plate-number">Plate Number</label>
+              <input type="text" id="plate-number" placeholder="Enter plate number">
+            </div>
+            <div class="form-group">
+              <label for="state">State</label>
+              <select id="state">
+                <option value="available">Available for Lease</option>
+                <option value="in-repair">In Repair</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="location">Location</label>
+              <select id="location">
+                <option value="BB">BB</option>
+                <option value="BA">BA</option>
+                <option value="KE">KE</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="submit">Save Car</button>
+              <button type="button" class="cancel">Cancel</button>
+            </div>
+          </form>
+        </div>
+        <!-- Car List Table -->
+        <div class="car-list">
+          <h3>Car List</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Id</th>
+                <th>Auto</th>
+                <th>SPZ</th>
+                <th>Typ</th>
+                <th>Palivo</th>
+                <th>Riadenie</th>
+                <th>Stav</th>
+                <th>Status</th>
+                <th>Metrika</th>
+                <th>Lokácia</th>
+                <th>Akcie</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr id="car-data-input">
+                <td>Car A</td>
+                <td>Personal</td>
+                <td>Benzine</td>
+                <td>ABC-123</td>
+                <td>Available for Lease</td>
+                <td>BA</td>
+                <td>
+                  <button class="edit">Edit</button>
+                  <button class="remove">Remove</button>
+                </td>
+              </tr>
+              <!-- Additional car rows here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  // Simple JavaScript for tab switching functionality
+  const tabs = document.querySelectorAll('.sidebar li');
+  const tabContents = document.querySelectorAll('.tab-content');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tabContents.forEach(tc => tc.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.getAttribute('data-tab')).classList.add('active');
+    });
+  });
+</script>
+<script src="{{ url_for('static', filename='js/Adashboard.js' )}}"></script>
+{% endblock %}

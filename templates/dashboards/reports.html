@@ -1,0 +1,22 @@
+{% extends 'base/base.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/header.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/layout.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/reports.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/cards.css') }}">
+<title>ICLS - Reporty</title>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  <div id="loading-message">
+    <h3 >Získavam dáta...</h3>
+  </div>
+  <div class="card-container" id="card-container"></div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="{{ url_for('static', filename='js/reports.js' )}}"></script>
+{% endblock %}

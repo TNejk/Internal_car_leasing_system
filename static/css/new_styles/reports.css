@@ -1,0 +1,68 @@
+/* Overall container styling */
+.container {
+  padding: 20px;
+}
+
+/* Card container: flexible grid layout */
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+/* Default message when no reports exist */
+#default-message {
+  font-size: 18px;
+  color: #666;
+  text-align: center;
+  width: 100%;
+  padding: 20px;
+}
+
+/* Individual report card styling */
+.report-card {
+  background-color: #bc2026;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  width: 250px;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Report card header styling */
+.report-card h3 {
+  margin-bottom: 15px;
+  font-size: 20px;
+  color: black;
+  /* Allow text to wrap and break long words */
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+/* Report card image styling */
+.report-card a img {
+  width: 50%;
+  height: auto;
+  border-radius: 4px;
+  transition: opacity 0.2s ease;
+}
+
+/* Image hover effect */
+.report-card a img:hover {
+  opacity: 0.8;
+}
+
+/* Card hover effect */
+.report-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive adjustments for smaller screens */
+@media screen and (max-width: 600px) {
+  .report-card {
+    width: 100%;
+  }
+}
