@@ -689,6 +689,47 @@ def get_full_car_info():
     return response, 200
 
 
+@app.route('/get_all_car_info', methods=['POST'])
+@jwt_required()
+def get_all_car_info():
+  conn, cur = connect_to_db()
+  data = request.get_json()
+  if conn is None:
+    return jsonify({'error': 'Database connection error: ' + cur}), 500
+
+  role = 'admin' if data.get("role") == 'admin' else None
+
+  if role is None:
+    return jsonify({'error': 'The "role" parameter is missing or invalid'}), 500
+
+  stmt = "SELECT * FROM car"
+  cur.execute(stmt)
+  res = cur.fetchall()
+  if not res:
+    return jsonify({'error': 'No cars!'}), 404
+
+  return jsonify({'cars': res}), 200
+
+@app.route('/get_all_user_info', methods=['POST'])
+@jwt_required()
+def get_all_user_info():
+  conn, cur = connect_to_db()
+  data = request.get_json()
+  if conn is None:
+    return jsonify({'error': 'Database connection error: ' + cur}), 500
+
+  role = 'admin' if data.get("role") == 'admin' else None
+
+  if role is None:
+    return jsonify({'error': 'The "role" parameter is missing or invalid'}), 500
+
+  stmt = "SELECT * FROM driver WHERE name != 'admin'"
+  cur.execute(stmt)
+  res = cur.fetchall()
+  if not res:
+    return jsonify({'error': 'No users!'}), 404
+
+  return jsonify({'users': res}), 200
 
 
 # # Get a list of reports, using their name you then download the correct file
