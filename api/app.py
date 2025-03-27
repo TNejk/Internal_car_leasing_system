@@ -689,7 +689,7 @@ def get_full_car_info():
     return response, 200
 
 
-@app.route('/get_full_car_info', methods=['POST'])
+@app.route('/get_all_car_info', methods=['POST'])
 @jwt_required()
 def get_full_car_info():
   conn, cur = connect_to_db()
@@ -710,7 +710,7 @@ def get_full_car_info():
 
   return jsonify({'cars': res}), 200
 
-@app.route('/get_full_user_info', methods=['POST'])
+@app.route('/get_all_user_info', methods=['POST'])
 @jwt_required()
 def get_full_user_info():
   conn, cur = connect_to_db()
