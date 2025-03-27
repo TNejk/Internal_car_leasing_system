@@ -691,7 +691,7 @@ def get_full_car_info():
 
 @app.route('/get_all_car_info', methods=['POST'])
 @jwt_required()
-def get_full_car_info():
+def get_all_car_info():
   conn, cur = connect_to_db()
   data = request.get_json()
   if conn is None:
@@ -712,7 +712,7 @@ def get_full_car_info():
 
 @app.route('/get_all_user_info', methods=['POST'])
 @jwt_required()
-def get_full_user_info():
+def get_all_user_info():
   conn, cur = connect_to_db()
   data = request.get_json()
   if conn is None:
