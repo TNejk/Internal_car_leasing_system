@@ -1092,7 +1092,7 @@ def get_monthly_leases():
       return jsonify(msg= f"Error getting monthly leases: {e}")
 
 
-
+# TODO: If a manager leases for someone else send the reciepient a notification
 @app.route('/lease_car', methods = ['POST'])
 @jwt_required()
 def lease_car():
@@ -1272,16 +1272,18 @@ def lease_car():
             
       con.commit()
       
-      # Upozorni manazerou iba ak si leasne auto normalny smrtelnik 
+      # Upozorni pouzivatela ze ma novu rezerváciu
       #!!!!!!!!!!!!!!!!!!!!!!  POZOR OTAZNIK NEZNAMY SYMBOL JE NEW LINE CHARACTER OD TIALTO: http://www.unicode-symbol.com/u/0085.html
-      message = messaging.Message(
-                notification=messaging.Notification(
-                title=f"Nová rezervácia auta: {car_name}!",
-                body=f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}"""
-            ),
-                topic="manager"
-            )
-      messaging.send(message)
+      rep_rec = recipient.replace("@", "_")
+      if username != recipient: 
+          message = messaging.Message(
+                    notification=messaging.Notification(
+                    title=f"Máte nové rezervované auto!",
+                    body=f"""Auto {car_name} vám bolo priradené na:\nOd: {form_timeof}\nDo: {form_timeto}"""
+                ),
+                    topic= rep_rec
+                )
+          messaging.send(message)
     except Exception as e:
       return {"status": False, "private": False, "msg": f"Error has occured! 112"}, 500
     con.close()
