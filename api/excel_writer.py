@@ -205,7 +205,7 @@ class writer():
                 ws = wb.create_sheet(f"{self.__convert_to_datetime(self.__get_sk_date_str()).day}")
                 #email_ft = Font(bold=True, color="B22222")
                 filler = ["","","","","","","",""]
-                data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka", "Poškodenie","Zašpinené", "Pš.Interiér", "Pš.Exterier", "Kolizia"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL"]]
+                data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka", "Poškodenie","Zašpinené", "Pš.Interiér", "Pš.Exterier", "Kolizia"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL","NULL","NULL","NULL","NULL","NULL"]]
 
                 for row in data:
                     ws.append(row)

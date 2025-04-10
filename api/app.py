@@ -1466,11 +1466,11 @@ def return_car():
   email = claims.get('sub', None)
   role = claims.get('role', None)  
   
-  damaged = ""
-  dirty   = ""
-  int_damage = ""
-  ext_damage = ""
-  collision  = ""
+  damaged =    False
+  dirty   =    False
+  int_damage = False
+  ext_damage = False
+  collision  = False
 
   try:
     damaged = data["damaged"]
@@ -1518,6 +1518,12 @@ def return_car():
           time_of_return_cell = sheet1.cell(row=row, column=9)
           late_return_cell = sheet1.cell(row=row, column=10)
           note_cell = sheet1.cell(row=row, column=11)
+          damaged_cell = sheet1.cell(row=row, column=12)
+          dirty_cell = sheet1.cell(row=row, column=13)
+          int_damage_cell = sheet1.cell(row=row, column=14)
+          ext_damage_cell = sheet1.cell(row=row, column=15)
+          collision_cell = sheet1.cell(row=row, column=16)
+
  
           # To avoid duplicates when returing, as dates could collide probalby idk fuck my stupid chungus life 
           if time_of_return_cell.value == "NULL":
@@ -1526,8 +1532,12 @@ def return_car():
                   time_of_return_cell.value = return_date
                   late_return_cell.value = meskanie
                   note_cell.value = new_note
-                  
-
+                  damaged_cell.value = damaged
+                  dirty_cell.value = dirty
+                  int_damage_cell.value = int_damage
+                  ext_damage_cell.value = ext_damage
+                  collision_cell.value = collision
+                
       # Save changes to the workbook
       wb.save(csv_file_path)
     
