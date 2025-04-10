@@ -45,8 +45,8 @@
               </select>
             </div>
             <div class="form-actions">
-              <button type="submit">Save User</button>
-              <button type="button" class="cancel">Cancel</button>
+              <button type="button" id="add-user">Pridaj Používateľa</button>
+              <button type="button" id="clear">Vyčisti</button>
             </div>
           </form>
         </div>
@@ -56,23 +56,14 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Name</th>
+                <th>ID</th>
+                <th>Meno</th>
                 <th>Email</th>
-                <th>Role</th>
-                <th>Actions</th>
+                <th>Rola</th>
+                <th>Akcie</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>John Doe</td>
-                <td>john@example.com</td>
-                <td>Manager</td>
-                <td>
-                  <button class="edit">Edit</button>
-                  <button class="remove">Remove</button>
-                </td>
-              </tr>
-              <!-- Additional user rows here -->
+            <tbody id="user-data-input">
             </tbody>
           </table>
         </div>
@@ -102,7 +93,7 @@
               <label for="gas-type">Gas Type</label>
               <select id="gas-type">
                 <option value="diesel">Diesel</option>
-                <option value="benzine">Benzine</option>
+                <option value="benzine">Benzíne</option>
               </select>
             </div>
             <div class="form-group">
@@ -132,39 +123,28 @@
         </div>
         <!-- Car List Table -->
         <div class="car-list">
-          <h3>Car List</h3>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Id</th>
-                <th>Auto</th>
-                <th>SPZ</th>
-                <th>Typ</th>
-                <th>Palivo</th>
-                <th>Riadenie</th>
-                <th>Stav</th>
-                <th>Status</th>
-                <th>Metrika</th>
-                <th>Lokácia</th>
-                <th>Akcie</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr id="car-data-input">
-                <td>Car A</td>
-                <td>Personal</td>
-                <td>Benzine</td>
-                <td>ABC-123</td>
-                <td>Available for Lease</td>
-                <td>BA</td>
-                <td>
-                  <button class="edit">Edit</button>
-                  <button class="remove">Remove</button>
-                </td>
-              </tr>
-              <!-- Additional car rows here -->
-            </tbody>
-          </table>
+          <h3>Zoznam áut</h3>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Id</th>
+                  <th>Auto</th>
+                  <th>SPZ</th>
+                  <th>Typ</th>
+                  <th>Palivo</th>
+                  <th>Riadenie</th>
+                  <th>Stav</th>
+                  <th>Status</th>
+                  <th>Metrika</th>
+                  <th>Lokácia</th>
+                  <th>Akcie</th>
+                </tr>
+              </thead>
+              <tbody id="car-data-input">
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>

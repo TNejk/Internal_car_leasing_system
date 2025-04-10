@@ -39,10 +39,12 @@ body {
   background: #34495e;
 }
 
-/* Main content styles */
+/* Main content styles with scrollable overflow */
 .content {
-  flex: 1;
+  flex: 1 1 auto;
   padding: 20px;
+  overflow-y: auto;
+  height: 91vh;
 }
 
 /* Hide inactive tabs */
@@ -101,6 +103,11 @@ body {
 }
 
 /* Table styling */
+.table-container {
+  max-height: 400px;  /* Set this to whatever max height you need */
+  overflow-y: auto;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
