@@ -162,7 +162,7 @@ class writer():
                 if int(all_sheets[-1]) == cur_date.day: #! The same day 
                     # Select the last sheet, that should correspond to the current day
                     ws = wb[wb.sheetnames[-1]]
-                    data = [["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL", "NULL", "NULL"]]
+                    data = [["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL", "NULL", "NULL","NULL","NULL","NULL","NULL","NULL"]]
                     for row in data:
                         ws.append(row)
 
@@ -173,7 +173,7 @@ class writer():
                     ws = wb.create_sheet(f"{cur_date.day}")
 
                     filler = ["","","","","","","",""]
-                    data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL"]]
+                    data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka", "Poškodenie","Zašpinené", "Pš.Interiér", "Pš.Exterier", "Kolizia"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL","NULL","NULL","NULL","NULL","NULL"]]
 
                     for row in data:
                         ws.append(row)
@@ -186,7 +186,7 @@ class writer():
                     # Set row height for header row
                     ws.row_dimensions[3].height = 35
                     # Set column widths for data columns
-                    for col in ["C", "D", "E", "F", "G", "H", "I", "J", "K"]:
+                    for col in ["C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"]:
                         ws.column_dimensions[col].width = 23
                     # Format header row (C3:J3)
                     for row_cells in ws["C3:K3"]:
@@ -205,7 +205,7 @@ class writer():
                 ws = wb.create_sheet(f"{self.__convert_to_datetime(self.__get_sk_date_str()).day}")
                 #email_ft = Font(bold=True, color="B22222")
                 filler = ["","","","","","","",""]
-                data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL"]]
+                data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ","Email", "Odovzdanie", "Meškanie", "Poznámka", "Poškodenie","Zašpinené", "Pš.Interiér", "Pš.Exterier", "Kolizia"],["","",timeof, timeto, car_name, stk, drive_type, recipient, "NULL","NULL","NULL"]]
 
                 for row in data:
                     ws.append(row)
@@ -221,7 +221,7 @@ class writer():
                 ws.row_dimensions[3].height = 35
 
                 # Set column widths for data columns
-                for col in ["C", "D", "E", "F", "G", "H", "I", "J","K"]:
+                for col in ["C", "D", "E", "F", "G", "H", "I", "J","K", "L", "M", "N", "O", "P"]:
                     ws.column_dimensions[col].width = 23
 
                 # Format header row (C3:J3)
@@ -256,7 +256,7 @@ class writer():
             del wb["Sheet"]
             ws = wb.create_sheet(f"{self.__convert_to_datetime(self.__get_sk_date_str()).day}")
             filler = ["","","","","","","",""]
-            data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "TYP","Email", "Odovzdanie", "Meškanie", "Poznámka"],["","",timeof, timeto, car_name, stk, drive_type, recipient,"NULL","NULL","NULL"]]
+            data = [filler,filler,["", "", "Čas od", "Čas do", "Auto", "SPZ", "TYP","Email", "Odovzdanie", "Meškanie", "Poznámka", "Poškodenie","Zašpinené", "Pš.Interiér", "Pš.Exterier", "Kolizia"],["","",timeof, timeto, car_name, stk, drive_type, recipient,"NULL","NULL","NULL","NULL","NULL","NULL","NULL","NULL"]]
             for row in data:
                 ws.append(row)
                 # Format red flag cell (B3)
@@ -268,7 +268,7 @@ class writer():
             # Set row height for header row
             ws.row_dimensions[3].height = 35
             # Set column widths for data columns
-            for col in ["C", "D", "E", "F", "G", "H", "I", "J", "K"]:
+            for col in ["C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"]:
                 ws.column_dimensions[col].width = 23
             # Format header row (C3:J3)
             for row_cells in ws["C3:K3"]:
