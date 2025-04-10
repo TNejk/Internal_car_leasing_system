@@ -200,11 +200,12 @@ def register():
   email = data['email']
   password = data['password']
   role = data['role']
+  name = data['name']
 
   
 
   if not email or not password:
-    return {"status": False, "msg": f"Chýba meno, heslo!"}
+    return {"status": False, "msg": f"Chýba email alebo heslo!"}
   
   conn, cur = connect_to_db()
   req_salted = login_salt+req_password+login_salt
@@ -224,8 +225,8 @@ def register():
 
 
   result = cur.execute(
-      "INSERT INTO driver (email, password, role) VALUES (%s, %s, %s)",
-      (email, hashed, role)
+      "INSERT INTO driver (email, password, role, name) VALUES (%s, %s, %s, $s)",
+      (email, hashed, role, name)
   )
   
   conn.commit()
