@@ -1632,6 +1632,14 @@ def return_car():
     #         topic=msg_rec
     #     )
     #     messaging.send(message)
+    message = messaging.Message(
+          notification=messaging.Notification(
+          title=f"Nastalo poškodenie auta!",
+          body=f""""""
+      ),
+          topic= "manager"
+      )
+    messaging.send(message)
 
     return jsonify({'status': "returned"}), 200
 
