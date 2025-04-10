@@ -1,0 +1,19 @@
+/* Targets all FullCalendar buttons */
+.fc .fc-button,
+.time-grid-month{
+  background-color: #bc2026;
+  border-color: #bc2026;
+  color: white; /* Makes sure the text is readable on red */
+}
+
+/* Optional: Change hover and active states for consistency */
+.fc .fc-button:hover,
+.fc .fc-button:focus {
+  background-color: darkred;
+  border-color: darkred;
+}
+
+.fc .fc-button-active {
+  background-color: #bc2026;
+  border-color: #bc2026;
+}

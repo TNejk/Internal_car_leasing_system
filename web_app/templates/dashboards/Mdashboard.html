@@ -1,0 +1,27 @@
+{% extends './base/base.html' %}
+
+{% block head %}
+<!--<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">-->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/notifications.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/calendar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/modals.css') }}">
+
+<title>ICLS - Gamo</title>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  <div id="welcome-message"></div>
+  <div id="loading-message">
+    <h3 >Získavam dáta...</h3>
+  </div>
+  <div id="calendar" style="margin: 0 10px 10px 10px"></div>
+  <div class="modal-backdrop" id="modal-backdrop" onclick="closeModalF()"></div>
+  <div class="modal" id="modal-monthly"></div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="{{ url_for('static', filename='js/Mdashboard.js' )}}"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+{% endblock %}
