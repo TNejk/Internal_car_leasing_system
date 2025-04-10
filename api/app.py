@@ -200,20 +200,19 @@ def register():
   email = data['email']
   password = data['password']
   role = data['role']
+  name = data['name']
 
   
 
   if not email or not password:
-    return {"status": False, "msg": f"Chýba meno, heslo!"}
+    return {"status": False, "msg": f"Chýba email alebo heslo!"}
   
   conn, cur = connect_to_db()
-  req_salted = login_salt+req_password+login_salt
-  req_hashed = hashlib.sha256(req_salted.encode()).hexdigest()
 
   #! Only allow the admin to create users
   res = cur.execute(
     "SELECT id_driver FROM driver WHERE email = %s AND password = %s AND role LIKE 'admin'", 
-    (requester, req_hashed)
+    (requester, req_password)
   )
   tmp = cur.fetchall()
   if len(tmp) <1:
@@ -224,8 +223,8 @@ def register():
 
 
   result = cur.execute(
-      "INSERT INTO driver (email, password, role) VALUES (%s, %s, %s)",
-      (email, hashed, role)
+      "INSERT INTO driver (email, password, role, name) VALUES (%s, %s, %s, %s)",
+      (email, hashed, role, name)
   )
   
   conn.commit()
@@ -238,10 +237,10 @@ def register():
 @app.route('/login', methods=['POST'])
 def login():
   data = request.get_json()
-  username=data['username']
+  email=data['username']
   password=data['password']
-  if not username or not password:
-    return jsonify({'error': 'Chábe meno alebo heslo!', 'type': 0}), 401
+  if not email or not password:
+    return jsonify({'error': 'Chýba email alebo heslo!', 'type': 0}), 401
 
   conn, cur = connect_to_db()
   if conn is None:
@@ -250,18 +249,18 @@ def login():
   salted = login_salt+password+login_salt
   hashed = hashlib.sha256(salted.encode()).hexdigest()
   try:
-    query = "SELECT role FROM driver WHERE email = %s AND password = %s;"
-    cur.execute(query, (username, hashed))
+    query = "SELECT role, name FROM driver WHERE email = %s AND password = %s;"
+    cur.execute(query, (email, hashed))
     res = cur.fetchone()
 
     if res is None:
       return jsonify({'error': 'Nesprávne meno alebo heslo!', 'type': 0}), 401
     else:
       additional_claims = {'role': res[0]}
-      access_token = create_access_token(identity=username, fresh=True, expires_delta=timedelta(minutes=30), additional_claims=additional_claims)
+      access_token = create_access_token(identity=email, fresh=True, expires_delta=timedelta(minutes=30), additional_claims=additional_claims)
       # refresh_token = create_refresh_token(identity=username, expires_delta=timedelta(days=1), additional_claims=additional_claims)
       # return jsonify(access_token=access_token, refresh_token=refresh_token), 200
-      return jsonify(access_token=access_token, role=res[0]), 200
+      return jsonify(access_token=access_token, role=res[0], name=res[1]), 200
 
   finally:
     cur.close()
@@ -1092,7 +1091,7 @@ def get_monthly_leases():
       return jsonify(msg= f"Error getting monthly leases: {e}")
 
 
-# TODO: If a manager leases for someone else send the reciepient a notification
+
 @app.route('/lease_car', methods = ['POST'])
 @jwt_required()
 def lease_car():
@@ -1272,18 +1271,16 @@ def lease_car():
             
       con.commit()
       
-      # Upozorni pouzivatela ze ma novu rezerváciu
+      # Upozorni manazerou iba ak si leasne auto normalny smrtelnik 
       #!!!!!!!!!!!!!!!!!!!!!!  POZOR OTAZNIK NEZNAMY SYMBOL JE NEW LINE CHARACTER OD TIALTO: http://www.unicode-symbol.com/u/0085.html
-      rep_rec = recipient.replace("@", "_")
-      if username != recipient: 
-          message = messaging.Message(
-                    notification=messaging.Notification(
-                    title=f"Máte nové rezervované auto!",
-                    body=f"""Auto {car_name} vám bolo priradené na:\nOd: {form_timeof}\nDo: {form_timeto}"""
-                ),
-                    topic= rep_rec
-                )
-          messaging.send(message)
+      message = messaging.Message(
+                notification=messaging.Notification(
+                title=f"Nová rezervácia auta: {car_name}!",
+                body=f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}"""
+            ),
+                topic="manager"
+            )
+      messaging.send(message)
     except Exception as e:
       return {"status": False, "private": False, "msg": f"Error has occured! 112"}, 500
     con.close()
