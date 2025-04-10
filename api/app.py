@@ -223,7 +223,7 @@ def register():
 
 
   result = cur.execute(
-      "INSERT INTO driver (email, password, role, name) VALUES (%s, %s, %s, $s)",
+      "INSERT INTO driver (email, password, role, name) VALUES (%s, %s, %s, %s)",
       (email, hashed, role, name)
   )
   
