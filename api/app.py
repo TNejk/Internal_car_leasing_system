@@ -276,62 +276,31 @@ def create_car():
   email = claims.get('sub', None)
   role = claims.get('role', None)
 
-  if role != "admin":
+  if role != "admin" or email is None:
      return {"status": False, "msg": "Unathorized"}, 400
-  
-  car_name = ""
-  car_spz  = ""
-  gas      = ""
-  drive_tp = ""
-  image    = None
-  url      = "" 
-  
-  # Check for all the needed data
+
+  data = request.get_json()
+  car_name = data['name'] or 'Auto bez názvu'
+  _type = data['type'] or None
+  status = data['status'] or None
+  location = data['location'] or None
+  url = data['url'] or 'undefined'
+  spz = data['spz'] or 'undefined'
+  gas = data['gas'] or 'undefined'
+  drive_tp = data['drive_tp'] or 'undefined'
+
+  conn, cur = connect_to_db()
+
+  query = "INSERT INTO car (name, type, status, location, url, stk, gas, drive_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
   try:
-      data = request.get_json()
-      car_name  = data["car_name"]
-      car_spz   = data["spz"]
-      location = data["location"]
-      status = data["status"]
-      gas       = data["gas"]
-      drive_tp  = data["drive_type"]
-
-      image     = data["image"]
-      image_ext = data["image_extension"]
-  except:
-     return {"status": False, "msg": "Missing parameters."}
-  
-  # Try to save the image i was given, the image should be in base64 format
-  try:
-
-    #! ADD PADDING TO THE END
-    photo_data = base64.b64decode(image + '==')
-    
-    # TODO: Add a correct path here or smth idk fuck off
-    with open(f"/app/images/{car_name}.{image_ext}", "wb") as file:
-        file.write(photo_data)
-
-  except Exception as e: 
-    return {"status": False, "msg": f"Error saving car image. {e}"}
-  
-  try:
-    # Insert into car table all the data
-    conn, cur = connect_to_db()
-    #* FOR NOW url is placeholder
-    _url = "https://fl.gamo.sosit-wh.net/images/placeholder.png"
-    _type = "personal"
-    _health = "good"
-    _usage_metric = 1
-
-    query = "INSERT INTO car (name, type, status, health, usage_metric, location, url, stk, gas, drive_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s, %s)"
-    cur.execute(query, (car_name, _type, status,_health, _usage_metric, location, url, car_spz, gas, drive_tp,))
+    cur.execute(query, (car_name, _type, status, location, url, spz, gas, drive_tp,))
     conn.commit()
     conn.close()
-
     return {"status": True, "msg": "Auto bolo vytvorené."}
   except Exception as e:
-      return {"status": False, "msg": f"An error has occured: {e}"}, 500
-  
+    conn.commit()
+    conn.close()
+    return {"status": False, "msg": e}
 
 
 # Only the admin should be able to do this ig
