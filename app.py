@@ -208,13 +208,11 @@ def register():
     return {"status": False, "msg": f"Chýba email alebo heslo!"}
   
   conn, cur = connect_to_db()
-  req_salted = login_salt+req_password+login_salt
-  req_hashed = hashlib.sha256(req_salted.encode()).hexdigest()
 
   #! Only allow the admin to create users
   res = cur.execute(
     "SELECT id_driver FROM driver WHERE email = %s AND password = %s AND role LIKE 'admin'", 
-    (requester, req_hashed)
+    (requester, req_password)
   )
   tmp = cur.fetchall()
   if len(tmp) <1:
