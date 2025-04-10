@@ -237,10 +237,10 @@ def register():
 @app.route('/login', methods=['POST'])
 def login():
   data = request.get_json()
-  username=data['username']
+  email=data['username']
   password=data['password']
-  if not username or not password:
-    return jsonify({'error': 'Chábe meno alebo heslo!', 'type': 0}), 401
+  if not email or not password:
+    return jsonify({'error': 'Chýba email alebo heslo!', 'type': 0}), 401
 
   conn, cur = connect_to_db()
   if conn is None:
@@ -249,18 +249,18 @@ def login():
   salted = login_salt+password+login_salt
   hashed = hashlib.sha256(salted.encode()).hexdigest()
   try:
-    query = "SELECT role FROM driver WHERE email = %s AND password = %s;"
-    cur.execute(query, (username, hashed))
+    query = "SELECT role, name FROM driver WHERE email = %s AND password = %s;"
+    cur.execute(query, (email, hashed))
     res = cur.fetchone()
 
     if res is None:
       return jsonify({'error': 'Nesprávne meno alebo heslo!', 'type': 0}), 401
     else:
       additional_claims = {'role': res[0]}
-      access_token = create_access_token(identity=username, fresh=True, expires_delta=timedelta(minutes=30), additional_claims=additional_claims)
+      access_token = create_access_token(identity=email, fresh=True, expires_delta=timedelta(minutes=30), additional_claims=additional_claims)
       # refresh_token = create_refresh_token(identity=username, expires_delta=timedelta(days=1), additional_claims=additional_claims)
       # return jsonify(access_token=access_token, refresh_token=refresh_token), 200
-      return jsonify(access_token=access_token, role=res[0]), 200
+      return jsonify(access_token=access_token, role=res[0], name=res[1]), 200
 
   finally:
     cur.close()
