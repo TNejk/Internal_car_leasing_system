@@ -284,16 +284,16 @@ def create_car():
   _type = data['type'] or None
   status = data['status'] or None
   location = data['location'] or None
-  url = data['url'] or 'undefined'
+  #url = data['url'] if data['url'] 'undefined'
   spz = data['spz'] or 'undefined'
   gas = data['gas'] or 'undefined'
   drive_tp = data['drive_tp'] or 'undefined'
 
   conn, cur = connect_to_db()
 
-  query = "INSERT INTO car (name, type, status, location, url, stk, gas, drive_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+  query = "INSERT INTO car (name, type, status, location, stk, gas, drive_type) VALUES (%s,%s,%s,%s,%s,%s,%s)"
   try:
-    cur.execute(query, (car_name, _type, status, location, url, spz, gas, drive_tp,))
+    cur.execute(query, (car_name, _type, status, location, spz, gas, drive_tp,))
     conn.commit()
     conn.close()
     return {"status": True, "msg": "Auto bolo vytvorené."}
@@ -1435,11 +1435,11 @@ def return_car():
   email = claims.get('sub', None)
   role = claims.get('role', None)  
   
-  damaged =    False
-  dirty   =    False
-  int_damage = False
-  ext_damage = False
-  collision  = False
+  damaged = ""
+  dirty   = ""
+  int_damage = ""
+  ext_damage = ""
+  collision  = ""
 
   try:
     damaged = data["damaged"]
@@ -1487,12 +1487,6 @@ def return_car():
           time_of_return_cell = sheet1.cell(row=row, column=9)
           late_return_cell = sheet1.cell(row=row, column=10)
           note_cell = sheet1.cell(row=row, column=11)
-          damaged_cell = sheet1.cell(row=row, column=12)
-          dirty_cell = sheet1.cell(row=row, column=13)
-          int_damage_cell = sheet1.cell(row=row, column=14)
-          ext_damage_cell = sheet1.cell(row=row, column=15)
-          collision_cell = sheet1.cell(row=row, column=16)
-
  
           # To avoid duplicates when returing, as dates could collide probalby idk fuck my stupid chungus life 
           if time_of_return_cell.value == "NULL":
@@ -1501,12 +1495,8 @@ def return_car():
                   time_of_return_cell.value = return_date
                   late_return_cell.value = meskanie
                   note_cell.value = new_note
-                  damaged_cell.value = damaged
-                  dirty_cell.value = dirty
-                  int_damage_cell.value = int_damage
-                  ext_damage_cell.value = ext_damage
-                  collision_cell.value = collision
-                
+                  
+
       # Save changes to the workbook
       wb.save(csv_file_path)
     
@@ -1608,14 +1598,6 @@ def return_car():
     #         topic=msg_rec
     #     )
     #     messaging.send(message)
-    message = messaging.Message(
-          notification=messaging.Notification(
-          title=f"Nastalo poškodenie auta!",
-          body=f""""""
-      ),
-          topic= "manager"
-      )
-    messaging.send(message)
 
     return jsonify({'status': "returned"}), 200
 
