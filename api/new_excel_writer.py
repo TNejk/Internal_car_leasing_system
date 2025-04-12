@@ -166,9 +166,10 @@ class ExcelWriter:
                     cell.fill      = self.Header_fill
                     cell.border    = self.Header_border
         wb_name = f"{current_time.year}.{current_time.month} ICLS Report.xlsx"
-        wb.save(f"reports/{wb_name}")
+        wb.save(f"{os.getcwd()}/reports{wb_name}")
 
 
 obj = ExcelWriter()
 
 obj.createExcel()
+obj.get_lease_data()
