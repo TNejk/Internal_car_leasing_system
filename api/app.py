@@ -1595,7 +1595,7 @@ def return_car():
 
 
       # Update report, open as csv object, look for row where time_from ,time_to, id_car, id_driver is the same and update the return&-time, meskanie and note values
-      edit_csv_row(timeof=str_timeof, timeto=str_timeto, return_date=tor, meskanie=late_return, new_note= note)
+      edit_csv_row(timeof=str_timeof, timeto=str_timeto, return_date=tor, meskanie=late_return, new_note= note, damaged=damaged, dirty=dirty, int_damage=int_damage, ext_damage= ext_damage, collision= collision)
 
     conn.commit()
       # If manager cancelling for someone send him a notification 
