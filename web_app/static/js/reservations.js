@@ -41,8 +41,6 @@ function get_leases() {
         isfalse: statusFalse.checked
       }
 
-      console.log(bd);
-
       fetch('/get_user_leases', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -208,22 +206,29 @@ function scrapReservation(){
   fetch('/get_session_data', {method: 'POST'})
     .then(response => response.json())
     .then(data => {
-  let token = data.token;
-  let email = data.username;
+      let token = data.token;
+      let email;
+      if (data.role === 'user'){
+        email = data.username;
+      }else {
+        email = document.getElementById('modal-user').innerHTML.split('>')[1];
+      }
 
-  fetch('https://icls.sosit-wh.net/cancel_lease', {
-    method: 'POST',
-    headers: {
-      Authorization: 'Bearer ' + token,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({"car_name": car, "recipient": email}),
-    }).then(response => response.json())
-      .then((data) => {
-    closeModalF();
-    reload(data);
-    get_leases();
-    })
+      console.log(car, email);
+
+      fetch('https://icls.sosit-wh.net/cancel_lease', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({"car_name": car, "recipient": email}),
+        }).then(response => response.json())
+          .then((data) => {
+            closeModalF();
+            reload(data);
+            get_leases();
+        });
     });
 }
 
@@ -344,7 +349,6 @@ function reload(data){
   const canceled = data['cancelled'];
   const modalTitle = document.querySelector('#modal-status #modal-inner h2');
   const modalMessage = document.querySelector('#modal-status #modal-inner p');
-  console.log(set);
   if (status === 'returned' && set === false){
     modalTitle.textContent = 'Úspech :)';
     modalMessage.textContent = 'Auto bolo úspešne vtárené!';
@@ -359,11 +363,9 @@ function reload(data){
   if (!status && set === false) {
     modalTitle.textContent = 'Neúspech :(';
     modalMessage.textContent = 'Auto sa nepodarilo vrátiť! Obnovte stránku a skúste to znova.';
-    set = true;
   }else if (!canceled&& set === false){
     modalTitle.textContent = 'Neúspech :(';
     modalMessage.textContent = 'Rezerváciu sa nepodarilo zrušiť! Obnovte stránku a skúste to znova.';
-    set = true;
   }
   modalStatus.style.display = 'block';
   modalInner.style.display = 'block';
