@@ -1024,11 +1024,11 @@ def cancel_lease():
           topic=msg_rec
       )
       messaging.send(message)
-
+  sql_status_message = cur.statusmessage
   conn.commit()
   conn.close()
 
-  return {"cancelled": True}, 200
+  return {"cancelled": True, "msg": sql_status_message}, 200
 
 
 
