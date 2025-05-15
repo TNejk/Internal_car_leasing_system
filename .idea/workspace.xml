@@ -4,7 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b729d87-16c7-439e-ba33-511b1c183346" name="Changes" comment="" />
+    <list default="true" id="2b729d87-16c7-439e-ba33-511b1c183346" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/static/js/lease.js" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/static/js/lease.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/static/js/reservations.js" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/static/js/reservations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/templates/dashboards/lease.html" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/templates/dashboards/lease.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/templates/dashboards/reservations.html" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/templates/dashboards/reservations.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/templates/signs/sign_in.html" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/templates/signs/sign_in.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/workers/request_user_leases.py" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/workers/request_user_leases.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -41,6 +50,8 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/web_app/static/js/Adashboard.js" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/web_app/static/js/lease.js" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/web_app/static/js/reservations.js" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
@@ -56,38 +67,38 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultHtmlFileTemplate": "HTML File",
-    "JavaScript Debug.sign_in.html.executor": "Run",
-    "Python.api.executor": "Run",
-    "Python.app.executor": "Run",
-    "Python.client (1).executor": "Run",
-    "Python.client.executor": "Run",
-    "Python.main.executor": "Run",
-    "Python.password_enc (1).executor": "Run",
-    "Python.scratch.executor": "Run",
-    "Python.testing.executor": "Run",
-    "Python.token_testing.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "web__development__branch",
-    "last_opened_file_path": "Z:/gamo_icls/backend",
-    "list.type.of.created.stylesheet": "CSS",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;JavaScript Debug.sign_in.html.executor&quot;: &quot;Run&quot;,
+    &quot;Python.api.executor&quot;: &quot;Run&quot;,
+    &quot;Python.app.executor&quot;: &quot;Run&quot;,
+    &quot;Python.client (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.client.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.password_enc (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch.executor&quot;: &quot;Run&quot;,
+    &quot;Python.testing.executor&quot;: &quot;Run&quot;,
+    &quot;Python.token_testing.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;web__development__branch&quot;,
+    &quot;last_opened_file_path&quot;: &quot;Z:/gamo_icls/backend&quot;,
+    &quot;list.type.of.created.stylesheet&quot;: &quot;CSS&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File": [
-      "Python"
+  &quot;keyToStringList&quot;: {
+    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File&quot;: [
+      &quot;Python&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="Z:\internal_car_leasing_system\web_app\static" />
@@ -241,6 +252,7 @@
       <workItem from="1743073020824" duration="24000" />
       <workItem from="1743076906259" duration="337000" />
       <workItem from="1743195104795" duration="70000" />
+      <workItem from="1747289473230" duration="10824000" />
     </task>
     <servers />
   </component>
@@ -278,7 +290,7 @@
     <SUITE FILE_PATH="coverage/internal_car_leasing_system$password_enc__1_.coverage" NAME="password_enc (1) Coverage Results" MODIFIED="1732795422108" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$APPLICATION_CONFIG_DIR$/scratches" />
     <SUITE FILE_PATH="coverage/internal_car_leasing_system$client.coverage" NAME="client Coverage Results" MODIFIED="1738602962724" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/Downloads" />
     <SUITE FILE_PATH="coverage/internal_car_leasing_system$api.coverage" NAME="api Coverage Results" MODIFIED="1731582116512" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/api" />
-    <SUITE FILE_PATH="coverage/internal_car_leasing_system$main.coverage" NAME="main Coverage Results" MODIFIED="1743195137437" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/web_app" />
+    <SUITE FILE_PATH="coverage/internal_car_leasing_system$main.coverage" NAME="main Coverage Results" MODIFIED="1747298698415" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/web_app" />
     <SUITE FILE_PATH="coverage/internal_car_leasing_system$token_testing.coverage" NAME="token_testing Coverage Results" MODIFIED="1732186522166" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$APPLICATION_CONFIG_DIR$/scratches" />
   </component>
 </project>

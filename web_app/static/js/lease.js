@@ -1,6 +1,5 @@
 let selectedRange = null;
-let username = null;
-let recipient = null;
+let username = null
 let role = null;
 let car_name = null;
 let is_private = false;
@@ -192,9 +191,10 @@ function reload(data){
 };
 
 function leaseCar(selectedRange) {
+  console.log(document.getElementById('car-renter'));
   data = {
     'username': username,
-    'recipient': username, // zmen na recipient ked budes robit managera
+    'recipient': document.getElementById('car-renter').value,
     'role': role,
     'car_name': car_name,
     'stk': stk,
@@ -211,6 +211,7 @@ function leaseCar(selectedRange) {
   })
     .then(response => response.json())
     .then(data => {
+      console.log(data);
       reload(data);
       fetchCarData(car_id, Token, username, role);
 

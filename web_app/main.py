@@ -62,10 +62,11 @@ def logout():
 def lease():
   location = request.args.get('location', None)
   cars = request_all_car_data(location)
+  users = get_all_users(session['username'], session['role'])
   username = session['username']
   role = session['role']
 
-  return render_template('dashboards/lease.html', cars = cars, token=session.get('token'), icons = load_icons(), username=username, role=role, show_header=True)
+  return render_template('dashboards/lease.html', users = users, cars = cars, token=session.get('token'), icons = load_icons(), username=username, role=role, show_header=True)
 
 @app.route(f'/reservations', methods=['GET', 'POST'])
 @require_role('user','manager')

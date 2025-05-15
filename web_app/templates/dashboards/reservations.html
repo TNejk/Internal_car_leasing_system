@@ -40,9 +40,11 @@
         </div>
       </div>
       <label for="timeof">Od:</label>
-      <input type="time" id="timeof">
+      <input type="date" id="timeof">
       <label for="timeto">Do:</label>
-      <input type="time" id="timeto">
+      <input type="date" id="timeto">
+      <br>
+      <button id='filter' type="submit">Filtrovať</button>
     </div>
 
 
@@ -69,20 +71,20 @@
     <button id="close-modal">Zatvor</button>
   </div>
   <div class="modal" id="modal-return-car">
-    <label for="card-health">Stav Auta:</label>
-    <select id="card-health">
-      <option value="good">Dobrý</option>
-      <option value="mild">Postačujúci</option>
-      <option value="bad">Zlý</option>
-    </select>
-    <label for="card-location">Miesto návratu auta:</label>
-    <select id="card-location">
+    <label for="car-location">Miesto návratu auta:</label>
+    <select id="car-location">
       <option value="Banská Bystrica">Banská Bystrica</option>
       <option value="Bratislava">Bratislava</option>
       <option value="Košice">Košice</option>
     </select>
-    <label for="note">Poznámka</label>
-    <input type="text" id="note" placeholder="">
+    <label for="car-damaged">Je auto poškodené (špinavé)?</label><input type="checkbox" id="car-damaged">
+    <div id="car-damaged-params" style="display: none;">
+      <label for="car-dirty">Špinavé</label><input type="checkbox" id="car-dirty">
+      <label for="car-int-dmg">Poškodený interiér</label><input type="checkbox" id="car-int-dmg">
+      <label for="car-ext-dmg">Poškodený exteriér</label><input type="checkbox" id="car-ext-dmg">
+      <label for="car-collision">Zrážka</label><input type="checkbox" id="car-collision">
+      <label for="note">Poznámka</label><input type="text" id="note" placeholder="">
+    </div>
     <button id="return-car-button">Odovzdaj auto</button>
     <button id="stop-return-button">Zruš</button>
   </div>
