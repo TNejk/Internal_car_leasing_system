@@ -1235,8 +1235,8 @@ def lease_car():
         id_recipient = cur.fetchall()
         cur.execute("insert into lease(id_car, id_driver, start_of_lease, end_of_lease, status, private) values (%s, %s, %s,  %s, %s, %s)", (car_data[0][0], id_recipient[0][0], timeof, timeto, True, private))
 
-      except:
-        return {"status": False, "private": False, "msg": f"Error has occured! 111"}, 500
+      except Exception as e:
+        return {"status": False, "private": False, "msg": f"Error has occured! 111, {e}"}, 500
             
       con.commit()
       
@@ -1599,7 +1599,7 @@ def return_car():
 
     conn.commit()
     
-    
+
     if (damaged == "TRUE"):
       message = messaging.Message(
         notification=messaging.Notification(
