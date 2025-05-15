@@ -1598,17 +1598,18 @@ def return_car():
       edit_csv_row(timeof=str_timeof, timeto=str_timeto, return_date=tor, meskanie=late_return, new_note= note, damaged=damaged, dirty=dirty, int_damage=int_damage, ext_damage= ext_damage, collision= collision)
 
     conn.commit()
-      # If manager cancelling for someone send him a notification 
-    # if (role == "manager" or role == "admin") and (email != recipient):
-    #     msg_rec = recipient.replace("@" ,"_")
-    #     message = messaging.Message(
-    #       notification=messaging.Notification(
-    #       title=f"Vaša rezervácia bola zrušená!",
-    #       body=f"""Rezervácia pre auto: {car_name} bola zrušená."""
-    #     ),
-    #         topic=msg_rec
-    #     )
-    #     messaging.send(message)
+    
+    
+    if (damaged == "TRUE"):
+      message = messaging.Message(
+        notification=messaging.Notification(
+        title=f"Poškodenie auta!",
+        body=f"""Email: {email}\nVrátil auto s poškodením!"""
+      ),
+        topic= "manager"
+      )
+      messaging.send(message)  
+    
 
     return jsonify({'status': "returned"}), 200
 
