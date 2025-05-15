@@ -1009,6 +1009,7 @@ def cancel_lease():
   
   try:
     cur.execute("UPDATE lease SET status = false WHERE id_lease = (SELECT id_lease FROM lease WHERE id_driver = %s AND id_car = %s  AND status = true ORDER BY id_lease DESC LIMIT 1)", (id_name, id_car))
+    sql_status_message = cur.statusmessage
     cur.execute("update car set status = %s where id_car = %s", ("stand_by", id_car))
   except Exception as e:
     return jsonify(msg= f"Error cancelling lease!, {e}"), 500
@@ -1024,7 +1025,7 @@ def cancel_lease():
           topic=msg_rec
       )
       messaging.send(message)
-  sql_status_message = cur.statusmessage
+ 
   conn.commit()
   conn.close()
 
