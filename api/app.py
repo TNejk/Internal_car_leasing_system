@@ -1601,7 +1601,7 @@ def return_car():
     conn.commit()
     
 
-    if (damaged == "TRUE"):
+    if (damaged == True):
       message = messaging.Message(
         notification=messaging.Notification(
         title=f"Poškodenie auta!",
