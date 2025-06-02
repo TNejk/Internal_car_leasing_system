@@ -87,6 +87,25 @@ def __convert_to_datetime(string) -> datetime:
             return dt_obj
         except ValueError as e:
             raise ValueError(f"Invalid datetime format: {string}") from e
+def find_reports_directory():
+    """Find the reports directory by checking multiple possible locations."""
+    possible_paths = [
+        os.path.join(os.path.dirname(os.getcwd()), 'reports'),  # ../reports (one level up) 
+        "/app/reports",  # Docker absolute path (parent level)
+        "../reports"  # Relative parent
+    ]
+    
+    print(f"DEBUG: Current working directory: {os.getcwd()}")
+    
+    for path in possible_paths:
+        print(f"DEBUG: Checking reports path: {path}")
+        if os.path.exists(path) and os.path.isdir(path):
+            print(f"DEBUG: Found reports directory at: {path}")
+            return path
+    
+    print("ERROR: No reports directory found in any expected location")
+    return None
+
 def get_reports_paths(folder_path):
     try:
         if not os.path.exists(folder_path):
@@ -769,8 +788,14 @@ def list_reports():
   res =  curr.fetchall()
   if len(res) <1:
     return {"msg": "Unauthorized access detected, ball explosion spell had been cast at your spiritual chackra."}
-  # Should return all file names
-  return {"reports": get_reports_paths(folder_path=f"{os.getcwd()}/reports/")}
+  
+  # Find the reports directory
+  reports_path = find_reports_directory()
+  
+  if not reports_path:
+    return {"reports": [], "msg": "Reports directory not found"}
+  
+  return {"reports": get_reports_paths(folder_path=reports_path)}
 
 
 # NEED TO REPLACE WHITESPACE WITH %20
@@ -805,8 +830,12 @@ def get_reports(filename):
         return {"msg": "Invalid authorization"}, 403
 
     try:
-        # Safe path construction
-        reports_dir = os.path.join(os.getcwd(), 'reports')
+        # Try multiple possible paths for reports directory (same as list_reports)
+        reports_dir = find_reports_directory()
+        
+        if not reports_dir:
+            return {"msg": "Reports directory not found"}, 404
+            
         safe_path = os.path.join(reports_dir, filename)
         
         # Security check to prevent path traversal
