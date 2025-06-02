@@ -89,31 +89,28 @@ def __convert_to_datetime(string) -> datetime:
             raise ValueError(f"Invalid datetime format: {string}") from e
         
 def find_reports_directory():
-    """Find the reports directory at ../reports only."""
-    reports_path = "../reports"
+    """Find the reports directory at the volume mount location."""
+    reports_path = "/app/reports"
     
     print(f"DEBUG: Current working directory: {os.getcwd()}")
     print(f"DEBUG: Checking reports path: {reports_path}")
-    print(f"DEBUG: Absolute path would be: {os.path.abspath(reports_path)}")
     print(f"DEBUG: Path exists: {os.path.exists(reports_path)}")
     print(f"DEBUG: Is directory: {os.path.isdir(reports_path)}")
     
-    # List what's actually in the parent directory
-    parent_dir = ".."
-    if os.path.exists(parent_dir):
-        print(f"DEBUG: Contents of parent directory ({os.path.abspath(parent_dir)}):")
-        try:
-            for item in os.listdir(parent_dir):
-                item_path = os.path.join(parent_dir, item)
-                print(f"DEBUG:   {item} ({'dir' if os.path.isdir(item_path) else 'file'})")
-        except Exception as e:
-            print(f"DEBUG: Error listing parent directory: {e}")
-    
     if os.path.exists(reports_path) and os.path.isdir(reports_path):
         print(f"DEBUG: Found reports directory at: {reports_path}")
+        # List contents of reports directory
+        try:
+            print(f"DEBUG: Contents of reports directory:")
+            for item in os.listdir(reports_path):
+                item_path = os.path.join(reports_path, item)
+                print(f"DEBUG:   {item} ({'dir' if os.path.isdir(item_path) else 'file'})")
+        except Exception as e:
+            print(f"DEBUG: Error listing reports directory: {e}")
         return reports_path
     
-    print("ERROR: ../reports directory not found")
+    print("ERROR: /app/reports directory not found - check Docker volume mount")
+    print("HINT: Volume should be: -v /home/systemak/icls/api/reports:/app/reports")
     return None
 
 def get_reports_paths(folder_path):
