@@ -119,11 +119,26 @@ def get_reports_paths(folder_path):
             print(f"WARNING: Reports directory does not exist: {folder_path}")
             return []
             
+        print(f"DEBUG: Scanning directory: {folder_path}")
+        
+        # First, list ALL files in the directory
+        try:
+            all_items = os.listdir(folder_path)
+            print(f"DEBUG: All items in directory: {all_items}")
+        except Exception as e:
+            print(f"ERROR: Could not list directory contents: {e}")
+            return []
+            
         files = []
+        xlsx_files_found = 0
+        
         with os.scandir(folder_path) as entries:
             for entry in entries:
+                print(f"DEBUG: Processing entry: {entry.name} (is_file: {entry.is_file()})")
+                
                 # Check for Excel files (case insensitive)
                 if entry.is_file() and entry.name.lower().endswith('.xlsx'):
+                    xlsx_files_found += 1
                     print(f"DEBUG: Found Excel file: {entry.name}")
                     try:
                         # Handle new monthly format: "2025.05 ICLS Report.xlsx"
@@ -131,6 +146,7 @@ def get_reports_paths(folder_path):
                             print(f"DEBUG: Processing new format file: {entry.name}")
                             # Extract year.month from filename: "2025.05 ICLS Report.xlsx"
                             date_part = entry.name.split(' ')[0]  # "2025.05"
+                            print(f"DEBUG: Extracted date part: '{date_part}'")
                             year, month = map(int, date_part.split('.'))
                             file_date = datetime(year, month, 1)
                             files.append((file_date, entry.name))  # Store filename, not full path
@@ -146,8 +162,11 @@ def get_reports_paths(folder_path):
                         # Skip files with invalid format
                         print(f"WARNING: Skipping invalid file: {entry.name} - {str(e)}")
                         continue
+                else:
+                    print(f"DEBUG: Skipping non-Excel file: {entry.name}")
         
-        print(f"DEBUG: Found {len(files)} valid report files")
+        print(f"DEBUG: Excel files found: {xlsx_files_found}")
+        print(f"DEBUG: Valid report files processed: {len(files)}")
         
         # Sort by datetime descending (newest first)
         files.sort(key=lambda x: x[0], reverse=True)
