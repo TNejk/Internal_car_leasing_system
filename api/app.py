@@ -87,24 +87,33 @@ def __convert_to_datetime(string) -> datetime:
             return dt_obj
         except ValueError as e:
             raise ValueError(f"Invalid datetime format: {string}") from e
+        
 def find_reports_directory():
-    """Find the reports directory by checking the volume-mounted location only."""
-    # Only check for the volume-mounted reports directory
-    # Do NOT check /app/reports as it gets wiped on Docker restart
-    possible_paths = [
-        "/reports",  # Volume-mounted reports directory 
-        "../reports"  # Relative path to volume-mounted directory
-    ]
+    """Find the reports directory at ../reports only."""
+    reports_path = "../reports"
     
     print(f"DEBUG: Current working directory: {os.getcwd()}")
+    print(f"DEBUG: Checking reports path: {reports_path}")
+    print(f"DEBUG: Absolute path would be: {os.path.abspath(reports_path)}")
+    print(f"DEBUG: Path exists: {os.path.exists(reports_path)}")
+    print(f"DEBUG: Is directory: {os.path.isdir(reports_path)}")
     
-    for path in possible_paths:
-        print(f"DEBUG: Checking reports path: {path}")
-        if os.path.exists(path) and os.path.isdir(path):
-            print(f"DEBUG: Found reports directory at: {path}")
-            return path
+    # List what's actually in the parent directory
+    parent_dir = ".."
+    if os.path.exists(parent_dir):
+        print(f"DEBUG: Contents of parent directory ({os.path.abspath(parent_dir)}):")
+        try:
+            for item in os.listdir(parent_dir):
+                item_path = os.path.join(parent_dir, item)
+                print(f"DEBUG:   {item} ({'dir' if os.path.isdir(item_path) else 'file'})")
+        except Exception as e:
+            print(f"DEBUG: Error listing parent directory: {e}")
     
-    print("ERROR: No volume-mounted reports directory found")
+    if os.path.exists(reports_path) and os.path.isdir(reports_path):
+        print(f"DEBUG: Found reports directory at: {reports_path}")
+        return reports_path
+    
+    print("ERROR: ../reports directory not found")
     return None
 
 def get_reports_paths(folder_path):
