@@ -31,7 +31,7 @@ class MonthlyExcelWriter:
         self._init_styles()
         
     def _init_styles(self):
-        """Initialize Excel styling constants for professional appearance."""
+
         # Original styles
         self.red_flag_ft = Font(bold=True, color="B22222")
         self.red_flag_fill = PatternFill("solid", "B22222")
@@ -83,7 +83,6 @@ class MonthlyExcelWriter:
         self.header_alignment = Alignment(horizontal='center', vertical='center')
     
     def connect_to_db(self) -> tuple:
-        """Establish database connection."""
         try:
             db_con = psycopg2.connect(
                 dbname=self.db_name, 

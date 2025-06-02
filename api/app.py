@@ -89,37 +89,54 @@ def __convert_to_datetime(string) -> datetime:
             raise ValueError(f"Invalid datetime format: {string}") from e
 def get_reports_paths(folder_path):
     try:
+        if not os.path.exists(folder_path):
+            print(f"WARNING: Reports directory does not exist: {folder_path}")
+            return []
+            
         files = []
         with os.scandir(folder_path) as entries:
             for entry in entries:
-                if entry.is_file() and entry.name.endswith('.xlsx'):
+                # Check for Excel files (case insensitive)
+                if entry.is_file() and entry.name.lower().endswith('.xlsx'):
+                    print(f"DEBUG: Found Excel file: {entry.name}")
                     try:
-                        # Handle new monthly format: "2025.04 ICLS Report.xlsx"
+                        # Handle new monthly format: "2025.05 ICLS Report.xlsx"
                         if " ICLS Report.xlsx" in entry.name:
-                            # Extract year.month from filename: "2025.04 ICLS Report.xlsx"
-                            date_part = entry.name.split(' ')[0]  # "2025.04"
+                            print(f"DEBUG: Processing new format file: {entry.name}")
+                            # Extract year.month from filename: "2025.05 ICLS Report.xlsx"
+                            date_part = entry.name.split(' ')[0]  # "2025.05"
                             year, month = map(int, date_part.split('.'))
                             file_date = datetime(year, month, 1)
-                            files.append((file_date, entry.path))
+                            files.append((file_date, entry.name))  # Store filename, not full path
+                            print(f"DEBUG: Successfully parsed: {entry.name} -> {year}-{month:02d}")
                         else:
+                            print(f"DEBUG: Trying old format for: {entry.name}")
                             # Fallback: try old timestamp format for backward compatibility
                             timestamp_str = entry.name.split('_', 1)[0]
                             file_date = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
-                            files.append((file_date, entry.path))
+                            files.append((file_date, entry.name))  # Store filename, not full path
+                            print(f"DEBUG: Successfully parsed old format: {entry.name}")
                     except (ValueError, IndexError) as e:
                         # Skip files with invalid format
-                        print(f"Skipping invalid file: {entry.name} - {str(e)}")
+                        print(f"WARNING: Skipping invalid file: {entry.name} - {str(e)}")
                         continue
+        
+        print(f"DEBUG: Found {len(files)} valid report files")
         
         # Sort by datetime descending (newest first)
         files.sort(key=lambda x: x[0], reverse=True)
         
-        # Remove path prefix and return just sorted filenames
-        return [entry[1].removeprefix("/app/reports/") for entry in files]
+        # Return just the filenames (already stored as filenames, not full paths)
+        result = [file_info[1] for file_info in files]
+        print(f"DEBUG: Returning files: {result}")
+        return result
         
     except OSError as e:
-        print(f"Error accessing directory: {str(e)}")
-        return None
+        print(f"ERROR: Error accessing directory {folder_path}: {str(e)}")
+        return []  # Return empty list instead of None
+    except Exception as e:
+        print(f"ERROR: Unexpected error in get_reports_paths: {str(e)}")
+        return []  # Return empty list instead of None
 
 import os
 
