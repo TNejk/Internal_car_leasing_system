@@ -1,0 +1,47 @@
+# Add this service to your existing docker-compose.yml file
+# 
+# Example usage in your docker-compose.yml:
+# 
+# services:
+#   # ... your existing services ...
+#   
+#   excel-writer:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile.excel-writer
+#     container_name: icls-excel-writer
+#     environment:
+#       - DB_HOST=your_postgres_host
+#       - DB_PORT=5432
+#       - POSTGRES_USER=${POSTGRES_USER}
+#       - POSTGRES_PASS=${POSTGRES_PASS}
+#       - POSTGRES_DB=${POSTGRES_DB}
+#       - TZ=Europe/Bratislava
+#     volumes:
+#       - ./reports:/app/reports
+#     networks:
+#       - your_network_name
+#     restart: unless-stopped
+#     depends_on:
+#       - your_postgres_service
+
+# Standalone service definition:
+excel-writer:
+  build:
+    context: .
+    dockerfile: Dockerfile.excel-writer
+  container_name: icls-excel-writer
+  environment:
+    - DB_HOST=postgres  # Change to your database service name
+    - DB_PORT=5432
+    - POSTGRES_USER=${POSTGRES_USER}
+    - POSTGRES_PASS=${POSTGRES_PASS}
+    - POSTGRES_DB=${POSTGRES_DB}
+    - TZ=Europe/Bratislava
+  volumes:
+    - ./reports:/app/reports  # Reports will be saved to ./reports on host
+  networks:
+    - icls-network  # Change to your network name
+  restart: unless-stopped
+  depends_on:
+    - postgres  # Change to your database service name 
