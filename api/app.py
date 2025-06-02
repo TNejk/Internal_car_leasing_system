@@ -88,11 +88,12 @@ def __convert_to_datetime(string) -> datetime:
         except ValueError as e:
             raise ValueError(f"Invalid datetime format: {string}") from e
 def find_reports_directory():
-    """Find the reports directory by checking multiple possible locations."""
+    """Find the reports directory by checking the volume-mounted location only."""
+    # Only check for the volume-mounted reports directory
+    # Do NOT check /app/reports as it gets wiped on Docker restart
     possible_paths = [
-        os.path.join(os.path.dirname(os.getcwd()), 'reports'),  # ../reports (one level up) 
-        "/app/reports",  # Docker absolute path (parent level)
-        "../reports"  # Relative parent
+        "/reports",  # Volume-mounted reports directory 
+        "../reports"  # Relative path to volume-mounted directory
     ]
     
     print(f"DEBUG: Current working directory: {os.getcwd()}")
@@ -103,7 +104,7 @@ def find_reports_directory():
             print(f"DEBUG: Found reports directory at: {path}")
             return path
     
-    print("ERROR: No reports directory found in any expected location")
+    print("ERROR: No volume-mounted reports directory found")
     return None
 
 def get_reports_paths(folder_path):
