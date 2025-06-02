@@ -95,10 +95,18 @@ def get_reports_paths(folder_path):
             for entry in entries:
                 if entry.is_file() and entry.name.endswith('.xlsx'):
                     try:
-                        # Extract datetime from filename
-                        timestamp_str = entry.name.split('_', 1)[0]
-                        file_date = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
-                        files.append((file_date, entry.path))
+                        # Handle new monthly format: "2025.04 ICLS Report.xlsx"
+                        if " ICLS Report.xlsx" in entry.name:
+                            # Extract year.month from filename: "2025.04 ICLS Report.xlsx"
+                            date_part = entry.name.split(' ')[0]  # "2025.04"
+                            year, month = map(int, date_part.split('.'))
+                            file_date = datetime(year, month, 1)
+                            files.append((file_date, entry.path))
+                        else:
+                            # Fallback: try old timestamp format for backward compatibility
+                            timestamp_str = entry.name.split('_', 1)[0]
+                            file_date = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+                            files.append((file_date, entry.path))
                     except (ValueError, IndexError) as e:
                         # Skip files with invalid format
                         print(f"Skipping invalid file: {entry.name} - {str(e)}")

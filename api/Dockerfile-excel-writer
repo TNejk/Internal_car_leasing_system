@@ -8,7 +8,15 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Set timezone to Slovakia
-ENV TZ=Europe/Bratislava
+
+# Set timezone to Slovakia
+ENV DB_HOST=icls-postgres \
+    DB_PORT=5432 \
+    POSTGRES_USER=postgres \
+    POSTGRES_PASS=admin123 \
+    POSTGRES_DB=postgres \
+    TZ=Europe/Bratislava
+
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Set working directory
