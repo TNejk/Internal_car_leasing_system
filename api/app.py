@@ -1207,7 +1207,7 @@ def lease_car():
      return {"status": False, "private": False, "msg": f"Zabratý dátum (hodina typujem)"}
   
   # Init excel writer to use later 
-  exc_writer = writer()
+  #exc_writer = writer()
   
   # If the user is leasing for himself
   if recipient ==  username:
@@ -1234,7 +1234,7 @@ def lease_car():
           con.commit()
         except Exception as e:
           return {"status": False, "private": False, "msg": f"Error has occured! 113"}, 500
-        exc_writer.write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
+        #exc_writer.write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
         return {"status": True, "private": True}
 
 
@@ -1257,7 +1257,7 @@ def lease_car():
     send_firebase_message_safe(message)
 
     #!!!!!!!!!!!!
-    exc_writer.write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
+    #exc_writer.write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
     #send_email(msg="Auto bolo rezervovane!")
     return {"status": True, "private": private}
 
@@ -1290,7 +1290,7 @@ def lease_car():
     con.close()
 
     #!!!  
-    exc_writer.write_report(recipient, car_name,stk, drive_type, form_timeof, form_timeto)
+    #exc_writer.write_report(recipient, car_name,stk, drive_type, form_timeof, form_timeto)
     #send_email(msg="Auto bolo rezervovane!")
     return {"status": True, "private": private}
       
@@ -1458,7 +1458,7 @@ def approve_requests():
 
 
 
-
+# CAR RETURN NO LONGER NEEDS TO WRITE TO AN EXCEL FILE
 @app.route('/return_car', methods = ['POST'])
 @jwt_required() 
 def return_car():
@@ -1484,68 +1484,6 @@ def return_car():
     collision  = data["collision"]
   except:
      return {"status": False, "msg": "missing damage data"}, 400
-  
-  def edit_csv_row(timeof,timeto, return_date, meskanie, new_note, damaged, dirty, int_damage, ext_damage, collision):
-      # Get rid of the seconds, cuz python sometimes cuts them off on one date and that fucks up the editing proces
-      # So just get rid of them yourself
-
-      #excel timeof = "25-02-2025 21:04"
-      #excel timeto = "25-02-2025 21:04"
-      def convert_to_datetime(string) -> datetime:
-        try:
-          dt_obj = datetime.strptime(string, "%d-%m-%Y %H:%M")
-          return dt_obj
-        except ValueError as e:
-            raise ValueError(f"Invalid datetime format: {string}") from e
-        
-
-      
-      csv_file_path = get_latest_file(f"{os.getcwd()}/reports")
-
-      wb = openpyxl.load_workbook(csv_file_path)
-      sheet_names = wb.sheetnames
-
-      if len(sheet_names) >1:
-        sheet1 = wb[sheet_names[-1]]
-      else:
-        sheet1 = wb.active
-
-      dt_timeof = convert_to_datetime(timeof)
-      dt_timeto = convert_to_datetime(timeto)
-
-      # Loop over all rows in the worksheet
-      # ["","Čas od", "Čas do", "Auto", "SPZ","Email", "Odovzdanie", "Meškanie", "Poznámka"]
-      for row in range(3, sheet1.max_row + 1):
-          # Get the values from the cells in the current row
-          exc_timeof = sheet1.cell(row=row, column=3).value
-          exc_timeto = sheet1.cell(row=row, column=4).value
-          time_of_return_cell = sheet1.cell(row=row, column=9)
-          late_return_cell = sheet1.cell(row=row, column=10)
-          note_cell = sheet1.cell(row=row, column=11)
-
-          damaged_cell    = sheet1.cell(row=row, column=12)
-          dirty_cell      = sheet1.cell(row=row, column=13)
-          int_damage_cell = sheet1.cell(row=row, column=14)
-          ext_damage_cell = sheet1.cell(row=row, column=15)
-          collision_cell  = sheet1.cell(row=row, column=16)
- 
-          # To avoid duplicates when returing, as dates could collide probalby idk fuck my stupid chungus life 
-          if time_of_return_cell.value == "NULL":
-
-              if convert_to_datetime(exc_timeof) == dt_timeof and convert_to_datetime(exc_timeto) == dt_timeto:
-                  time_of_return_cell.value = return_date
-                  late_return_cell.value = meskanie
-                  note_cell.value = new_note
-                  damaged_cell.value    = damaged
-                  dirty_cell.value      = dirty
-                  int_damage_cell.value = int_damage
-                  ext_damage_cell.value = ext_damage
-                  collision_cell.value  = collision
-                  
-
-      # Save changes to the workbook
-      wb.save(csv_file_path)
-    
   
   id_lease = data["id_lease"]
   # TODO: ADD A VARIABLE FOR TIME_TO SO YOU CAN CALCULATE BEING LATE and write it to a csv
@@ -1605,36 +1543,11 @@ def return_car():
       # Update the car table
       um = _usage_metric(id_car, conn)
       
-      # no longer needed to reset status!!!
       query = "UPDATE car SET health = %s, status = %s, usage_metric = %s, location = %s WHERE id_car = %s;"
       cur.execute(query, (health, 'stand_by', um, location, id_car ))
 
-      # If the return date is after the timeof, indicate late return of car
-      late_return = "False"
-      # Str + datetime.datetime
-
-      tor_as_datetime = datetime.strptime(tor, "%Y-%m-%d %H:%M:%S.%f%z")
-
-      # Now you can compare the two datetime objects
-
-      str_timeof = res[0][1].strftime("%d-%m-%Y %H:%M")
-      str_timeto = res[0][2].strftime("%d-%m-%Y %H:%M")
-      # Get rid of the miliseconds
-      tor = tor_as_datetime.strftime("%d-%m-%Y %H:%M")
-      
-      if tor_as_datetime < res[0][2]:
-          late_return = "False"
-      else:
-          late_return = "True"
-
-
-
-      # Update report, open as csv object, look for row where time_from ,time_to, id_car, id_driver is the same and update the return&-time, meskanie and note values
-      edit_csv_row(timeof=str_timeof, timeto=str_timeto, return_date=tor, meskanie=late_return, new_note= note, damaged=damaged, dirty=dirty, int_damage=int_damage, ext_damage= ext_damage, collision= collision)
-
     conn.commit()
     
-
     if (damaged == True):
       message = messaging.Message(
         notification=messaging.Notification(
@@ -1645,7 +1558,6 @@ def return_car():
       )
       send_firebase_message_safe(message)  
     
-
     return jsonify({'status': "returned"}), 200
 
   except psycopg2.Error as e:
