@@ -904,9 +904,19 @@ def get_leases():
         JOIN 
             car c ON l.id_car = c.id_car
         WHERE 
-            l.status = TRUE AND d.email = %s; 
+            d.email = %(user_email)s
+            AND (
+                ( %(ft_istrue)s = true AND l.status = true )
+                OR 
+                ( %(ft_isfalse)s = true AND l.status = false )
+            ); 
     """
-    curr.execute(query, (email,))
+    params = {
+      'ft_istrue': ft_istrue,
+      'ft_isfalse': ft_isfalse,
+      'user_email': email
+    }
+    curr.execute(query, params)
 
   elif role == "manager" or role == "admin": 
     # These are all voluntary!!!
