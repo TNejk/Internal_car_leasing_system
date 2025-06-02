@@ -8,7 +8,6 @@ import psycopg2
 from flask_mail import Mail, Message
 from flask import Flask, request, jsonify, send_from_directory
 import requests
-from excel_writer import writer
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from flask_cors import CORS, cross_origin
 from functools import wraps
