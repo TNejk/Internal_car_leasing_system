@@ -25,6 +25,15 @@ from firebase_admin import messaging
 
 import smtplib, ssl
 
+def send_firebase_message_safe(message):
+    """Send Firebase message with error handling."""
+    try:
+        messaging.send(message)
+        return True
+    except Exception as e:
+        print(f"ERROR: Failed to send Firebase message: {e}")
+        return False
+
 bratislava_tz = pytz.timezone('Europe/Bratislava')
 
 mail_api_key = os.getenv("MAIL_API_KEY")
@@ -280,15 +289,29 @@ def create_car():
      return {"status": False, "msg": "Unathorized"}, 400
 
   data = request.get_json()
-  car_name = data['name'] or 'Auto bez názvu'
-  _type = data['type'] or None
-  status = data['status'] or None
-  location = data['location'] or None
-  #url = data['url'] if data['url'] 'undefined'
-  spz = data['spz'] or 'undefined'
-  gas = data['gas'] or 'undefined'
-  drive_tp = data['drive_tp'] or 'undefined'
+  try:
+    car_name = data['name']  
+    _type = data['type']
+    status = data['status']
+    location = data['location']
+    
+    spz = data['spz']
+    gas = data['gas']
+    drive_tp = data['drive_tp']
 
+    # The image is a list of bytes, only allow .png or .jpg files
+    car_image = data['image']
+  except:
+     return {"status": False, "msg": "Chýbajúce parametre pri vytvorení auta!"}
+  
+  # TODO: Here construct an image from the bytes
+
+  # TODO: After constructing it, save it to the /images folder, where it should then be automatically added to the nginx file server
+  
+
+  #* construct a url using the new images name and add it to the database
+  
+  url = "https://fl.gamo.sosit-wh.net/{0}".format()
   conn, cur = connect_to_db()
 
   query = "INSERT INTO car (name, type, status, location, stk, gas, drive_type) VALUES (%s,%s,%s,%s,%s,%s,%s)"
@@ -323,6 +346,7 @@ def del_cars():
     if car_name == "":
        return {"status": False, "msg": "Missing parameters!"}, 500
     
+    #TODO:  Make this into an ID check, not a name check dumbfuck
     try:
       conn, cur = connect_to_db()
       cur.execute("DELETE FROM car WHERE name = %s", (car_name, ))
@@ -555,7 +579,7 @@ def activate_car():
       ),
           topic="system"
       )
-  messaging.send(message)
+  send_firebase_message_safe(message)
   return {"status": True, "msg": f"Car {car_name} was activated!"}
 
 
@@ -1024,7 +1048,7 @@ def cancel_lease():
       ),
           topic=msg_rec
       )
-      messaging.send(message)
+      send_firebase_message_safe(message)
  
   conn.commit()
   conn.close()
@@ -1157,19 +1181,19 @@ def lease_car():
   user = cur.fetchall()
   
   # Check for the leased car if it has available date range to lease from
-  cur.execute("""
-    SELECT id_lease start_of_lease, end_of_lease FROM lease 
+  conflict_query = """
+    SELECT COUNT(*) FROM lease 
     WHERE status = true AND id_car = %s  
-      AND (start_of_lease < %s AND end_of_lease > %s 
-           OR start_of_lease < %s AND end_of_lease > %s 
-           OR start_of_lease >= %s AND start_of_lease < %s
-           OR start_of_lease = %s AND end_of_lease = %s
-              )
-    """, (car_id,timeof, timeto, timeto, timeof, timeof, timeto, timeof, timeto))
+    AND (
+        (start_of_lease < %s AND end_of_lease > %s) OR
+        (start_of_lease < %s AND end_of_lease > %s) OR
+        (start_of_lease >= %s AND start_of_lease < %s)
+    )
+  """
+  cur.execute(conflict_query, (car_id, timeof, timeof, timeto, timeto, timeof, timeto))
   
-  #return {"sd": timeof, "sda": timeto}, 200
-  conflicting_leases = cur.fetchall()
-  if len(conflicting_leases) > 0:
+  conflicting_leases = cur.fetchone()
+  if conflicting_leases[0] > 0:
      return {"status": False, "private": False, "msg": f"Zabratý dátum (hodina typujem)"}
   
   # Init excel writer to use later 
@@ -1178,7 +1202,7 @@ def lease_car():
   # If the user is leasing for himself
   if recipient ==  username:
     if private == True:
-      if jwt_role != "manager" or jwt_role != "admin":
+      if jwt_role != "manager" and jwt_role != "admin":
         # Just need to create a requst row, a new lease is only created and activated after being approved in the approve_request route
         cur.execute("insert into request(start_of_request, end_of_request, status, id_car, id_driver) values (%s, %s, %s, %s, %s)", (timeof, timeto, True, car_data[0][0], user[0][0]))
         con.commit()
@@ -1190,9 +1214,9 @@ def lease_car():
               ),
                   topic="manager"
               )
-        messaging.send(message)
+        send_firebase_message_safe(message)
 
-        return {"status": True, "private": True, "msg": f"Request for a private ride was sent!"}, 500
+        return {"status": True, "private": True, "msg": f"Request for a private ride was sent!"}, 200
 
       else: # User is a manager, therfore no request need to be made, and a private ride is made 
         try:
@@ -1220,7 +1244,7 @@ def lease_car():
           ),
               topic="manager"
           )
-    messaging.send(message)
+    send_firebase_message_safe(message)
 
     #!!!!!!!!!!!!
     exc_writer.write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
@@ -1250,7 +1274,7 @@ def lease_car():
             ),
                 topic="manager"
             )
-      messaging.send(message)
+      send_firebase_message_safe(message)
     except Exception as e:
       return {"status": False, "private": False, "msg": f"Error has occured! 112"}, 500
     con.close()
@@ -1396,7 +1420,7 @@ def approve_requests():
         ),
             topic= rep_email
         )
-        messaging.send(message)
+        send_firebase_message_safe(message)
       except Exception as e:
         return {"status": False, "msg": f"Error approving, {e}"}, 400
     
@@ -1412,7 +1436,7 @@ def approve_requests():
       ),
           topic= rep_email
       )
-      messaging.send(message)
+      send_firebase_message_safe(message)
 
     conn.commit()
     conn.close()
@@ -1609,7 +1633,7 @@ def return_car():
       ),
         topic= "manager"
       )
-      messaging.send(message)  
+      send_firebase_message_safe(message)  
     
 
     return jsonify({'status': "returned"}), 200
