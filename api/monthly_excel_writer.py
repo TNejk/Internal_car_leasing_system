@@ -183,34 +183,30 @@ class MonthlyExcelWriter:
             current_time = self.get_sk_date()
             
             for row in raw_data:
-                # Determine actual lease status based on data, not unreliable status column
+                # Determine actual lease status based on data
                 time_of_return = row[3]
                 end_of_lease = row[2]
+                status_bool = row[5]  # The boolean status field
                 
-                # Logic to determine if lease is cancelled vs completed vs active
+                # Logic to determine lease status:
+                # 1. If has return time = completed
+                # 2. If no return time but status=true = active 
+                # 3. If no return time and status=false = cancelled/rejected
                 if time_of_return:
                     # Has return time = completed
                     is_cancelled = False
                     is_completed = True
                     is_active = False
-                elif end_of_lease and current_time > end_of_lease:
-                    # Past end date without return = likely cancelled or overdue
-                    # We'll consider it cancelled if significantly overdue (more than 7 days)
-                    days_overdue = (current_time - end_of_lease).days
-                    is_cancelled = days_overdue > 7
+                elif status_bool:
+                    # No return time but status=true = active lease
+                    is_cancelled = False
                     is_completed = False
-                    is_active = not is_cancelled
+                    is_active = True
                 else:
-                    # If the lease status is true, that means the lease is active
-                    tmp_lease_status = row[5]
-                    if tmp_lease_status:
-                        is_cancelled = False
-                        is_completed = False
-                        is_active = True
-                    else:
-                        is_cancelled = True
-                        is_completed = False
-                        is_active = False
+                    # No return time and status=false = cancelled/rejected
+                    is_cancelled = True
+                    is_completed = False
+                    is_active = False
                 
                 lease_record = {
                     'id_lease': row[0],
