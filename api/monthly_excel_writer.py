@@ -201,10 +201,16 @@ class MonthlyExcelWriter:
                     is_completed = False
                     is_active = not is_cancelled
                 else:
-                    # Before end date without return = active
-                    is_cancelled = False
-                    is_completed = False
-                    is_active = True
+                    # If the lease status is true, that means the lease is active
+                    tmp_lease_status = row[5]
+                    if tmp_lease_status:
+                        is_cancelled = False
+                        is_completed = False
+                        is_active = True
+                    else:
+                        is_cancelled = True
+                        is_completed = False
+                        is_active = False
                 
                 lease_record = {
                     'id_lease': row[0],
