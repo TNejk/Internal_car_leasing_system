@@ -288,6 +288,8 @@ class MonthlyExcelWriter:
         ws.column_dimensions['F'].width = 20
         ws.column_dimensions['G'].width = 20
         ws.column_dimensions['H'].width = 20
+        ws.column_dimensions['I'].width = 20
+        ws.column_dimensions['J'].width = 20
         
         # Main title with enhanced styling
         ws.merge_cells('B2:G2')
@@ -390,13 +392,14 @@ class MonthlyExcelWriter:
             ws[f"C{row}"].alignment = self.center_alignment
             row += 1
         
-        # Add charts
+        # Add charts with proper positioning to avoid overlap
         self._add_lease_status_chart(ws, completed_leases, cancelled_leases, active_leases)
-        self._add_lease_type_chart(ws, private_leases, business_leases)
+        self._add_top_drivers_chart(ws, lease_data)
+        self._add_top_vehicles_chart(ws, lease_data)
         self._add_damage_chart(ws, damaged_cars, dirty_cars, exterior_damage, interior_damage, collisions)
         
-        # Add summary insights
-        self._add_summary_insights(ws, lease_data, row + 2)
+        # Add summary insights - position it lower to avoid chart overlap
+        self._add_summary_insights(ws, lease_data, 35)
     
     def _add_lease_status_chart(self, ws, completed: int, cancelled: int, active: int):
         """Add pie chart for lease status distribution."""
@@ -411,7 +414,7 @@ class MonthlyExcelWriter:
             ['Aktívne', active]
         ]
         
-        # Write chart data starting at column E
+        # Write chart data starting at column E, row 4
         start_row = 4
         for i, row_data in enumerate(chart_data):
             for j, value in enumerate(row_data):
@@ -425,8 +428,8 @@ class MonthlyExcelWriter:
         chart.add_data(data, titles_from_data=True)
         chart.set_categories(labels)
         chart.title = "Rozdelenie rezervácií podľa stavu"
-        chart.width = 12
-        chart.height = 8
+        chart.width = 10
+        chart.height = 6
         
         # Style the chart
         chart.dataLabels = DataLabelList()
@@ -435,17 +438,70 @@ class MonthlyExcelWriter:
         
         ws.add_chart(chart, "E6")
     
-    def _add_lease_type_chart(self, ws, private: int, business: int):
-        """Add pie chart for lease type distribution."""
-        if private + business == 0:
+    def _add_top_drivers_chart(self, ws, lease_data: List[Dict]):
+        """Add bar chart showing top drivers by number of leases."""
+        if not lease_data:
             return
             
+        # Count leases per driver
+        driver_counts = {}
+        for lease in lease_data:
+            driver_name = lease['driver_name']
+            driver_counts[driver_name] = driver_counts.get(driver_name, 0) + 1
+        
+        # Get top 5 drivers
+        top_drivers = sorted(driver_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+        
+        if not top_drivers:
+            return
+        
         # Data for the chart
-        chart_data = [
-            ['Typ rezervácie', 'Počet'],
-            ['Súkromné', private],
-            ['Firemné', business]
-        ]
+        chart_data = [['Vodič', 'Počet rezervácií']]
+        chart_data.extend(top_drivers)
+        
+        # Write chart data starting at column H, row 4
+        start_row = 4
+        for i, row_data in enumerate(chart_data):
+            for j, value in enumerate(row_data):
+                ws.cell(row=start_row + i, column=8 + j, value=value)
+        
+        # Create bar chart
+        chart = BarChart()
+        labels = Reference(ws, min_col=8, min_row=start_row + 1, max_row=start_row + len(chart_data) - 1)
+        data = Reference(ws, min_col=9, min_row=start_row, max_row=start_row + len(chart_data) - 1)
+        
+        chart.add_data(data, titles_from_data=True)
+        chart.set_categories(labels)
+        chart.title = "Top 5 vodičov podľa počtu rezervácií"
+        chart.width = 12
+        chart.height = 6
+        
+        # Style the chart
+        chart.dataLabels = DataLabelList()
+        chart.dataLabels.showVal = True
+        
+        ws.add_chart(chart, "H6")
+    
+    def _add_top_vehicles_chart(self, ws, lease_data: List[Dict]):
+        """Add bar chart showing top 3 most used vehicles."""
+        if not lease_data:
+            return
+            
+        # Count leases per vehicle
+        vehicle_counts = {}
+        for lease in lease_data:
+            vehicle_key = f"{lease['car_name']} ({lease['stk']})"
+            vehicle_counts[vehicle_key] = vehicle_counts.get(vehicle_key, 0) + 1
+        
+        # Get top 3 vehicles
+        top_vehicles = sorted(vehicle_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+        
+        if not top_vehicles:
+            return
+        
+        # Data for the chart
+        chart_data = [['Vozidlo', 'Počet rezervácií']]
+        chart_data.extend(top_vehicles)
         
         # Write chart data starting at column E, row 20
         start_row = 20
@@ -453,20 +509,19 @@ class MonthlyExcelWriter:
             for j, value in enumerate(row_data):
                 ws.cell(row=start_row + i, column=5 + j, value=value)
         
-        # Create pie chart
-        chart = PieChart()
+        # Create bar chart
+        chart = BarChart()
         labels = Reference(ws, min_col=5, min_row=start_row + 1, max_row=start_row + len(chart_data) - 1)
         data = Reference(ws, min_col=6, min_row=start_row, max_row=start_row + len(chart_data) - 1)
         
         chart.add_data(data, titles_from_data=True)
         chart.set_categories(labels)
-        chart.title = "Rozdelenie rezervácií podľa typu"
+        chart.title = "Top 3 najpoužívanejšie vozidlá"
         chart.width = 12
-        chart.height = 8
+        chart.height = 6
         
         # Style the chart
         chart.dataLabels = DataLabelList()
-        chart.dataLabels.showPercent = True
         chart.dataLabels.showVal = True
         
         ws.add_chart(chart, "E22")
@@ -483,8 +538,8 @@ class MonthlyExcelWriter:
             ['Kolízie', collisions]
         ]
         
-        # Write chart data starting at column H
-        start_row = 4
+        # Write chart data starting at column H, row 20
+        start_row = 20
         for i, row_data in enumerate(chart_data):
             for j, value in enumerate(row_data):
                 ws.cell(row=start_row + i, column=8 + j, value=value)
@@ -497,14 +552,14 @@ class MonthlyExcelWriter:
         chart.add_data(data, titles_from_data=True)
         chart.set_categories(labels)
         chart.title = "Štatistiky poškodení vozidiel"
-        chart.width = 15
-        chart.height = 10
+        chart.width = 12
+        chart.height = 6
         
         # Style the chart
         chart.dataLabels = DataLabelList()
         chart.dataLabels.showVal = True
         
-        ws.add_chart(chart, "H6")
+        ws.add_chart(chart, "H22")
     
     def _add_summary_insights(self, ws, lease_data: List[Dict], start_row: int):
         """Add summary insights and recommendations."""
@@ -557,7 +612,7 @@ class MonthlyExcelWriter:
         """Create enhanced main leases data sheet with professional formatting."""
         ws = wb.create_sheet("Rezervácie")
         
-        # Headers matching original format exactly
+        # Headers matching original format
         headers = [
             "", "", "Čas od", "Čas do", "Auto", "SPZ", "Typ", "Email", 
             "Odovzdanie", "Meškanie", "Poznámka", "Poškodenie", "Zašpinené", 
@@ -607,13 +662,11 @@ class MonthlyExcelWriter:
             start_time = self.convert_to_bratislava_timezone(lease['start_of_lease'])
             end_time = self.convert_to_bratislava_timezone(lease['end_of_lease'])
             
-            # Handle return time with enhanced status display
-            if lease['is_cancelled']:
-                return_time = "🚫 ZRUŠENÉ"
-            elif lease['time_of_return']:
+            # Handle return time - show actual time when available
+            if lease['time_of_return']:
                 return_time = self.convert_to_bratislava_timezone(lease['time_of_return'])
             else:
-                return_time = "🔄 AKTÍVNE"
+                return_time = ""
             
             # Prepare drive type info matching original format
             drive_info = f"{lease['gas']}, {lease['drive_type']}" if lease['gas'] and lease['drive_type'] else (lease['gas'] or lease['drive_type'] or "")
