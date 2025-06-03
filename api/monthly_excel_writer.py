@@ -180,14 +180,39 @@ class MonthlyExcelWriter:
             
             # Convert to list of dictionaries for easier handling
             lease_data = []
+            current_time = self.get_sk_date()
+            
             for row in raw_data:
+                # Determine actual lease status based on data, not unreliable status column
+                time_of_return = row[3]
+                end_of_lease = row[2]
+                
+                # Logic to determine if lease is cancelled vs completed vs active
+                if time_of_return:
+                    # Has return time = completed
+                    is_cancelled = False
+                    is_completed = True
+                    is_active = False
+                elif end_of_lease and current_time > end_of_lease:
+                    # Past end date without return = likely cancelled or overdue
+                    # We'll consider it cancelled if significantly overdue (more than 7 days)
+                    days_overdue = (current_time - end_of_lease).days
+                    is_cancelled = days_overdue > 7
+                    is_completed = False
+                    is_active = not is_cancelled
+                else:
+                    # Before end date without return = active
+                    is_cancelled = False
+                    is_completed = False
+                    is_active = True
+                
                 lease_record = {
                     'id_lease': row[0],
                     'start_of_lease': row[1],
                     'end_of_lease': row[2],
                     'time_of_return': row[3],
                     'note': row[4] or '',
-                    'status': row[5],  # True = active/completed, False = cancelled
+                    'status': row[5],  # Keep original for reference but don't use for logic
                     'private': row[6],
                     'car_health_check': row[7],
                     'dirty': row[8],
@@ -200,8 +225,10 @@ class MonthlyExcelWriter:
                     'gas': row[15] or '',
                     'email': row[16],
                     'driver_name': row[17],
-                    # Add calculated fields
-                    'is_cancelled': not row[5],  # status = False means cancelled
+                    # Add calculated fields based on actual data
+                    'is_cancelled': is_cancelled,
+                    'is_completed': is_completed,
+                    'is_active': is_active,
                     'is_multi_month': self._is_multi_month_lease(row[1], row[2]),
                     'late_return': self._calculate_late_return(row[2], row[3]) if row[3] else False
                 }
@@ -303,9 +330,9 @@ class MonthlyExcelWriter:
         
         # Calculate statistics
         total_leases = len(lease_data)
-        completed_leases = len([l for l in lease_data if not l['is_cancelled'] and l['time_of_return']])
+        completed_leases = len([l for l in lease_data if l['is_completed']])
         cancelled_leases = len([l for l in lease_data if l['is_cancelled']])
-        active_leases = len([l for l in lease_data if not l['is_cancelled'] and not l['time_of_return']])
+        active_leases = len([l for l in lease_data if l['is_active']])
         private_leases = len([l for l in lease_data if l['private']])
         business_leases = total_leases - private_leases
         multi_month_leases = len([l for l in lease_data if l['is_multi_month']])
@@ -577,7 +604,7 @@ class MonthlyExcelWriter:
         # Calculate insights
         total_leases = len(lease_data)
         if total_leases > 0:
-            success_rate = len([l for l in lease_data if not l['is_cancelled'] and l['time_of_return']]) / total_leases * 100
+            success_rate = len([l for l in lease_data if l['is_completed']]) / total_leases * 100
             damage_rate = len([l for l in lease_data if l['car_health_check'] or l['dirty'] or l['exterior_damage'] or l['interior_damage'] or l['collision']]) / total_leases * 100
             late_rate = len([l for l in lease_data if l['late_return']]) / total_leases * 100
             
@@ -739,7 +766,7 @@ class MonthlyExcelWriter:
             row += 1
             ws.merge_cells(f'A{row}:P{row}')
             summary_cell = ws[f'A{row}']
-            summary_cell.value = f"📊 Celkom: {len(lease_data)} rezervácií | ✅ Dokončené: {len([l for l in lease_data if not l['is_cancelled'] and l['time_of_return']])} | ❌ Zrušené: {len([l for l in lease_data if l['is_cancelled']])} | 🔄 Aktívne: {len([l for l in lease_data if not l['is_cancelled'] and not l['time_of_return']])}"
+            summary_cell.value = f"📊 Celkom: {len(lease_data)} rezervácií | ✅ Dokončené: {len([l for l in lease_data if l['is_completed']])} | ❌ Zrušené: {len([l for l in lease_data if l['is_cancelled']])} | 🔄 Aktívne: {len([l for l in lease_data if l['is_active']])}"
             summary_cell.font = Font(name='Calibri', size=12, bold=True, color="1F4E79")
             summary_cell.alignment = self.center_alignment
             summary_cell.fill = PatternFill("solid", "E3F2FD")
