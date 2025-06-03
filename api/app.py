@@ -113,105 +113,12 @@ def find_reports_directory():
     print("HINT: Volume should be: -v /home/systemak/icls/api/reports:/app/reports")
     return None
 
-def get_reports_paths(folder_path):
-    try:
-        if not os.path.exists(folder_path):
-            print(f"WARNING: Reports directory does not exist: {folder_path}")
-            return []
-            
-        print(f"DEBUG: Scanning directory: {folder_path}")
-        
-        # First, list ALL files in the directory
-        try:
-            all_items = os.listdir(folder_path)
-            print(f"DEBUG: All items in directory: {all_items}")
-        except Exception as e:
-            print(f"ERROR: Could not list directory contents: {e}")
-            return []
-            
-        files = []
-        xlsx_files_found = 0
-        
-        with os.scandir(folder_path) as entries:
-            for entry in entries:
-                print(f"DEBUG: Processing entry: {entry.name} (is_file: {entry.is_file()})")
-                
-                # Check for Excel files (case insensitive)
-                if entry.is_file() and entry.name.lower().endswith('.xlsx'):
-                    xlsx_files_found += 1
-                    print(f"DEBUG: Found Excel file: {entry.name}")
-                    try:
-                        # Handle new monthly format: "2025.05 ICLS Report.xlsx"
-                        if " ICLS Report.xlsx" in entry.name:
-                            print(f"DEBUG: Processing new format file: {entry.name}")
-                            # Extract year.month from filename: "2025.05 ICLS Report.xlsx"
-                            date_part = entry.name.split(' ')[0]  # "2025.05"
-                            print(f"DEBUG: Extracted date part: '{date_part}'")
-                            year, month = map(int, date_part.split('.'))
-                            file_date = datetime(year, month, 1)
-                            files.append((file_date, entry.name))  # Store filename, not full path
-                            print(f"DEBUG: Successfully parsed: {entry.name} -> {year}-{month:02d}")
-                        else:
-                            print(f"DEBUG: Trying old format for: {entry.name}")
-                            # Fallback: try old timestamp format for backward compatibility
-                            timestamp_str = entry.name.split('_', 1)[0]
-                            file_date = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
-                            files.append((file_date, entry.name))  # Store filename, not full path
-                            print(f"DEBUG: Successfully parsed old format: {entry.name}")
-                    except (ValueError, IndexError) as e:
-                        # Skip files with invalid format
-                        print(f"WARNING: Skipping invalid file: {entry.name} - {str(e)}")
-                        continue
-                else:
-                    print(f"DEBUG: Skipping non-Excel file: {entry.name}")
-        
-        print(f"DEBUG: Excel files found: {xlsx_files_found}")
-        print(f"DEBUG: Valid report files processed: {len(files)}")
-        
-        # Sort by datetime descending (newest first)
-        files.sort(key=lambda x: x[0], reverse=True)
-        
-        # Return just the filenames (already stored as filenames, not full paths)
-        result = [file_info[1] for file_info in files]
-        print(f"DEBUG: Returning files: {result}")
-        return result
-        
-    except OSError as e:
-        print(f"ERROR: Error accessing directory {folder_path}: {str(e)}")
-        return []  # Return empty list instead of None
-    except Exception as e:
-        print(f"ERROR: Unexpected error in get_reports_paths: {str(e)}")
-        return []  # Return empty list instead of None
-
-import os
-
-def get_latest_file(folder_path, use_modification_time=True):
-    try:
-        if not os.path.exists(folder_path):
-            raise FileNotFoundError(f"The folder '{folder_path}' does not exist.")
-        
-        if not os.path.isdir(folder_path):
-            raise NotADirectoryError(f"'{folder_path}' is not a directory.")
-
-        latest_file = None
-        latest_time = 0
-
-        # Use os.scandir for better performance
-        with os.scandir(folder_path) as entries:
-            for entry in entries:
-                if entry.is_file():
-                    # Use modification time or creation time based on the parameter
-                    file_time = entry.stat().st_mtime 
-                    
-                    if file_time > latest_time:
-                        latest_time = file_time
-                        latest_file = entry.path
-
-        return latest_file
-
-    except (FileNotFoundError, NotADirectoryError, PermissionError, OSError) as e:
-        print(f"An error occurred: {e}")
-        return None
+def get_reports_paths(folder_path):  
+    try:  
+        with os.scandir(folder_path) as entries:  
+            return [entry.path.removeprefix("/app/reports/") for entry in entries if entry.is_file()]  
+    except OSError:  # Specific exception > bare except!  
+        return None  
 
 def get_sk_date():
     # Ensure the datetime is in UTC before converting
@@ -814,14 +721,28 @@ def list_reports():
   res =  curr.fetchall()
   if len(res) <1:
     return {"msg": "Unauthorized access detected, ball explosion spell had been cast at your spiritual chackra."}
-  
-  # Find the reports directory
-  reports_path = find_reports_directory()
-  
-  if not reports_path:
-    return {"reports": [], "msg": "Reports directory not found"}
-  
-  return {"reports": get_reports_paths(folder_path=reports_path)}
+
+  return {"reports": get_reports_paths(folder_path=f"{os.getcwd()}/reports/")}
+
+
+
+
+
+# @app.route('/list_reports', methods = ['POST'])
+# @jwt_required()
+# def list_reports():
+#   data = request.get_json()
+#   email = data["email"]
+#   role = data["role"]
+
+#   conn, curr = connect_to_db()
+
+#   curr.execute("select id_driver from driver where email = %s and role = %s", (email, role))
+#   res =  curr.fetchall()
+#   if len(res) <1:
+#     return {"msg": "Unauthorized access detected, ball explosion spell had been cast at your spiritual chackra."}
+#   # Should return all file names
+#   return {"reports": get_reports_paths(folder_path=f"{os.getcwd()}/reports/")}
 
 
 # NEED TO REPLACE WHITESPACE WITH %20
@@ -856,7 +777,8 @@ def get_reports(filename):
         return {"msg": "Invalid authorization"}, 403
 
     try:
-        # Try multiple possible paths for reports directory (same as list_reports)
+        
+
         reports_dir = find_reports_directory()
         
         if not reports_dir:
