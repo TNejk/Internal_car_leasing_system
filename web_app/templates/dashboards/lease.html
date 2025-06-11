@@ -50,6 +50,14 @@
           <p id="car-frequency"></p>
           <p id="car-location"></p>
           <p id="car-spz"></p>
+          {% if role == 'manager' %}
+            <label for="car-renter">Objednávané: </label>
+            <select id="car-renter">
+            {% for user in users %}
+              <option value="{{ user['email'] }}">{{ user['email'] }}</option>
+            {% endfor %}
+            </select>
+          {% endif %}
         </div>
       </div>
 

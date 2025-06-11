@@ -4,25 +4,16 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/header.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/layout.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/reports.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/cards.css') }}">
 <title>ICLS - Reporty</title>
 {% endblock %}
 
 {% block body %}
 <div class="container">
-  <div class="card-container" id="card-container">
-    {% if data|length < 1 %}
-      <div id="default-message">Neexistuje žiadny report</div>
-    {% else %}
-      {% for report in data %}
-        <div class="report-card">
-          <h3>{{ report[0] }}</h3>
-          <a href="/manager/get_report?report={{ report[0] }}">
-            <img src="{{ report[2] }}" alt="stiahnuť" >
-          </a>
-        </div>
-      {% endfor %}
-    {% endif %}
+  <div id="loading-message">
+    <h3 >Získavam dáta...</h3>
   </div>
+  <div class="card-container" id="card-container"></div>
 </div>
 {% endblock %}
 

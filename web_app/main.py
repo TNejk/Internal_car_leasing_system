@@ -13,6 +13,8 @@ from get_report import get_report
 from request_monthly_leases import request_monthly_leases
 from get_all_users import get_all_users
 from get_all_cars import get_all_cars
+from get_all_car_info import get_all_car_info
+from get_all_user_info import get_all_user_info
 sys.path.append('misc')
 from load_icons import load_icons
 
@@ -26,6 +28,10 @@ app.config['SECRET_KEY'] = SECRET_KEY
 @app.route('/')
 def index():
   return redirect('/sign-in')
+
+#################################
+#       User and Manager        #
+#################################
 
 @app.route('/sign-in', methods=['GET','POST'])
 @revoke_token()
@@ -46,20 +52,21 @@ def sign_in():
     else:
       return render_template('signs/sign_in.html', data=result, show_header=False)
 
-@app.route('/manager/dashboard', methods=['GET', 'POST'])
-@require_role('manager')
-def manager_dashboard():
-  return render_template('dashboards/Mdashboard.html', icons = load_icons(), show_header=True, role = session.get('role'))
+@app.route('/logout')
+@revoke_token()
+def logout():
+    return redirect(url_for('sign_in'))
 
 @app.route('/lease', methods=['GET'])
 @require_role('user','manager')
 def lease():
   location = request.args.get('location', None)
   cars = request_all_car_data(location)
+  users = get_all_users(session['username'], session['role'])
   username = session['username']
   role = session['role']
 
-  return render_template('dashboards/lease.html', cars = cars, token=session.get('token'), icons = load_icons(), username=username, role=role, show_header=True)
+  return render_template('dashboards/lease.html', users = users, cars = cars, token=session.get('token'), icons = load_icons(), username=username, role=role, show_header=True)
 
 @app.route(f'/reservations', methods=['GET', 'POST'])
 @require_role('user','manager')
@@ -76,55 +83,6 @@ def get_user_leases():
   filters = request.get_json()
   data = request_user_leases(session['role'], filters)
   return jsonify(data)
-
-@app.route('/manager/get_monthly_leases', methods=['POST'])
-@require_role('manager')
-@check_token()
-def get_monthly_leases():
-  data = request.get_json()
-  month = data['month']
-  data = request_monthly_leases(month)
-  return jsonify(data)
-
-@app.route(f'/manager/reports', methods=['GET'])
-@require_role('manager')
-@check_token()
-def reports():
-  data = list_reports(session['username'], session['role'])
-  for report in data:
-    report.append(url_for('static', filename='sources/images/open.svg'))
-    report.append(url_for('static', filename='sources/images/download.svg'))
-
-  return render_template('dashboards/reports.html', data = data, icons = load_icons(), show_header=True)
-
-
-@app.route('/manager/get_report', methods=['GET'])
-@require_role('manager')
-@check_token()
-def get_report_r():
-  try:
-    data = request.args.get('report')
-    response = get_report(data)
-    return response
-
-  except Exception as e:
-    logging.error(f"Error in get_report_r: {str(e)}")
-    return {"msg": f"Server error: {str(e)}"}, 500
-
-@app.route('/get_users', methods=['POST'])
-@require_role('manager')
-@check_token()
-def get_users():
-  data = get_all_users(session['username'],session['role'])
-  return data
-
-@app.route('/get_cars', methods=['POST'])
-@require_role('manager')
-@check_token()
-def get_cars():
-  data = get_all_cars(session['username'],session['role'])
-  return data
-
 
 @app.route('/get_session_data', methods=['POST'])
 @require_role('user','manager')
@@ -151,10 +109,125 @@ def get_notifications():
   data = session['notifications']
   return jsonify(data)
 
-@app.route('/logout')
-@revoke_token()
-def logout():
-    return redirect(url_for('sign_in'))
+#################################
+#            Manager            #
+#################################
+
+@app.route('/manager/dashboard', methods=['GET', 'POST'])
+@require_role('manager')
+def manager_dashboard():
+  return render_template('dashboards/Mdashboard.html', icons = load_icons(), show_header=True, role = session.get('role'))
+
+@app.route('/manager/get_monthly_leases', methods=['POST'])
+@require_role('manager')
+@check_token()
+def get_monthly_leases():
+  data = request.get_json()
+  month = data['month']
+  data = request_monthly_leases(month)
+  return jsonify(data)
+
+@app.route(f'/manager/reports', methods=['GET'])
+@require_role('manager')
+@check_token()
+def reports():
+  return render_template('dashboards/reports.html', icons = load_icons(), show_header=True, role = session['role'])
+
+@app.route('/manager/get_all_reports', methods=['GET'])
+@require_role('manager')
+@check_token()
+def get_all_reports():
+  data = list_reports(session['username'],session['role'])
+  return jsonify(data)
+
+@app.route('/manager/get_report', methods=['GET'])
+@require_role('manager')
+@check_token()
+def get_report_r():
+  try:
+    data = request.args.get('report')
+    response = get_report(data)
+    return response
+
+  except Exception as e:
+    logging.error(f"Error in get_report_r: {str(e)}")
+    return {"msg": f"Server error: {str(e)}"}, 500
+
+@app.route('/get_cars', methods=['POST'])
+@require_role('manager')
+@check_token()
+def get_car_list():
+  data = get_all_cars(session['username'],session['role'])
+  return data
+
+@app.route('/get_users', methods=['POST'])
+@require_role('manager')
+@check_token()
+def get_users():
+  data = get_all_users(session['username'],session['role'])
+  return data
+
+#################################
+#             Admin             #
+#################################
+
+@app.route('/admin/dashboard', methods=['GET', 'POST'])
+@require_role('admin')
+def admin_dashboard():
+  return render_template('dashboards/Adashboard.html', icons = load_icons(), show_header=True, role = session.get('role'))
+
+@app.route('/admin/get_car_list', methods=['POST'])
+@require_role('admin')
+def admin_get_car_list():
+  data = get_all_car_info(session['username'],session['role'])
+  return jsonify(data)
+
+@app.route('/admin/get_user_list', methods=['POST'])
+@require_role('admin')
+def admin_get_user_list():
+  data = get_all_user_info(session['username'],session['role'])
+  return jsonify(data)
+
+@app.route('/admin/create_car', methods=['POST'])
+@require_role('admin')
+def admin_create_car():
+  return 1
+
+@app.route('/admin/update_car', methods=['POST'])
+@require_role('admin')
+def admin_edit_car():
+  return 1
+
+@app.route('/admin/delete_car', methods=['POST'])
+@require_role('admin')
+def admin_delete_car():
+  return 1
+
+@app.route('/admin/decommission', methods=['POST'])
+@require_role('admin')
+def admin_decommission():
+  return 1
+
+@app.route('/admin/activation', methods=['POST'])
+@require_role('admin')
+def admin_activation():
+  return 1
+
+@app.route('/admin/create_user', methods=['POST'])
+@require_role('admin')
+def admin_add_user():
+  return 1
+
+@app.route('/admin/update_user', methods=['POST'])
+@require_role('admin')
+def admin_update_user():
+  return 1
+
+@app.route('/admin/delete_user', methods=['POST'])
+@require_role('admin')
+def admin_delete_user():
+  return 1
+
 
 if __name__ == '__main__':
   app.run(debug=True, use_reloader=True)

@@ -11,48 +11,64 @@ const scrapReservationButton = document.getElementById('scrap-reservation-button
 const returnCarButton = document.getElementById('return-car-button');
 const stopReturnButton = document.getElementById('stop-return-button');
 
+const filter = document.getElementById('filter');
 const userList = document.getElementById('user-list');
 const carList = document.getElementById('car-list');
 const statusTrue = document.getElementById('status-true');
 const statusFalse = document.getElementById('status-false');
+const timeof = document.getElementById('timeof');
+const timeto = document.getElementById('timeto');
 
-let timeof = new Date();
-let timeto = new Date()
-timeto.setFullYear(timeto.getFullYear() + 1);
+const carDamaged = document.getElementById('car-damaged');
+const carDamagedParams = document.getElementById('car-damaged-params');
+const carCollision = document.getElementById('car-collision');
 
 let leaseId;
 let role;
 
-function get_leases(){
+function get_leases() {
   fetch('/get_session_data', {method: 'POST'})
-  .then(res => res.json())
-  .then(data => {
-    role = data.role;
-
-    fetch('/get_user_leases', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({car_name: carList.value, email: userList.value, timeof: timeof, timeto: timeto, istrue: statusTrue.checked, isfalse: statusFalse.checked}),})
     .then(res => res.json())
     .then(data => {
-        document.getElementById('default-message').style.display = 'block';
-      }else {
-        if (role === 'manager'){
-          if (userList.value === ''){
-            render_cards(data);
-          } else {
-            const filteredData = data.filter(lease => lease.email === userList.value);
-            render_cards(filteredData);
-            }
-        } else {
-          render_cards(data);
-          }
+      role = data.role;
+
+      let bd = {
+        car_name: carList.value,
+        email: userList.value,
+        timeof: timeof.value,
+        timeto: timeto.value,
+        istrue: statusTrue.checked,
+        isfalse: statusFalse.checked
       }
-    });
-  })
-} // finished
+
+      fetch('/get_user_leases', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(bd),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.length < 0) {
+            document.getElementById('default-message').style.display = 'block';
+          } else{
+            if (role === 'manager') {
+              if (userList.value === '') {
+                render_cards(data);
+              } else {
+                const filteredData = data.filter(lease => lease.email === userList.value);
+                render_cards(filteredData);
+              }
+            } else {
+              render_cards(data);
+            }
+          }
+
+        })
+    })
+}// finished
 
 function render_cards(data){
+
   // Get the container where cards will be added
   const cardCont = document.getElementById('card-container');
   cardCont.innerHTML = ''; // Clear existing cards
@@ -86,6 +102,17 @@ function render_cards(data){
       openModal(lease);
     };
     card.id = 'card';
+    if (lease.status === false){
+      card.style.backgroundColor = '#bc2026';
+    }else if(lease.status === true){
+      // !!!!!!!!!!!!!!!! kamo neformatuj cas, lebo z dakeho dovodu ti ho nastavi o dve hodiny dozadu a nepojde ti to spravne :)
+      const date = new Date().toLocaleString();//.replace('T', ' ').split('.')[0]
+      if (date < lease.time_from){
+        card.style.backgroundColor = 'orange';
+      }else {
+        card.style.backgroundColor = 'green';
+      }
+    }
 
     // Create car image
     const img = document.createElement('img');
@@ -128,9 +155,18 @@ function finishReservation(){
     return date.toISOString().replace('T', ' ').replace('Z', '') + "+0000";
   }
 
+  const location = document.getElementById("car-location").value;
+  let damaged = document.getElementById("car-damaged").value;
+  if (damaged === 'on'){damaged = true}else if(damaged === 'off'){damaged = false}
+  let dirty = document.getElementById("car-dirty").value;
+  if (dirty === 'on'){dirty = true}else if(dirty === 'off'){dirty = false}
+  let intDmg = document.getElementById("car-int-dmg").value;
+  if (intDmg === 'on'){intDmg = true}else if(intDmg === 'off'){intDmg = false}
+  let extDmg = document.getElementById("car-ext-dmg").value;
+  if (extDmg === 'on'){extDmg = true}else if(extDmg === 'off'){extDmg = false}
+  let collision = document.getElementById("car-collision").value;
+  if (collision === 'on'){collision = true}else if(collision === 'off'){collision = false}
   const note = document.getElementById("note").value;
-  const health = document.getElementById("card-health").value;
-  const location = document.getElementById("card-location").value;
 
   fetch('/get_session_data', {method: 'POST'})
     .then(response => response.json())
@@ -142,8 +178,13 @@ function finishReservation(){
     'time_of_return': returnTime,
     'note': note,
     'location': location,
-    'health': health
+    'damaged': damaged,
+    'dirty': dirty,
+    'int_damage': intDmg,
+    'ext_damage': extDmg,
+    'collision': collision
   };
+  console.log(payload);
   fetch('https://icls.sosit-wh.net/return_car', {
     method: 'POST',
     headers: {
@@ -165,27 +206,40 @@ function scrapReservation(){
   fetch('/get_session_data', {method: 'POST'})
     .then(response => response.json())
     .then(data => {
-  let token = data.token;
-  let email = data.username;
+      let token = data.token;
+      let email;
+      if (data.role === 'user'){
+        email = data.username;
+      }else {
+        email = document.getElementById('modal-user').innerHTML.split('>')[1];
+      }
 
-  fetch('https://icls.sosit-wh.net/cancel_lease', {
-    method: 'POST',
-    headers: {
-      Authorization: 'Bearer ' + token,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({"car_name": car, "recipient": email}),
-    }).then(response => response.json())
-      .then((data) => {
-    closeModalF();
-    reload(data);
-    get_leases();
-    })
+      console.log(car, email);
+
+      fetch('https://icls.sosit-wh.net/cancel_lease', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({"car_name": car, "recipient": email}),
+        }).then(response => response.json())
+          .then((data) => {
+            closeModalF();
+            reload(data);
+            get_leases();
+        });
     });
 }
 
 function openModal(lease) {
   leaseId = lease.lease_id;
+  if (lease.status === false) {
+      document.getElementById('finish-reservation-button').style.display = 'none';
+      document.getElementById('scrap-reservation-button').style.display = 'none';
+    }else {
+      document.getElementById('finish-reservation-button').style.display = 'block';
+      document.getElementById('scrap-reservation-button').style.display = 'block';}
 
   const formatter = new Intl.DateTimeFormat("sk-SK", {
     weekday: "long",
@@ -213,6 +267,7 @@ function openModal(lease) {
   document.getElementById("modal-time-from").innerText = `Rezervované od:\n${from}`;
   document.getElementById("modal-time-to").innerText = `Rezervovaná do:\n${to}`;
   document.getElementById("modal-spz").innerText = `SPZ auta:\n${lease['spz']}`;
+  document.getElementById("modal-state").innerText = `Status:\n${lease['status'] === true ? 'Aktívny' : 'Ukončený'}`;
   stopReturnButton.value = lease['car_name'];
   if (role === 'manager') {
     document.getElementById("modal-user").innerText = `Objednal:\n${lease['email']}`;
@@ -231,6 +286,9 @@ closeModal.addEventListener('click', function(){
   modalLeaseDetails.style.display = "none";
   modalReturnCar.style.display = "none";
   modalBackdrop.style.display = "none";
+  const checkboxes = document.querySelectorAll('#car-damaged-params input[type="checkbox"]');
+  // Disable each one
+  checkboxes.forEach(cb => cb.checked = false);
 }); // finished
 
 finishReservationButton.addEventListener('click', () => {
@@ -247,8 +305,43 @@ returnCarButton.addEventListener('click', () => {
 }) // finished
 
 stopReturnButton.addEventListener('click', () => {
+  const checkboxes = document.querySelectorAll('#car-damaged-params input[type="checkbox"]');
+  carDamaged.checked = false;
+  carDamagedParams.style.display = "none";
+  checkboxes.forEach(cb => cb.checked = false);
   closeModalF();
 }) // finished
+
+carDamaged.addEventListener('click', () => {
+  let state = carDamaged.checked;
+  if (state === true) {
+    carDamagedParams.style.display = 'block';
+  }else {
+    carDamagedParams.style.display = 'none';
+    const checkboxes = document.querySelectorAll('#car-damaged-params input[type="checkbox"]');
+    // Disable each one
+    checkboxes.forEach(checkbox => {
+      checkbox.checked = false;
+    });
+  }
+  
+})
+
+carCollision.addEventListener('click',() =>{
+  let state = carCollision.checked;
+  if (state === true) {
+    const checkboxes = document.querySelectorAll('#car-damaged-params input[type="checkbox"]');
+    // Disable each one
+    checkboxes.forEach(checkbox => {
+      checkbox.checked = true;
+    });
+  }else{
+    const checkboxes = document.querySelectorAll('#car-damaged-params input[type="checkbox"]');
+    // Disable each one
+    checkboxes.forEach(checkbox => {
+      checkbox.checked = false;
+    });}
+})
 
 function reload(data){
   let set = false;
@@ -256,7 +349,6 @@ function reload(data){
   const canceled = data['cancelled'];
   const modalTitle = document.querySelector('#modal-status #modal-inner h2');
   const modalMessage = document.querySelector('#modal-status #modal-inner p');
-  console.log(set);
   if (status === 'returned' && set === false){
     modalTitle.textContent = 'Úspech :)';
     modalMessage.textContent = 'Auto bolo úspešne vtárené!';
@@ -271,30 +363,27 @@ function reload(data){
   if (!status && set === false) {
     modalTitle.textContent = 'Neúspech :(';
     modalMessage.textContent = 'Auto sa nepodarilo vrátiť! Obnovte stránku a skúste to znova.';
-    set = true;
   }else if (!canceled&& set === false){
     modalTitle.textContent = 'Neúspech :(';
     modalMessage.textContent = 'Rezerváciu sa nepodarilo zrušiť! Obnovte stránku a skúste to znova.';
-    set = true;
   }
   modalStatus.style.display = 'block';
   modalInner.style.display = 'block';
   modalBackdrop.style.display = 'block';
 } // finished
 
+try {
+  filter.addEventListener('click', function () {
+    get_leases();
+  })
+}finally {
+  console.log();
+}
+
 closeModalStatus.addEventListener('click', function() {
   modalBackdrop.style.display = "none";
   modalStatus.style.display = "none";
 }) // finished
-
-try{
-  userList.addEventListener('click', function () {
-  get_leases()
-  })
-}
-catch {
-  console.log();
-} // finished
 
 document.addEventListener('DOMContentLoaded', () => {
   get_leases();

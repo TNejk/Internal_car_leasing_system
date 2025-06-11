@@ -8,8 +8,14 @@ def request_user_leases(role,filters):
           'car_name': filters.get('car_name',''),
           'timeof': filters.get('timeof',''),
           'timeto': filters.get('timeto',''),
-          'status': filters.get('status',''),}
+          'istrue': filters.get('istrue', True),
+          'isfalse': filters.get('isfalse', True),}
   url = 'https://icls.sosit-wh.net/get_leases'
   request = requests.post(url=url, headers=headers, json=body)
+  print(request.text)
   response = request.json()['active_leases']
-  return response
+
+  # Assuming time is comparable (like a datetime object or a timestamp)
+  sorted_array = sorted(response, key=lambda x: x['time_from'], reverse=True)
+
+  return sorted_array

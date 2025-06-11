@@ -1,5 +1,8 @@
 <header class="main-header">
   <img src="../../static/sources/images/logo.svg" alt="GAMO" id="gamo-img">
+  {% if role == 'admin' %}
+  <a href="/logout">Odhlásiť sa</a>
+  {% else %}
   <div class="icons">
     <ul>
         {% if role == 'manager' %}
@@ -33,4 +36,5 @@
       </li>
     </ul>
   </div>
+  {% endif %}
 </header>
