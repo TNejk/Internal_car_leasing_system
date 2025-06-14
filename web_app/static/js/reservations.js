@@ -28,45 +28,40 @@ let role;
 
 function get_leases() {
   fetch('/get_session_data', {method: 'POST'})
+  .then(res => res.json())
+  .then(data => {
+    role = data.role;
+    username = data.username;
+
+    if (role === 'manager'){
+      payload = JSON.stringify({car_name: carList.value, email: userList.value, timeof: timeof, timeto: timeto, istrue: statusTrue.checked, isfalse: statusFalse.checked})
+    }else {
+      payload = JSON.stringify({car_name: '', email: username, timeof: '', timeto: '', istrue: '', isfalse: ''})
+    }
+
+    fetch('/get_user_leases', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: payload,})
     .then(res => res.json())
     .then(data => {
-      role = data.role;
-
-      let bd = {
-        car_name: carList.value,
-        email: userList.value,
-        timeof: timeof.value,
-        timeto: timeto.value,
-        istrue: statusTrue.checked,
-        isfalse: statusFalse.checked
-      }
-
-      fetch('/get_user_leases', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(bd),
-      })
-        .then(res => res.json())
-        .then(data => {
-          console.log(data);
-          if (data.length < 0) {
-            document.getElementById('default-message').style.display = 'block';
-          } else{
-            if (role === 'manager') {
-              if (userList.value === '') {
-                render_cards(data);
-              } else {
-                const filteredData = data.filter(lease => lease.email === userList.value);
-                render_cards(filteredData);
-              }
-            } else {
-              render_cards(data);
+      if (!data){
+        document.getElementById('default-message').style.display = 'block';
+      }else {
+        if (role === 'manager'){
+          if (userList.value === ''){
+            render_cards(data);
+          } else {
+            const filteredData = data.filter(lease => lease.email === userList.value);
+            render_cards(filteredData);
             }
+        } else {
+          render_cards(data);
           }
-
-        })
-    })
-}// finished
+      }
+    });
+  })
+} // finished
 
 function render_cards(data){
 
@@ -325,7 +320,7 @@ carDamaged.addEventListener('click', () => {
       checkbox.checked = false;
     });
   }
-  
+
 })
 
 carCollision.addEventListener('click',() =>{
@@ -387,16 +382,18 @@ document.addEventListener('DOMContentLoaded', () => {
   get_leases();
   modalInner.style.display = 'none';
 
-  fetch('get_cars', {method: 'POST'}).then(res => res.json()).then(data => {
-    for (let car of data) {
-      const opt = new Option(car[0],car[0]);
-      carList.add(opt);
-    }
-  })
-  fetch('get_users', {method: 'POST'}).then(res=> res.json()).then(data => {
-    for (let user of data) {
-      const opt = new Option(user.email,user.email);
-      userList.add(opt);
-    }
-  })
-})} // finished
+  if (role === 'manager') {
+    fetch('get_cars', {method: 'POST'}).then(res => res.json()).then(data => {
+      for (let car of data) {
+        const opt = new Option(car[0],car[0]);
+        carList.add(opt);
+      }
+    })
+    fetch('get_users', {method: 'POST'}).then(res=> res.json()).then(data => {
+      for (let user of data) {
+        const opt = new Option(user.email,user.email);
+        userList.add(opt);
+      }
+    })
+  }
+}) // finished
