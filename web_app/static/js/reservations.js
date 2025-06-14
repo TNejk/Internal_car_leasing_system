@@ -48,6 +48,7 @@ function get_leases() {
       })
         .then(res => res.json())
         .then(data => {
+          console.log(data);
           if (data.length < 0) {
             document.getElementById('default-message').style.display = 'block';
           } else{
@@ -372,13 +373,10 @@ function reload(data){
   modalBackdrop.style.display = 'block';
 } // finished
 
-try {
+if (filter !== null) {
   filter.addEventListener('click', function () {
     get_leases();
   })
-}finally {
-  console.log();
-}
 
 closeModalStatus.addEventListener('click', function() {
   modalBackdrop.style.display = "none";
@@ -401,4 +399,4 @@ document.addEventListener('DOMContentLoaded', () => {
       userList.add(opt);
     }
   })
-}) // finished
+})} // finished
