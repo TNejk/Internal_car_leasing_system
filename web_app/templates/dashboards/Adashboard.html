@@ -10,43 +10,42 @@
 <div class="container">
   <aside class="sidebar">
     <ul>
-      <li class="active" data-tab="users">Users</li>
-      <li data-tab="cars">Cars</li>
+      <li class="active" data-tab="users">Používatelia</li>
+      <li data-tab="cars">Autá</li>
     </ul>
   </aside>
 
   <main class="content">
     <!-- Users Management Section -->
     <section id="users" class="tab-content active">
-      <h2>Manage Users</h2>
+      <h2>Správa používateľov</h2>
       <div class="user-actions">
-        <button id="register-user">Register New User</button>
         <!-- User Form -->
         <div class="form-container" id="user-form">
           <form>
             <div class="form-group">
-              <label for="user-name">Name</label>
-              <input type="text" id="user-name" placeholder="Enter name">
+              <label for="user-name">Meno</label>
+              <input type="text" id="user-name" placeholder="Vlož celé meno">
             </div>
             <div class="form-group">
               <label for="user-email">Email</label>
-              <input type="email" id="user-email" placeholder="Enter email">
+              <input type="email" id="user-email" placeholder="Vlož email">
             </div>
             <div class="form-group">
-              <label for="user-password">Password</label>
-              <input type="password" id="user-password" placeholder="Enter password">
+              <label for="user-password">Heslo</label>
+              <input type="password" id="user-password" placeholder="Vlož heslo">
             </div>
             <div class="form-group">
-              <label for="user-role">Role</label>
+              <label for="user-role">Rola</label>
               <select id="user-role">
-                <option value="user">User</option>
-                <option value="manager">Manager</option>
+                <option value="user">Používateľ</option>
+                <option value="manager">Manažér</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
             <div class="form-actions">
               <button type="button" id="add-user">Pridaj Používateľa</button>
-              <button type="button" id="clear">Vyčisti</button>
+              <button type="button" id="clear-user">Vyčisti</button>
             </div>
           </form>
         </div>
@@ -72,52 +71,63 @@
 
     <!-- Cars Management Section -->
     <section id="cars" class="tab-content">
-      <h2>Manage Cars</h2>
+      <h2>Správa áut</h2>
       <div class="car-actions">
-        <button id="add-car">Add New Car</button>
         <!-- Car Form -->
         <div class="form-container" id="car-form">
           <form>
             <div class="form-group">
-              <label for="car-name">Car Name</label>
-              <input type="text" id="car-name" placeholder="Enter car name">
+              <label for="car-name">Meno auta</label>
+              <input type="text" id="car-name" placeholder="Vlož meno auta">
             </div>
             <div class="form-group">
-              <label for="car-type">Type</label>
+              <label for="car-type">Typ</label>
               <select id="car-type">
-                <option value="cargo">Cargo</option>
-                <option value="personal">Personal</option>
+                <option value="personal">Osobné</option>
+                <option value="cargo">Nákladné</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="gas-type">Gas Type</label>
+              <label for="drive-tp">Prevodovka</label>
+              <select id="drive-tp">
+                <option value="MANUÁL">Manuál</option>
+                <option value="AUTOMAT">Automat</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="gas-type">Typ paliva</label>
               <select id="gas-type">
                 <option value="diesel">Diesel</option>
-                <option value="benzine">Benzíne</option>
+                <option value="benzine">Benzín</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="plate-number">Plate Number</label>
-              <input type="text" id="plate-number" placeholder="Enter plate number">
+              <label for="plate-number">ŠPZ</label>
+              <input type="text" id="plate-number" placeholder="Vlož ŠPZ">
             </div>
             <div class="form-group">
-              <label for="state">State</label>
+              <label for="state">Status</label>
               <select id="state">
-                <option value="available">Available for Lease</option>
-                <option value="in-repair">In Repair</option>
+                <option value="available">Aktívne</option>
+                <option value="in-repair">Servis</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="location">Location</label>
+              <label for="location">Lokácia</label>
               <select id="location">
-                <option value="BB">BB</option>
-                <option value="BA">BA</option>
-                <option value="KE">KE</option>
+                <option value="BB">Banská Bystrica</option>
+                <option value="BA">Bratislava</option>
+                <option value="KE">Košice</option>
               </select>
+            </div>
+            <div class="form-group">
+              <label for="imageInput">Obrázok</label>
+              <input type="file" id="imageInput" accept="image/*">
+              <img id="preview" style="max-width: 300px; margin-top: 10px;">
             </div>
             <div class="form-actions">
-              <button type="submit">Save Car</button>
-              <button type="button" class="cancel">Cancel</button>
+              <button type="button" id="add-car">Pridaj auto</button>
+              <button type="button" class="clear-user">Vyčisti</button>
             </div>
           </form>
         </div>
@@ -133,7 +143,7 @@
                   <th>SPZ</th>
                   <th>Typ</th>
                   <th>Palivo</th>
-                  <th>Riadenie</th>
+                  <th>Prevodovka</th>
                   <th>Stav</th>
                   <th>Status</th>
                   <th>Metrika</th>
@@ -147,7 +157,12 @@
           </div>
         </div>
       </div>
+      <div></div>
     </section>
+    <div class="modal-backdrop" id="modal-backdrop" onclick="closeModalF()"></div>
+    <div class="modal" id="modal-edit-car"></div>
+    <div class="modal" id="modal-edit-user"></div>
+    <div id="modal-status" class="modal-status"></div>
   </main>
 </div>
 

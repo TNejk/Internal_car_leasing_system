@@ -17,6 +17,8 @@ from get_all_users import get_all_users
 from get_all_cars import get_all_cars
 from get_all_car_info import get_all_car_info
 from get_all_user_info import get_all_user_info
+from create_user import create_user
+from create_car import create_car
 
 sys.path.append('misc')
 from load_icons import load_icons
@@ -101,13 +103,13 @@ def get_user_leases():
 
 
 @app.route('/get_session_data', methods=['POST'])
-@require_role('user', 'manager')
+@require_role('user', 'manager','admin')
 @check_token()
 def get_session_data():
   data = {
     'username': session.get('username'),
     'password': session.get('password'),
-    'token': session.get('token'),
+    # 'token': session.get('token'),
     'role': session.get('role')
   }
   return jsonify(data)
@@ -205,12 +207,14 @@ def get_cars():
 
 @app.route('/admin/dashboard', methods=['GET', 'POST'])
 @require_role('admin')
+@check_token()
 def admin_dashboard():
   return render_template('dashboards/Adashboard.html', icons=load_icons(), show_header=True, role=session.get('role'))
 
 
 @app.route('/admin/get_car_list', methods=['POST'])
 @require_role('admin')
+@check_token()
 def admin_get_car_list():
   data = get_all_car_info(session['username'], session['role'])
   return jsonify(data)
@@ -218,6 +222,7 @@ def admin_get_car_list():
 
 @app.route('/admin/get_user_list', methods=['POST'])
 @require_role('admin')
+@check_token()
 def admin_get_user_list():
   data = get_all_user_info(session['username'], session['role'])
   return jsonify(data)
@@ -225,48 +230,59 @@ def admin_get_user_list():
 
 @app.route('/admin/create_car', methods=['POST'])
 @require_role('admin')
+@check_token()
 def admin_create_car():
-  return 1
+  data = request.get_json()
+  response = create_car(data)
+  return response
 
 
 @app.route('/admin/update_car', methods=['POST'])
 @require_role('admin')
+@check_token()
 def admin_edit_car():
   return 1
 
 
 @app.route('/admin/delete_car', methods=['POST'])
 @require_role('admin')
+@check_token()
 def admin_delete_car():
   return 1
 
 
 @app.route('/admin/decommission', methods=['POST'])
 @require_role('admin')
+@check_token()
 def admin_decommission():
   return 1
 
 
 @app.route('/admin/activation', methods=['POST'])
 @require_role('admin')
+@check_token()
 def admin_activation():
   return 1
 
 
 @app.route('/admin/create_user', methods=['POST'])
 @require_role('admin')
+@check_token()
 def admin_add_user():
-  return 1
-
+  data = request.get_json()
+  response = create_user(data)
+  return response
 
 @app.route('/admin/update_user', methods=['POST'])
 @require_role('admin')
+@check_token()
 def admin_update_user():
   return 1
 
 
 @app.route('/admin/delete_user', methods=['POST'])
 @require_role('admin')
+@check_token()
 def admin_delete_user():
   return 1
 
