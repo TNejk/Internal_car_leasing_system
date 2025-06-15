@@ -2,7 +2,7 @@ let selectedRange = null;
 let username = null
 let role = null;
 let car_name = null;
-let is_private = false;
+let is_private = null;
 let Token = null;
 let car_id = null;
 let stk = null;
@@ -145,11 +145,11 @@ function renderDetails(car_details) {
   const carDetails = car_details[0];
   car_name = carDetails[1];
   stk = carDetails[8]
-  if (carDetails[3] == 'stand_by') {
+  if (carDetails[3] === 'stand_by') {
     carDetails[3] = 'Voľné';
-  } else if (carDetails[3] == 'leased') {
+  } else if (carDetails[3] === 'leased') {
     carDetails[3] = 'Obsadené';
-  } else if (carDetails[3] == 'service') {
+  } else if (carDetails[3] === 'service') {
     carDetails[3] = 'V servise';
   } else {
     carDetails[3] = 'Kontaktujte administrátora :(';
@@ -177,11 +177,18 @@ function renderDetails(car_details) {
 
 function reload(data){
   const status = data['status'];
+  const msg = data['msg'];
   const modalTitle = document.querySelector('#modal .modal-inner h2');
   const modalMessage = document.querySelector('#modal .modal-inner p');
-  if (status == true){
-    modalTitle.textContent = 'Úspech :)';
-    modalMessage.textContent = 'Rezervácia auta bola úspešná!';
+  if (status === true){
+    if (msg === 'Request for a private ride was sent!'){
+      modalTitle.textContent = 'Čaká sa na potvrdenie...';
+      modalMessage.textContent = 'Požiadavka na súkromnú jazdu bola úspešne odoslaná!';
+    }else {
+      modalTitle.textContent = 'Úspech :)';
+      modalMessage.textContent = 'Rezervácia auta bola úspešná!';
+    }
+
   }else{
     modalTitle.textContent = 'Neúspech :(';
     modalMessage.textContent = 'Rezervácia auta sa nepodarila, skúste to znova.';
@@ -191,10 +198,12 @@ function reload(data){
 };
 
 function leaseCar(selectedRange) {
-  console.log(document.getElementById('car-renter'));
+  let recipient = role === "manager" ? document.getElementById('car-renter').value : username;
+  is_private = document.getElementById('isPrivate').checked;
+
   data = {
     'username': username,
-    'recipient': document.getElementById('car-renter').value,
+    'recipient': recipient,
     'role': role,
     'car_name': car_name,
     'stk': stk,
@@ -202,6 +211,7 @@ function leaseCar(selectedRange) {
     'timeof': selectedRange['start'],
     'timeto': selectedRange['end'],
   };
+
   fetch('https://icls.sosit-wh.net/lease_car', {
     method: 'POST',
     headers: {

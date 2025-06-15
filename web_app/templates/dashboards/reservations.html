@@ -18,9 +18,10 @@
     <form action="/logout">
       <button>Odhlásenie</button>
     </form>
-    {% if role == 'manager' %}
+
     <h3>Filtre</h3>
     <div id="filters">
+      {% if role == 'manager' %}
       <label for="user-list">Používatelia</label>
       <select id="user-list">
           <option value="">Všetci</option>
@@ -29,6 +30,7 @@
       <select id="car-list">
         <option value="">Všetky</option>
       </select>
+      {% endif %}
       <div class="checkbox-group">
         <div class="checkbox-item">
           <label for="status-true">Aktívna</label>
@@ -47,8 +49,6 @@
       <button id='filter' type="submit">Filtrovať</button>
     </div>
 
-
-    {% endif %}
   </div>
   <div class="content">
     <div class="card-container" id="card-container">

@@ -36,7 +36,7 @@ function get_leases() {
     if (role === 'manager'){
       payload = JSON.stringify({car_name: carList.value, email: userList.value, timeof: timeof, timeto: timeto, istrue: statusTrue.checked, isfalse: statusFalse.checked})
     }else {
-      payload = JSON.stringify({car_name: '', email: username, timeof: '', timeto: '', istrue: '', isfalse: ''})
+      payload = JSON.stringify({car_name: '', email: username, timeof: timeof, timeto: timeto, istrue: statusTrue.checked, isfalse: statusFalse.checked})
     }
 
     fetch('/get_user_leases', {
@@ -45,6 +45,7 @@ function get_leases() {
       body: payload,})
     .then(res => res.json())
     .then(data => {
+      console.log(data);
       if (!data){
         document.getElementById('default-message').style.display = 'block';
       }else {
@@ -101,8 +102,10 @@ function render_cards(data){
     if (lease.status === false){
       card.style.backgroundColor = '#bc2026';
     }else if(lease.status === true){
-      // !!!!!!!!!!!!!!!! kamo neformatuj cas, lebo z dakeho dovodu ti ho nastavi o dve hodiny dozadu a nepojde ti to spravne :)
-      const date = new Date().toLocaleString();//.replace('T', ' ').split('.')[0]
+      // !!!!!!!!!!!!!!!! kamo skontroluj si vzdy ked porovnavas casy, ci su rovnako sformatovane, ci su rovnaka timezone lebo toISOString vzdy da cas o 2 hodiny dozadu idk why >:)
+      const now = new Date();
+      now.setHours(now.getHours() + 2);
+      let date = now.toISOString().replace('T', ' ').split('.')[0];
       if (date < lease.time_from){
         card.style.backgroundColor = 'orange';
       }else {
@@ -180,7 +183,6 @@ function finishReservation(){
     'ext_damage': extDmg,
     'collision': collision
   };
-  console.log(payload);
   fetch('https://icls.sosit-wh.net/return_car', {
     method: 'POST',
     headers: {
@@ -372,7 +374,7 @@ if (filter !== null) {
   filter.addEventListener('click', function () {
     get_leases();
   })
-
+}
 closeModalStatus.addEventListener('click', function() {
   modalBackdrop.style.display = "none";
   modalStatus.style.display = "none";
