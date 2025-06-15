@@ -3,6 +3,9 @@ import csv
 import os
 import hashlib
 import jwt
+import uuid
+from PIL import Image
+from io import BytesIO
 from dateutil import parser 
 import psycopg2
 from flask_mail import Mail, Message
@@ -279,20 +282,17 @@ def create_car():
     car_image = data['image']
   except:
      return {"status": False, "msg": "Chýbajúce parametre pri vytvorení auta!"}
-  
-  # TODO: Here construct an image from the bytes
 
-  # TODO: After constructing it, save it to the /images folder, where it should then be automatically added to the nginx file server
-  
+  UPLOAD_FOLDER = '/home/systemak/icls/api/images'
+  NGINX_PUBLIC_URL = 'https://fl.gamo.sosit-wh.net/images/'
 
-  #* construct a url using the new images name and add it to the database
-  
-  url = "https://fl.gamo.sosit-wh.net/{0}".format()
+  img_url = save_base64_img(car_image)
+
   conn, cur = connect_to_db()
 
-  query = "INSERT INTO car (name, type, status, location, stk, gas, drive_type) VALUES (%s,%s,%s,%s,%s,%s,%s)"
+  query = "INSERT INTO car (name, type, status, location, url, stk, gas, drive_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
   try:
-    cur.execute(query, (car_name, _type, status, location, spz, gas, drive_tp,))
+    cur.execute(query, (car_name, _type, status, location, spz, img_url, gas, drive_tp,))
     conn.commit()
     conn.close()
     return {"status": True, "msg": "Auto bolo vytvorené."}
@@ -1623,6 +1623,30 @@ def _usage_metric(id_car, conn):
 @jwt_required()
 def token_test():
   return jsonify({'msg': 'success'}), 200
+
+
+
+def save_base64_img(data_url):
+  # Separate metadata from actual base64 data
+  try:
+    header, encoded = data_url.split(",", 1)
+    file_ext = header.split(";")[0].split("/")[1]  # e.g. jpeg, png
+  except Exception:
+    raise ValueError("Invalid image data URL format")
+
+  # Decode base64 to bytes
+  image_data = base64.b64decode(encoded)
+  image = Image.open(BytesIO(image_data))
+
+  # Generate unique filename
+  unique_filename = f"{uuid.uuid4()}.{file_ext}"
+  image_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+
+  # Save image to disk
+  image.save(image_path)
+
+  # Return public URL
+  return NGINX_PUBLIC_URL + unique_filename
 
 if __name__ == "__main__":
   app.run()
