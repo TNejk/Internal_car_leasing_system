@@ -96,12 +96,7 @@ def __convert_to_datetime(string) -> datetime:
 def find_reports_directory():
     """Find the reports directory at the volume mount location."""
     reports_path = "/app/reports"
-    
-    print(f"DEBUG: Current working directory: {os.getcwd()}")
-    print(f"DEBUG: Checking reports path: {reports_path}")
-    print(f"DEBUG: Path exists: {os.path.exists(reports_path)}")
-    print(f"DEBUG: Is directory: {os.path.isdir(reports_path)}")
-    
+        
     if os.path.exists(reports_path) and os.path.isdir(reports_path):
         print(f"DEBUG: Found reports directory at: {reports_path}")
         # List contents of reports directory
@@ -306,7 +301,7 @@ def edit_user():
       """
 
   try:
-    cursor.execute(query, tuple(values))
+    cur.execute(query, tuple(values))
     conn.commit()
     conn.close()
 
@@ -429,7 +424,7 @@ def edit_car():
       """
 
   try:
-    cursor.execute(query, tuple(values))
+    cur.execute(query, tuple(values))
     conn.commit()
     conn.close()
 
@@ -557,6 +552,7 @@ def get_cars():
 @jwt_required()
 def get_car_list():
   #! This is useless here, why have it?
+  #? Cuz we wanted to send a location also to the api, but we never got into it. Either way it should have been a POST req then
   if request.method == 'GET':
       conn, cur = connect_to_db()
       if conn is None:
@@ -618,10 +614,8 @@ def decommission():
   if role != "manager" and role != "admin":
       return {"status": False, "msg": "Unauthorized"}, 401
 
-  # Input validation
   try:
       car_name = data["car_name"]
-      # TODO: Replace timeof with todays date, as i no longer require time_of
       time_of = __convert_to_datetime(get_sk_date())
       time_to = __convert_to_datetime(data["timeto"])
   except KeyError as e:
@@ -639,15 +633,42 @@ def decommission():
       # Add a decomission request to the DB
       car_decomission_query = "INSERT INTO decommissioned_cars(status, car_name, email, time_to, requested_at) values (%s, %s, %s, %s, %s)"
       cur.execute(car_decomission_query, (True, car_name, email, time_to, time_of, ))
-      
-      lease_update_query = """
-          UPDATE lease 
-          SET status = FALSE 
-          WHERE start_of_lease > %s AND end_of_lease < %s
-      """
 
-      cur.execute(lease_update_query, (time_of, time_to, ))
+      # Cancel all leases in the decommisoned timeframe, and send a notification to every affected user
+      lease_update_query = """
+          UPDATE lease
+          SET status = FALSE
+          WHERE start_of_lease > %s
+            AND end_of_lease   < %s
+          RETURNING email
+      """
+      cur.execute(lease_update_query, (time_of, time_to))
+
+      affected_emails = [row[0] for row in cur.fetchall()]
+
       conn.commit()
+      for email in affected_emails:
+          topic = email.replace("@", "_")
+          message = messaging.Message(
+              notification=messaging.Notification(
+                  title=f"Vaša rezervácia pre: {car_name} je zrušená",
+                  body="Objednané auto bolo de-aktivované správcom."
+              ),
+              topic=topic
+          )
+          send_firebase_message_safe(message)
+
+
+      message = messaging.Message(
+        notification=messaging.Notification(
+        title=f"Auto: {car_name}, bolo deaktivované!",
+        body=f"""Skontrolujte si prosím vaše rezervácie."""
+      ),
+          topic="system"
+      )
+      
+      send_firebase_message_safe(message)
+
 
       return {
           "status": True,
