@@ -2,7 +2,6 @@ import base64
 import csv
 import os
 import hashlib
-import jwt
 import uuid
 from PIL import Image
 from io import BytesIO
