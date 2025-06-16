@@ -700,15 +700,37 @@ def decommission():
 
       conn.commit()
       for email in affected_emails:
- 
-          message = messaging.Message(
-              notification=messaging.Notification(
-                  title=f"Vaša rezervácia pre: {car_name} je zrušená",
-                  body="Objednané auto bolo de-aktivované správcom."
-              ),
-              topic= email.replace("@", "_")
-          )
-          send_firebase_message_safe(message)
+
+        message = messaging.Message(
+          notification=messaging.Notification(
+          title=f"Vaša rezervácia pre: {car_name} je zrušená",
+          body="Objednané auto bolo de-aktivované správcom."
+        ),
+          topic= email.replace("@", "_")
+        )
+        send_firebase_message_safe(message)
+
+        create_notification(conn, cur, email, car_name, 'user', f"Vaša rezervácia pre: {car_name} je zrušená", "Objednané auto bolo de-aktivované správcom.")
+
+        driver_q = """SELECT id FROM driver WHERE email = %s"""
+        cur.execute(driver_q, email)
+        res = cur.fetchone()
+        if not res:
+          return jsonify({'error': 'Driver not found'}), 404
+        id_driver = res[0]
+
+        car_q = """SELECT id FROM car WHERE name = %s"""
+        cur.execute(car_q, car_name)
+        res = cur.fetch()
+        if not res:
+          return jsonify({'error': 'Car not found'}), 404
+        id_car = res[0]
+
+        web_notif_query = """INSERT INTO notifications (id_driver, id_car, target_role, title, message) values (%s, %s, %s, %s, %s)"""
+        title = f"Vaša rezervácia pre: {car_name} je zrušená"
+        message = "Objednané auto bolo de-aktivované správcom."
+        cur.execute(web_notif_query, (id_driver, id_car, 'user', title, message))
+
 
 
       message = messaging.Message(
@@ -721,6 +743,7 @@ def decommission():
       
       send_firebase_message_safe(message)
 
+    # create_notification
 
       return {
           "status": True,
@@ -766,6 +789,16 @@ def activate_car():
           topic="system"
       )
   send_firebase_message_safe(message)
+
+  # create_notification
+  # kamo neviem dpc uz chcem spat je mi smutno tu samemu pomoc chyba mi frajerka je tu tma iba lampa, monitor, miska,
+  # klavesnica a sluchadlova led mi svietia som zufaly, idem robim tofikikacie od spodu hore a ja fakt nemam mozgove
+  # kapacity riesit systemove notifikacie bude to musiet pockat ked to budeme vypelsovat s miskom druhym ja fakt nemam
+  # silu na toto fakt pooc frajerka mi chyba ohromne vola sa Any, velmi ju milujem, chodime spolu dneska uz sets a pol
+  # mesiaca a vidime spolocnu buducnost spoli fakt velmi mi chyba jej comfor objatie dotyk pery ale no o niekolko hodin
+  # budeme znova vo svojom naruci a bude na super, leb by som fakt bral keby lezy nedaleko mna aby som mohol pocut jej
+  # pofufkavanie spankove je to strasne cute a milujem to na nej <3
+
   return {"status": True, "msg": f"Car {car_name} was activated!"}
 
 
@@ -1270,6 +1303,8 @@ def cancel_lease():
           topic=msg_rec
       )
       send_firebase_message_safe(message)
+
+      create_notification(conn, cur, recipient, car_name,'user', f"Vaša rezervácia bola zrušená!",f"""Rezervácia pre auto: {car_name} bola zrušená.""")
  
   conn.commit()
   conn.close()
@@ -1437,6 +1472,8 @@ def lease_car():
               )
         send_firebase_message_safe(message)
 
+        create_notification(cur, con, username, car_name, 'manager', f"Žiadosť o súkromnu jazdu!", f"""email: {username} \n Od: {form_timeof} \n Do: {form_timeto}""")
+
         return {"status": True, "private": True, "msg": f"Request for a private ride was sent!"}, 200
 
       else: # User is a manager, therfore no request need to be made, and a private ride is made 
@@ -1467,6 +1504,8 @@ def lease_car():
           )
     send_firebase_message_safe(message)
 
+    create_notification(con, cur, email, recipient, 'manager', f"Upozornenie o leasingu auta: {car_name}!", f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""")
+
     #!!!!!!!!!!!!
     #exc_writer.write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
     #send_email(msg="Auto bolo rezervovane!")
@@ -1496,6 +1535,9 @@ def lease_car():
                 topic="manager"
             )
       send_firebase_message_safe(message)
+
+      create_notification(conn, curr, email, car_name, 'manager', f"Nová rezervácia auta: {car_name}!", f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""")
+
     except Exception as e:
       return {"status": False, "private": False, "msg": f"Error has occured! 112"}, 500
     con.close()
@@ -1642,6 +1684,9 @@ def approve_requests():
             topic= rep_email
         )
         send_firebase_message_safe(message)
+
+        create_notification(conn,curr,email, car_name, 'user', f"""Súkromná rezervácia auta: {car[0][1]}""")
+
       except Exception as e:
         return {"status": False, "msg": f"Error approving, {e}"}, 400
     
@@ -1658,6 +1703,8 @@ def approve_requests():
           topic= rep_email
       )
       send_firebase_message_safe(message)
+
+      create_notification(conn, curr, email, car_name, 'user', 'Súkromná rezervácia nebola prijatá!', f"""Súkromná rezervácia auta: {car[0][1]}.\nBola odmietnutá.""")
 
     conn.commit()
     conn.close()
@@ -1767,7 +1814,9 @@ def return_car():
       ),
         topic= "manager"
       )
-      send_firebase_message_safe(message)  
+      send_firebase_message_safe(message)
+
+      create_notification(conn, cur, email, id_car, 'manager', 'Poškodenie auta!', f"""Email: {email}\nVrátil auto s poškodením!""")
     
     return jsonify({'status': "returned"}), 200
 
@@ -1778,56 +1827,62 @@ def return_car():
     conn.close()
 
 
-@app.route('/notifications', methods=['GET'])
+@notifications_bp.route('/notifications', methods=['POST'])
 @jwt_required()
 def get_notifications():
-    claims = get_jwt()
-    email = claims.get('sub', None)
+  claims = get_jwt()
+  email = claims.get('sub', None)
 
-    conn, error = connect_to_db()
-    if conn is None:
-        return jsonify({'error': error}), 501
+  conn, error = connect_to_db()
+  if conn is None:
+    return jsonify({'error': error}), 500
 
-    try:
-        cur = conn.cursor()
+  cur = conn.cursor()
 
-        # Get user ID
-        cur.execute("SELECT id_driver FROM driver WHERE email=%s;", (email,))
-        res = cur.fetchone()
-        if not res:
-            return jsonify({'error': 'User neexistuje!'}), 404
-        user_id = res[0]
+  # Get the current user ID and role
+  try:
+    cur.execute("SELECT id_driver, role FROM driver WHERE email = %s;", (email,))
+    res = cur.fetchone()
 
-        # Get notifications
-        cur.execute("""
-            SELECT id_notification, id_driver, target_role, title, message, is_read, created_at 
-            FROM notifications 
-            WHERE id_driver = %s 
-            ORDER BY created_at DESC;
-        """, (user_id,))
-        rows = cur.fetchall()
+    if res is None:
+      return jsonify({'error': 'User not found'}), 404
 
-        notifications = []
-        for row in rows:
-            notifications.append({
-                'id': row[0],
-                'driver': row[1],
-                'target_role': row[2],
-                'title': row[3],
-                'message': row[4],
-                'is_read': row[5],
-                'created_at': row[6].isoformat()
-            })
+    id_driver, role = res
 
-        return jsonify(notifications)
+    if role == 'manager':
+      # Managers see ALL notifications where target_role = 'manager'
+      cur.execute("""
+                SELECT id_notification, id_driver, id_car, target_role, title, message, is_read, created_at
+                FROM notifications
+                WHERE target_role = 'manager'
+                ORDER BY created_at DESC
+            """)
+    else:
+      # Users see only THEIR notifications where target_role = 'user'
+      cur.execute("""
+                SELECT id_notification, id_driver, id_car, target_role, title, message, is_read, created_at
+                FROM notifications
+                WHERE id_driver = %s AND target_role = 'user'
+                ORDER BY created_at DESC
+            """, (id_driver,))
 
-    except Exception as e:
-        print("Error:", e)
-        return jsonify({'error': 'Unexpected error occurred'}), 500
+    notifs = cur.fetchall()
+    notifications = [{
+      'id': n[0],
+      'driver': n[1],
+      'car': n[2],
+      'target_role': n[3],
+      'title': n[4],
+      'message': n[5],
+      'is_read': n[6],
+      'created_at': n[7].isoformat()
+    } for n in notifs]
 
-    finally:
-        conn.close()
+    return jsonify(notifications)
 
+  finally:
+    cur.close()
+    conn.close()
 
 
 def _usage_metric(id_car, conn):
@@ -1909,6 +1964,43 @@ def save_base64_img(data_url):
 
   # Return public URL
   return NGINX_PUBLIC_URL + unique_filename
+
+def create_notification(conn, cur, email, car_name, target_role, title, message):
+  try:
+    # Fetch driver ID
+    if type(email) == str:
+      cur.execute("SELECT id_driver FROM driver WHERE email = %s", (email,))
+      res = cur.fetchone()
+      if not res:
+        print(f"[NOTIF ERROR] Driver not found for email: {email}")
+        return False
+      id_driver = res[0]
+
+    # Fetch car ID
+    if type(car_name) == str:
+      cur.execute("SELECT id_car FROM car WHERE name = %s", (car_name,))
+      res = cur.fetchone()
+      if not res:
+        print(f"[NOTIF ERROR] Car not found: {car_name}")
+        return False
+      id_car = res[0]
+
+    # Insert notification
+    cur.execute("""
+            INSERT INTO notifications (id_driver, id_car, target_role, title, message)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (id_driver, id_car, target_role, title, message))
+
+    conn.commit()
+    print(f"[NOTIF] Notification added for {email} ({target_role})")
+
+    return True
+
+  except Exception as e:
+    conn.rollback()
+    print(f"[NOTIF EXCEPTION] {e}")
+    return False
+
 
 if __name__ == "__main__":
   app.run()
