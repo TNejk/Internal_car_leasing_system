@@ -807,7 +807,7 @@ def get_all_car_info():
   if role is None:
     return jsonify({'error': 'The "role" parameter is missing or invalid'}), 500
 
-  stmt = "SELECT * FROM car"
+  stmt = "SELECT * FROM car WHERE is_deleted = false"
   cur.execute(stmt)
   res = cur.fetchall()
   if not res:
@@ -828,7 +828,7 @@ def get_all_user_info():
   if role is None:
     return jsonify({'error': 'The "role" parameter is missing or invalid'}), 500
 
-  stmt = "SELECT id_driver, name, email, role FROM driver WHERE name != 'admin' AND is_deleted == false"
+  stmt = "SELECT id_driver, name, email, role FROM driver WHERE name != 'admin' AND is_deleted = false"
   cur.execute(stmt)
   res = cur.fetchall()
   if not res:
