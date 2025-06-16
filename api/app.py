@@ -502,7 +502,7 @@ def get_users():
 
     conn, cur = connect_to_db()
     try:
-        cur.execute('SELECT email, role FROM driver;')
+        cur.execute('SELECT email, role FROM driver WHERE is_deleted = FALSE;')
         users = cur.fetchall()
         ed_users = []
         for i in users:
@@ -578,13 +578,13 @@ def get_single_car():
 
   conn, cur = connect_to_db()
   
-  qq = "SELECT name, stk, gas, drive_type, location, usage_metric, status FROM car WHERE name  = %s AND is_deleted = FALSE"
+  qq = "SELECT name, stk, gas, drive_type, location, usage_metric, status, url FROM car WHERE name  = %s AND is_deleted = FALSE"
   cur.execute(qq, (desired_car, ))
 
 
   res = cur.fetchone()
 
-  name, stk, gas, drive_type, location, usage_metric, status = res
+  name, stk, gas, drive_type, location, usage_metric, status, url = res
 
   return jsonify({
       "car_name":     name,
@@ -593,7 +593,8 @@ def get_single_car():
       "drive_type":   drive_type,
       "location":     location,
       "usage_metric": usage_metric,
-      "status":       status
+      "status":       status,
+      "url": url
   }), 200
 
 
