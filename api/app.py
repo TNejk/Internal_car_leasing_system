@@ -254,9 +254,9 @@ def login():
 @app.route('/edit_user', methods = ['POST'])
 @jwt_required()
 def edit_user():
-  claims = request.get_json()
-  email = claims['email']
-  role = claims['role']
+  claims = get_jwt()
+  email = claims.get('sub', None)
+  role = claims.get('role', None)
 
   if role != "admin" or email is None:
     return {"status": False, "msg": "Unathorized"}, 400
@@ -358,7 +358,7 @@ def create_car():
 @app.route('/edit_car', methods = ['POST'])
 @jwt_required()
 def edit_car():
-  claims = request.get_json()
+  claims = get_jwt()
   email = claims['email']
   role = claims['role']
 
