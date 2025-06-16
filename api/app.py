@@ -450,12 +450,12 @@ def del_cars():
     # done u idiot xD its made so that instead of deleting, the id_deleted collumn gets updated to we dont delete any data from the lease table
     try:
       conn, cur = connect_to_db()
-      cur.execute("UPDATE car SET is_deleted = true WHERE id = %s", (car_id, ))
+      cur.execute("UPDATE car SET is_deleted = true WHERE id_car = %s", (car_id, ))
       conn.commit()
       conn.close()
       return {"status": True, "msg": "Car succesfully deleted!"}, 200
     except Exception as e:
-       return {"status": False, "msg": f"An error has occured in deleting a car: {e}"}
+       return {"status": False, "msg": f"An error has occured in deleting a car: {str(e)}"}
 
 @app.route('/delete_user', methods=['POST'])
 @jwt_required()
@@ -479,7 +479,7 @@ def del_users():
       conn.close()
       return {"status": True, "msg": "User succesfully deleted!"}, 200
     except Exception as e:
-       return {"status": False, "msg": f"An error has occured in deleting a user: {e}"}
+       return {"status": False, "msg": f"An error has occured in deleting a user: {str(e)}"}
 
 
 @app.route('/get_users', methods=['GET'])
