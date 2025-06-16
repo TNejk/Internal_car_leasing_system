@@ -314,18 +314,19 @@ def del_cars():
     role = claims.get('role', None)
     
     data = request.get_json()
-    car_name = data["car_name"]
+    car_id = data["id"]
 
     if role != "admin":
        return {"status": False, "msg": "Unathorized"}, 400
     
     if car_name == "":
        return {"status": False, "msg": "Missing parameters!"}, 500
-    
+
     #TODO:  Make this into an ID check, not a name check dumbfuck
+    # done u idiot xD its made so that instead of deleting, the id_deleted collumn gets updated to we dont delete any data from the lease table
     try:
       conn, cur = connect_to_db()
-      cur.execute("DELETE FROM car WHERE name = %s", (car_name, ))
+      cur.execute("UPDATE car SET is_deleted = true WHERE id = %s", (car_id, ))
       conn.commit()
       conn.close()
       return {"status": True, "msg": "Car succesfully deleted!"}, 200
@@ -349,7 +350,7 @@ def del_users():
            
     try:
       conn, cur = connect_to_db()
-      cur.execute("DELETE FROM driver WHERE email = %s", (email, ))
+      cur.execute("UPDATE driver SET is_deleted = true WHERE email = %s", (email, ))
       conn.commit()
       conn.close()
       return {"status": True, "msg": "User succesfully deleted!"}, 200
@@ -691,7 +692,7 @@ def get_all_user_info():
   if role is None:
     return jsonify({'error': 'The "role" parameter is missing or invalid'}), 500
 
-  stmt = "SELECT id_driver, name, email, role, state FROM driver WHERE name != 'admin'"
+  stmt = "SELECT id_driver, name, email, role FROM driver WHERE name != 'admin' AND is_deleted == false"
   cur.execute(stmt)
   res = cur.fetchall()
   if not res:
