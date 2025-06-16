@@ -3,6 +3,7 @@
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/header.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/admin.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/modals.css') }}">
 <title>ICLS - Gamo</title>
 {% endblock %}
 
@@ -38,6 +39,7 @@
             <div class="form-group">
               <label for="user-role">Rola</label>
               <select id="user-role">
+                <option value="">Vyber možnosť</option>
                 <option value="user">Používateľ</option>
                 <option value="manager">Manažér</option>
                 <option value="admin">Admin</option>
@@ -59,6 +61,7 @@
                 <th>Meno</th>
                 <th>Email</th>
                 <th>Rola</th>
+<!--                <th>Stav účtu</th>-->
                 <th>Akcie</th>
               </tr>
             </thead>
@@ -83,6 +86,7 @@
             <div class="form-group">
               <label for="car-type">Typ</label>
               <select id="car-type">
+                <option value="">Vyber možnosť</option>
                 <option value="personal">Osobné</option>
                 <option value="cargo">Nákladné</option>
               </select>
@@ -90,6 +94,7 @@
             <div class="form-group">
               <label for="drive-tp">Prevodovka</label>
               <select id="drive-tp">
+                <option value="">Vyber možnosť</option>
                 <option value="MANUÁL">Manuál</option>
                 <option value="AUTOMAT">Automat</option>
               </select>
@@ -97,6 +102,7 @@
             <div class="form-group">
               <label for="gas-type">Typ paliva</label>
               <select id="gas-type">
+                <option value="">Vyber možnosť</option>
                 <option value="diesel">Diesel</option>
                 <option value="benzine">Benzín</option>
               </select>
@@ -108,6 +114,7 @@
             <div class="form-group">
               <label for="state">Status</label>
               <select id="state">
+                <option value="">Vyber možnosť</option>
                 <option value="available">Aktívne</option>
                 <option value="in-repair">Servis</option>
               </select>
@@ -115,6 +122,7 @@
             <div class="form-group">
               <label for="location">Lokácia</label>
               <select id="location">
+                <option value="">Vyber možnosť</option>
                 <option value="BB">Banská Bystrica</option>
                 <option value="BA">Bratislava</option>
                 <option value="KE">Košice</option>
@@ -159,10 +167,108 @@
       </div>
       <div></div>
     </section>
-    <div class="modal-backdrop" id="modal-backdrop" onclick="closeModalF()"></div>
-    <div class="modal" id="modal-edit-car"></div>
-    <div class="modal" id="modal-edit-user"></div>
+
+    <div class="modal" id="modal-edit-car" style="display: none">
+      <div class="form-container">
+        <h1 id="modal-h1-car"></h1>
+          <form>
+            <div class="form-group">
+              <label for="modal-car-name">Meno auta</label>
+              <input type="text" id="modal-car-name" placeholder="Vlož meno auta">
+            </div>
+            <div class="form-group">
+              <label for="modal-car-type">Typ</label>
+              <select id="modal-car-type">
+                <option value="">Vyber možnosť</option>
+                <option value="personal">Osobné</option>
+                <option value="cargo">Nákladné</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="modal-drive-tp">Prevodovka</label>
+              <select id="modal-drive-tp">
+                <option value="">Vyber možnosť</option>
+                <option value="MANUÁL">Manuál</option>
+                <option value="AUTOMAT">Automat</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="modal-gas-type">Typ paliva</label>
+              <select id="modal-gas-type">
+                <option value="">Vyber možnosť</option>
+                <option value="diesel">Diesel</option>
+                <option value="benzine">Benzín</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="modal-plate-number">ŠPZ</label>
+              <input type="text" id="modal-plate-number" placeholder="Vlož ŠPZ">
+            </div>
+            <div class="form-group">
+              <label for="modal-state">Status</label>
+              <select id="modal-state">
+                <option value="">Vyber možnosť</option>
+                <option value="available">Aktívne</option>
+                <option value="in-repair">Servis</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="modal-location">Lokácia</label>
+              <select id="modal-location">
+                <option value="">Vyber možnosť</option>
+                <option value="BB">Banská Bystrica</option>
+                <option value="BA">Bratislava</option>
+                <option value="KE">Košice</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="modal-imageInput">Obrázok</label>
+              <input type="file" id="modal-imageInput" accept="image/*">
+              <img id="modal-preview" style="max-width: 300px; margin-top: 10px;">
+            </div>
+            <div class="form-actions">
+              <button type="button" id="modal-edit-car-button">Uprav auto</button>
+              <button type="button" id="modal-close-edit-car-button">Späť</button>
+            </div>
+          </form>
+        </div>
+    </div>
+    <div class="modal" id="modal-edit-user" style="display: none">
+      <h1 id="modal-h1-user"></h1>
+      <div class="form-container">
+        <form>
+            <div class="form-group">
+              <label for="modal-user-name">Meno</label>
+              <input type="text" id="modal-user-name" placeholder="Vlož celé meno">
+            </div>
+            <div class="form-group">
+              <label for="modal-user-email">Email</label>
+              <input type="email" id="modal-user-email" placeholder="Vlož email">
+            </div>
+            <div class="form-group">
+              <label for="modal-user-password">Heslo</label>
+              <input type="password" id="modal-user-password" placeholder="Vlož heslo">
+            </div>
+            <div class="form-group">
+              <label for="modal-user-role">Rola</label>
+              <select id="modal-user-role">
+                <option value="">Vyber možnosť</option>
+                <option value="user">Používateľ</option>
+                <option value="manager">Manažér</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="button" id="modal-edit-user-button">Uprav Používateľa</button>
+              <button type="button" id="modal-close-edit-user-button">Späť</button>
+            </div>
+          </form>
+      </div>
+
+    </div>
     <div id="modal-status" class="modal-status"></div>
+
+
   </main>
 </div>
 

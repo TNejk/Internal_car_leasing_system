@@ -19,6 +19,10 @@ from get_all_car_info import get_all_car_info
 from get_all_user_info import get_all_user_info
 from create_user import create_user
 from create_car import create_car
+from delete_car import delete_car
+from delete_user import delete_user
+from edit_user import edit_user
+from edit_car import edit_car
 
 sys.path.append('misc')
 from load_icons import load_icons
@@ -217,7 +221,7 @@ def admin_dashboard():
 @check_token()
 def admin_get_car_list():
   data = get_all_car_info(session['username'], session['role'])
-  return jsonify(data)
+  return data
 
 
 @app.route('/admin/get_user_list', methods=['POST'])
@@ -225,14 +229,14 @@ def admin_get_car_list():
 @check_token()
 def admin_get_user_list():
   data = get_all_user_info(session['username'], session['role'])
-  return jsonify(data)
-
+  return data
 
 @app.route('/admin/create_car', methods=['POST'])
 @require_role('admin')
 @check_token()
 def admin_create_car():
   data = request.get_json()
+  print(data['image'])
   response = create_car(data)
   return response
 
@@ -241,14 +245,18 @@ def admin_create_car():
 @require_role('admin')
 @check_token()
 def admin_edit_car():
-  return 1
+  data = request.json
+  response = edit_car(data)
+  return response
 
 
 @app.route('/admin/delete_car', methods=['POST'])
 @require_role('admin')
 @check_token()
 def admin_delete_car():
-  return 1
+  data = request.get_json()
+  response = delete_car(data)
+  return response
 
 
 @app.route('/admin/decommission', methods=['POST'])
@@ -277,14 +285,18 @@ def admin_add_user():
 @require_role('admin')
 @check_token()
 def admin_update_user():
-  return 1
+  data = request.json
+  response = edit_user(data)
+  return response
 
 
 @app.route('/admin/delete_user', methods=['POST'])
 @require_role('admin')
 @check_token()
 def admin_delete_user():
-  return 1
+  data = request.get_json()
+  response = delete_user(data)
+  return response
 
 
 if __name__ == '__main__':

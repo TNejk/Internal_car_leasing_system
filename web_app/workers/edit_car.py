@@ -1,12 +1,11 @@
 import requests
 from flask import session, jsonify
 
-def get_all_user_info(email,role):
+def edit_car(data):
   headers = {'Authorization': 'Bearer ' + session.get('token')}
-  body = {'email': email, 'role': role}
-  url = 'https://icls.sosit-wh.net/get_all_user_info'
+  url = 'https://icls.sosit-wh.net/edit_car'
   try:
-    r = requests.post(url=url, headers=headers, json=body)
+    r = requests.post(url=url, headers=headers, json=data)
 
     # Try to parse JSON safely
     try:
@@ -16,7 +15,7 @@ def get_all_user_info(email,role):
       print(f"Response text: {r.text}")
       return jsonify({'error': 'Invalid JSON response from server', 'status_code': r.status_code}), 500
 
-    return jsonify(response['users'])
+    return jsonify(response)
 
   except requests.RequestException as e:
     print(f"Request failed: {e}")

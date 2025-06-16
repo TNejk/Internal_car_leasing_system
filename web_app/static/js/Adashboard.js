@@ -5,7 +5,15 @@ const clearUser = document.getElementById("clear-user");
 const addCar = document.getElementById("add-car");
 const imageInput = document.getElementById('imageInput');
 const preview = document.getElementById('preview');
+
+const modalEditUserButton = document.getElementById('modal-edit-user-button');
+const modalCloseEditUserButton = document.getElementById('modal-close-edit-user-button');
+const modalEditCarButton = document.getElementById('modal-edit-car-button');
+const modalCloseEditCarButton = document.getElementById('modal-close-edit-car-button');
+
+
 let reader;
+let editEntityId;
 
 let role;
 let requester;
@@ -17,6 +25,7 @@ function get_data() {
     for (let car of data) {
 
         const newLine = document.createElement('tr')
+        newLine.id = car[0];
 
         const id = document.createElement('td');
         id.textContent = car[0];
@@ -62,20 +71,19 @@ function get_data() {
 
         const edit = document.createElement('button');
         edit.classList.add('edit');
+        edit.type = 'submit';
         edit.textContent = 'Uprav'; // corrected this
         edit.addEventListener('click', () => {
-          // your edit logic here
-          editEntry('car',car[0]);
-          console.log('Edit clicked');
+          editModal('car', car[0], car[1]);
         });
 
         const remove = document.createElement('button');
         remove.classList.add('remove');
+        remove.type = 'submit';
         remove.textContent = 'Zmaž';
         remove.addEventListener('click', () => {
           // your delete logic here
           deleteEntry('car',car[0]);
-          console.log('Remove clicked');
         });
 
         buttontd.appendChild(edit);
@@ -89,10 +97,11 @@ function get_data() {
     });
 
   fetch('/admin/get_user_list', {method: 'POST'}).then(res => res.json()).then(data => {
-      // [6, 'klaudia.priezvisko@gamo.sk', 'manager', 'Klaudia']
+      // [6, 'klaudia.priezvisko@gamo.sk', 'manager', 'Klaudia', true]
       for (let user of data) {
 
         const newLine = document.createElement('tr')
+        newLine.classList.add(user.id);
 
         const id = document.createElement('td');
         id.textContent = user[0];
@@ -110,19 +119,25 @@ function get_data() {
         role.textContent = user[3];
         newLine.appendChild(role);
 
+        // const state = document.createElement('td')
+        // state.textContent = user[4];
+        // newLine.appendChild(state);
+
         const buttontd = document.createElement('td');
 
         const edit = document.createElement('button');
         edit.classList.add('edit');
+        edit.type = 'submit';
         edit.textContent = 'Uprav';
         edit.addEventListener('click', () => {
           // your edit logic here
-          editEntry('user',user[2]);
+          editModal('user',user[0], user[1]);
           console.log('Edit clicked');
         });
 
         const remove = document.createElement('button');
         remove.classList.add('remove');
+        remove.type = 'submit';
         remove.textContent = 'Zmaž';
         remove.addEventListener('click', () => {
           // your delete logic here
@@ -139,32 +154,6 @@ function get_data() {
 
       }
   });
-}
-
-function editModal(what, id){
-
-}
-
-function editEntry(what, id){
-  if (what === 'user'){
-    let payload = {'role': role,}
-  }
-}
-
-function deleteEntry(what, id) {
-  if (what === 'user'){
-    let payload = {'role': role, 'user': id};
-    fetch(`/admin/delete_user`,{method: 'POST',headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),})
-      .then(res => res.json()).then(data => {
-      console.log(data);
-    })
-  }else if(what === 'car'){
-    let payload = {'role': role, 'car': id};
-    fetch(`/admin/delete_car`,{method: 'POST',headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),})
-      .then(res => res.json()).then(data => {
-      console.log(data);
-    })
-  }
 }
 
 function add_user (){
@@ -188,12 +177,85 @@ function add_car (){
   let location = document.getElementById('location').value;
   let drive_tp = document.getElementById('drive-tp').value;
   let data = {'name': name, 'type': type, 'status': state, 'location': location, 'spz': spz, 'gas': gas, 'drive_tp': drive_tp, 'image': reader.result};
-  console.log(data);
   fetch('/admin/create_car',{method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)}).then(res => res.json())
     .then(data => {
       console.log(data);
     })
 }
+
+function deleteEntry(what, id) {
+  if (what === 'user'){
+    let payload = {'role': role, 'email': id};
+    fetch(`/admin/delete_user`,{method: 'POST',headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),})
+      .then(res => res.json()).then(data => {
+      console.log(data);
+    })
+  }else if(what === 'car'){
+    let payload = {'role': role, 'car': id};
+    fetch(`/admin/delete_car`,{method: 'POST',headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),})
+      .then(res => res.json()).then(data => {
+      console.log(data);
+    })
+  }
+}
+
+function editModal(what, id, meno){
+  editEntityId = id;
+  if (what === 'user'){
+    document.getElementById('modal-edit-user').style.display = 'block';
+    document.getElementById('modal-h1-user').innerText = `Uprav používateľa ${meno}`;
+  }else if(what === 'car'){
+    document.getElementById('modal-edit-car').style.display = 'block';
+    document.getElementById('modal-h1-car').innerText = `Uprav auto ${meno}`;
+  }
+}
+
+function editUser(){
+  let data = {'id': editEntityId};
+
+  let name = document.getElementById('modal-user-name').value;
+  if (name !== ''){
+    data['name'] = name;
+  }
+
+  let email = document.getElementById('modal-user-email').value;
+  if (email !== ''){
+    data['email'] = email;
+  }
+
+  let password = document.getElementById('modal-user-password').value;
+  if (password !== ''){
+    data['password'] = password;
+  }
+
+  let role = document.getElementById('modal-user-role').value;
+  if (role !== ''){
+    data['role'] = role;
+  }
+
+  if (Object.keys(data).length === 1) {
+    console.log("Theres nothing to edit");
+  }else {
+    fetch('/admin/update_user', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)})
+    .then(res => res.json()).then(data => {
+      console.log(data);
+    })
+  }
+
+}
+
+modalEditUserButton.addEventListener('click', function () {
+  editUser()
+})
+
+modalCloseEditUserButton.addEventListener('click', function (){
+  document.getElementById('modal-edit-user').style.display = 'none';
+  document.getElementById('modal-user-name').value = '';
+  document.getElementById('modal-user-email').value = '';
+  document.getElementById('modal-user-password').value = '';
+  document.getElementById('modal-user-role').value = '';
+
+})
 
 addUser.addEventListener('click', function() {
   add_user();
@@ -224,13 +286,6 @@ imageInput.addEventListener('change', function () {
     reader.readAsDataURL(file); // converts the image to base64 string
   }
 });
-
-function closeModalF(){
-  modalLeaseDetails.style.display = "none";
-  modalReturnCar.style.display = "none";
-  modalBackdrop.style.display = "none";
-} // finished
-
 
 document.addEventListener("DOMContentLoaded", function() {
   get_data();
