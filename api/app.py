@@ -321,7 +321,6 @@ def create_car():
   try:
     car_name = data['name']  
     _type = data['type']
-    status = data['status']
     location = data['location']
     
     spz = data['spz']
