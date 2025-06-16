@@ -358,7 +358,7 @@ def create_car():
 @app.route('/edit_car', methods = ['POST'])
 @jwt_required()
 def edit_car():
-  claims = request.get_json()
+  claims = get_jwt()
   email = claims['email']
   role = claims['role']
 
