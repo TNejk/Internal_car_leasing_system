@@ -256,6 +256,64 @@ def login():
     cur.close()
     conn.close()
 
+@app.route('/edit_user', methods = ['POST'])
+@jwt_required()
+def edit_user():
+  claims = request.get_json()
+  email = claims['email']
+  role = claims['role']
+
+  if role != "admin" or email is None:
+    return {"status": False, "msg": "Unathorized"}, 400
+
+
+  conn, cur = connect_to_db()
+  if conn is None:
+    return jsonify({"status": False, "msg": "Unathorized to db"}), 501
+
+  data = request.get_json()
+
+  fields = []
+  values = []
+
+  if "email" in data:
+    fields.append("email = %s")
+    values.append(data["email"])
+
+  if "password" in data:
+    fields.append("password = %s")
+    salted = login_salt + data['password'] + login_salt
+    hashed = hashlib.sha256(salted.encode()).hexdigest()
+    values.append(hashed)  # hash it first if needed
+
+  if "role" in data:
+    fields.append("role = %s")
+    values.append(data["role"])
+
+  if "name" in data:
+    fields.append("name = %s")
+    values.append(data["name"])
+
+  if not fields:
+    return {"error": "No fields to update"}, 400
+
+  values.append(user_id)
+
+  query = f"""
+          UPDATE driver
+          SET {', '.join(fields)}
+          WHERE id = %s
+      """
+
+  try:
+    cursor.execute(query, tuple(values))
+    conn.commit()
+    conn.close()
+
+    return {"status": True}
+  except Exception as e:
+    return {"status": False, "msg": e}, 400
+
 
 # Only ICLS GAMO can create new cars and such
 
@@ -300,6 +358,84 @@ def create_car():
     conn.commit()
     conn.close()
     return {"status": False, "msg": e}
+
+
+@app.route('/edit_car', methods = ['POST'])
+@jwt_required()
+def edit_car():
+  claims = request.get_json()
+  email = claims['email']
+  role = claims['role']
+
+  if role != "admin" or email is None:
+    return {"status": False, "msg": "Unathorized"}, 400
+
+
+  conn, cur = connect_to_db()
+  if conn is None:
+    return jsonify({"status": False, "msg": "Unathorized to db"}), 501
+
+  data = request.get_json()
+
+  fields = []
+  values = []
+
+  if "name" in data:
+    fields.append("name = %s")
+    values.append(data["name"])
+
+  if "type" in data:
+    fields.append("type = %s")
+    values.append(data["type"])  # hash it first if needed
+
+  if "status" in data:
+    fields.append("status = %s")
+    values.append(data["status"])
+
+  if "health" in data:
+    fields.append("health = %s")
+    values.append(data["health"])
+
+  if 'location' in data:
+    fields.append("location = %s")
+    values.append(data["location"])
+
+  if 'img' in data:
+    url = save_base64_img(data['img'])
+    fields.append("url = %s")
+    values.append(url)
+
+  if 'spz' in data:
+    fields.append("stk = %s")
+    values.append(data["spz"])
+
+  if 'gas' in data:
+    fields.append("gas = %s")
+    values.append(data["gas"])
+
+  if 'drive_tp' in data:
+    fields.append("drive_type = %s")
+    values.append(data["drive_tp"])
+
+  if not fields:
+    return {"error": "No fields to update"}, 400
+
+  values.append(user_id)
+
+  query = f"""
+          UPDATE car
+          SET {', '.join(fields)}
+          WHERE id = %s
+      """
+
+  try:
+    cursor.execute(query, tuple(values))
+    conn.commit()
+    conn.close()
+
+    return {"status": True}
+  except Exception as e:
+    return {"status": False, "msg": e}, 400
 
 
 # Only the admin should be able to do this ig
