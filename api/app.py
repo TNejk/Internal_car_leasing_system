@@ -1472,7 +1472,7 @@ def lease_car():
               )
         send_firebase_message_safe(message)
 
-        create_notification(cur, con, username, car_name, 'manager', f"Žiadosť o súkromnu jazdu!", f"""email: {username} \n Od: {form_timeof} \n Do: {form_timeto}""")
+        create_notification(con, cur, username, car_name, 'manager', f"Žiadosť o súkromnu jazdu!", f"""email: {username} \n Od: {form_timeof} \n Do: {form_timeto}""")
 
         return {"status": True, "private": True, "msg": f"Request for a private ride was sent!"}, 200
 
@@ -1504,7 +1504,7 @@ def lease_car():
           )
     send_firebase_message_safe(message)
 
-    create_notification(con, cur, email, recipient, 'manager', f"Upozornenie o leasingu auta: {car_name}!", f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""")
+    create_notification(con, cur, recipient, car_name, 'manager', f"Upozornenie o leasingu auta: {car_name}!", f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""")
 
     #!!!!!!!!!!!!
     #exc_writer.write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
@@ -1536,7 +1536,7 @@ def lease_car():
             )
       send_firebase_message_safe(message)
 
-      create_notification(conn, curr, email, car_name, 'manager', f"Nová rezervácia auta: {car_name}!", f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""")
+      create_notification(con, cur, email, car_name, 'manager', f"Nová rezervácia auta: {car_name}!", f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""")
 
     except Exception as e:
       return {"status": False, "private": False, "msg": f"Error has occured! 112"}, 500
@@ -1704,7 +1704,7 @@ def approve_requests():
       )
       send_firebase_message_safe(message)
 
-      create_notification(conn, curr, email, car_name, 'user', 'Súkromná rezervácia nebola prijatá!', f"""Súkromná rezervácia auta: {car[0][1]}.\nBola odmietnutá.""")
+      create_notification(conn, curr, reciever, car_name, 'user', 'Súkromná rezervácia nebola prijatá!', f"""Súkromná rezervácia auta: {car[0][1]}.\nBola odmietnutá.""")
 
     conn.commit()
     conn.close()
