@@ -545,6 +545,59 @@ def get_cars():
     conn.close()
 
 
+#! IM LEAVING THIS EMPTY FOR NOW, AFTER WE GET ACCESS TO THE GAMO AD SYSTEM I WILL HAVE TO REFACTOR IT ANYWAY
+@app.route('/get_single_user', methods=['POST'])
+@jwt_required()
+def get_single_user():
+  claims = get_jwt()
+  email = claims.get('sub', None)
+  role = claims.get('role', None)
+
+  data = request.get_json()
+
+  desired_user_email = data['desired_user_email']
+  
+  if email != desired_user_email and role != "admin":
+     return jsonify("Unauthorized."), 400
+
+
+
+@app.route('/get_single_car', methods=['POST'])
+@jwt_required()
+def get_single_car():
+  claims = get_jwt()
+  email = claims.get('sub', None)
+  role = claims.get('role', None)
+
+  data = request.get_json()
+
+  desired_car = data['desired_car']
+  
+  if role != "admin":
+     return jsonify("Unauthorized."), 400
+
+  conn, cur = connect_to_db()
+  
+  qq = "SELECT name, stk, gas, drive_type, location, usage_metric, status FROM car WHERE name  = %s AND is_deleted = FALSE"
+  cur.execute(qq, (desired_car, ))
+
+
+  res = cur.fetchone()[0]
+
+  name, stk, gas, drive_type, location, usage_metric, status = res
+
+  return jsonify({
+      "car_name":     name,
+      "spz":          stk,
+      "gas":          gas,
+      "drive_type":   drive_type,
+      "location":     location,
+      "usage_metric": usage_metric,
+      "status":       status
+  }), 200
+
+
+
 # Order by reserved first, then by metric and filter by reserved cars by the provided email
 # Cars table does not have the email, you will have to get it from the leases table that combines the car and driver table together,
 #! Return cars, sort by usage metric first, other options: location, gas type, shift type
