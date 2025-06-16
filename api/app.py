@@ -691,7 +691,7 @@ def get_all_user_info():
   if role is None:
     return jsonify({'error': 'The "role" parameter is missing or invalid'}), 500
 
-  stmt = "SELECT id_driver, name, email, role FROM driver WHERE name != 'admin'"
+  stmt = "SELECT id_driver, name, email, role, state FROM driver WHERE name != 'admin'"
   cur.execute(stmt)
   res = cur.fetchall()
   if not res:
@@ -1639,7 +1639,7 @@ def save_base64_img(data_url):
   image = Image.open(BytesIO(image_data))
 
   # Generate unique filename
-  unique_filename = f"{uuid.uuid4()}"
+  unique_filename = f"{uuid.uuid4()}.{file_ext}"
   image_path = os.path.join(UPLOAD_FOLDER, unique_filename)
 
   # Save image to disk
