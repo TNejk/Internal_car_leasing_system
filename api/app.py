@@ -8,7 +8,7 @@ from io import BytesIO
 from dateutil import parser 
 import psycopg2
 from flask_mail import Mail, Message
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, Blueprint
 import requests
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from flask_cors import CORS, cross_origin
@@ -23,8 +23,11 @@ import glob
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import messaging
+from yourapp.models import db, Notifications
 
 import smtplib, ssl
+
+notifications_bp = Blueprint('notifications', __name__)
 
 UPLOAD_FOLDER = './images'
 NGINX_PUBLIC_URL = 'https://fl.gamo.sosit-wh.net/'
@@ -1164,7 +1167,7 @@ def get_leases():
             AND ( %(ft_car)s IS NULL OR c.name = %(ft_car)s )
             AND ( %(ft_timeof)s IS NULL OR l.start_of_lease >= %(ft_timeof)s )
             AND ( %(ft_timeto)s IS NULL OR l.end_of_lease <= %(ft_timeto)s );
-      """  
+      """
     params = {
       'ft_istrue': ft_istrue,
       'ft_isfalse': ft_isfalse,
@@ -1774,6 +1777,58 @@ def return_car():
     return jsonify({'error': str(e)}), 501
   finally:
     conn.close()
+
+
+@notifications_bp.route('/notifications', methods=['GET'])
+@jwt_required()
+def get_notifications():
+    claims = get_jwt()
+    email = claims.get('sub', None)
+
+    conn, error = connect_to_db()
+    if conn is None:
+        return jsonify({'error': error}), 501
+
+    try:
+        cur = conn.cursor()
+
+        # Get user ID
+        cur.execute("SELECT id_driver FROM driver WHERE email=%s;", (email,))
+        res = cur.fetchone()
+        if not res:
+            return jsonify({'error': 'User neexistuje!'}), 404
+        user_id = res[0]
+
+        # Get notifications
+        cur.execute("""
+            SELECT id_notification, id_driver, target_role, title, message, is_read, created_at 
+            FROM notifications 
+            WHERE id_driver = %s 
+            ORDER BY created_at DESC;
+        """, (user_id,))
+        rows = cur.fetchall()
+
+        notifications = []
+        for row in rows:
+            notifications.append({
+                'id': row[0],
+                'driver': row[1],
+                'target_role': row[2],
+                'title': row[3],
+                'message': row[4],
+                'is_read': row[5],
+                'created_at': row[6].isoformat()
+            })
+
+        return jsonify(notifications)
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({'error': 'Unexpected error occurred'}), 500
+
+    finally:
+        conn.close()
+
 
 
 def _usage_metric(id_car, conn):
