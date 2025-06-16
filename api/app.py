@@ -640,23 +640,24 @@ def decommission():
           SET status = FALSE
           FROM driver AS d
           WHERE l.id_driver = d.id_driver
+            AND l.status = TRUE
             AND l.start_of_lease > %s
             AND l.end_of_lease   < %s
           RETURNING d.email
       """
       cur.execute(lease_update_query, (time_of, time_to))
 
-      affected_emails = [row[0] for row in cur.fetchall()]
+      affected_emails = list(set([row[0] for row in cur.fetchall()])) # Remove duplicate emails using set to list conversion
 
       conn.commit()
       for email in affected_emails:
-          topic = email.replace("@", "_")
+ 
           message = messaging.Message(
               notification=messaging.Notification(
                   title=f"Vaša rezervácia pre: {car_name} je zrušená",
                   body="Objednané auto bolo de-aktivované správcom."
               ),
-              topic=topic
+              topic= email.replace("@", "_")
           )
           send_firebase_message_safe(message)
 
