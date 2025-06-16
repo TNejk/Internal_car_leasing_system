@@ -255,8 +255,8 @@ def login():
 @jwt_required()
 def edit_user():
   claims = request.get_json()
-  email = claims['email']
-  role = claims['role']
+  email = claims.get('sub', None)
+  role = claims.get('role', None)
 
   if role != "admin" or email is None:
     return {"status": False, "msg": "Unathorized"}, 400
