@@ -26,7 +26,7 @@ from firebase_admin import messaging
 
 import smtplib, ssl
 
-UPLOAD_FOLDER = './images'
+UPLOAD_FOLDER = './'
 NGINX_PUBLIC_URL = 'https://fl.gamo.sosit-wh.net/images/'
 
 def send_firebase_message_safe(message):
