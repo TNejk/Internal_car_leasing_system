@@ -254,7 +254,7 @@ def login():
 @app.route('/edit_user', methods = ['POST'])
 @jwt_required()
 def edit_user():
-  claims = request.get_json()
+  claims = get_jwt()
   email = claims.get('sub', None)
   role = claims.get('role', None)
 
