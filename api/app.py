@@ -338,7 +338,7 @@ def create_car():
 
   query = "INSERT INTO car (name, type, location, url, stk, gas, drive_type) VALUES (%s,%s,%s,%s,%s,%s,%s)"
   try:
-    cur.execute(query, (car_name, _type, location, spz, img_url, gas, drive_tp,))
+    cur.execute(query, (car_name, _type, location, img_url, spz, gas, drive_tp,))
     conn.commit()
     conn.close()
     return {"status": True, "msg": "Auto bolo vytvorené."}
