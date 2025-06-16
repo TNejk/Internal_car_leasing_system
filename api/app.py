@@ -23,7 +23,6 @@ import glob
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import messaging
-from yourapp.models import db, Notifications
 
 import smtplib, ssl
 
