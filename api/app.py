@@ -636,11 +636,13 @@ def decommission():
 
       # Cancel all leases in the decommisoned timeframe, and send a notification to every affected user
       lease_update_query = """
-          UPDATE lease
+          UPDATE lease AS l
           SET status = FALSE
-          WHERE start_of_lease > %s
-            AND end_of_lease   < %s
-          RETURNING email
+          FROM driver AS d
+          WHERE l.id_driver = d.id_driver
+            AND l.start_of_lease > %s
+            AND l.end_of_lease   < %s
+          RETURNING d.email
       """
       cur.execute(lease_update_query, (time_of, time_to))
 
