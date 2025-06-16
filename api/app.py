@@ -292,12 +292,12 @@ def edit_user():
   if not fields:
     return {"error": "No fields to update"}, 400
 
-  values.append(user_id)
+  values.append(data['id'])
 
   query = f"""
           UPDATE driver
           SET {', '.join(fields)}
-          WHERE id = %s
+          WHERE id_driver = %s
       """
 
   try:
@@ -415,12 +415,12 @@ def edit_car():
   if not fields:
     return {"error": "No fields to update"}, 400
 
-  values.append(user_id)
+  values.append(data['id'])
 
   query = f"""
           UPDATE car
           SET {', '.join(fields)}
-          WHERE id = %s
+          WHERE id_car = %s
       """
 
   try:
