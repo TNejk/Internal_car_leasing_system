@@ -582,7 +582,7 @@ def get_single_car():
   cur.execute(qq, (desired_car, ))
 
 
-  res = cur.fetchone()[0]
+  res = cur.fetchone()
 
   name, stk, gas, drive_type, location, usage_metric, status = res
 
