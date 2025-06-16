@@ -333,20 +333,19 @@ def create_car():
      return {"status": False, "msg": "Chýbajúce parametre pri vytvorení auta!"}
 
   img_url = save_base64_img(car_image)
-  print(img_url)
 
   conn, cur = connect_to_db()
 
-  query = "INSERT INTO car (name, type, status, location, url, stk, gas, drive_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+  query = "INSERT INTO car (name, type, location, url, stk, gas, drive_type) VALUES (%s,%s,%s,%s,%s,%s,%s)"
   try:
-    cur.execute(query, (car_name, _type, status, location, spz, img_url, gas, drive_tp,))
+    cur.execute(query, (car_name, _type, location, spz, img_url, gas, drive_tp,))
     conn.commit()
     conn.close()
     return {"status": True, "msg": "Auto bolo vytvorené."}
   except Exception as e:
     conn.commit()
     conn.close()
-    return {"status": False, "msg": e}
+    return {"status": False, "msg": str(e)}
 
 
 @app.route('/edit_car', methods = ['POST'])
