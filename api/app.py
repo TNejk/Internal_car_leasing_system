@@ -178,29 +178,24 @@ def modify_token():
 @app.route('/register', methods = ['POST'])
 @jwt_required()
 def register():
+
+  claims = get_jwt()
+  rq_role =  claims.get("role", None)
+
   data = request.get_json()
-  requester = data["requester"]
-  req_password = data["req_password"]
 
   email = data['email']
   password = data['password']
   role = data['role']
   name = data['name']
 
-  
-
-  if not email or not password:
+  if not email:
     return {"status": False, "msg": f"Chýba email alebo heslo!"}
   
   conn, cur = connect_to_db()
 
   #! Only allow the admin to create users
-  res = cur.execute(
-    "SELECT id_driver FROM driver WHERE email = %s AND password = %s AND role LIKE 'admin'", 
-    (requester, req_password)
-  )
-  tmp = cur.fetchall()
-  if len(tmp) <1:
+  if rq_role != "admin":
      return {"status": False, "msg": "Unauthorized"}
   
   salted = login_salt+password+login_salt
