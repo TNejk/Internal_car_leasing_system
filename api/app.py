@@ -381,7 +381,7 @@ def edit_car():
 
   if "type" in data:
     fields.append("type = %s")
-    values.append(data["type"])  # hash it first if needed
+    values.append(data["type"])  # hash it first if needed, # Why hash it??
 
   if "status" in data:
     fields.append("status = %s")
@@ -533,7 +533,7 @@ def get_cars():
 
   conn, cur = connect_to_db()
   try:
-    cur.execute('SELECT name FROM car;')
+    cur.execute('SELECT name FROM car WHERE is_deleted = FALSE;')
     cars = cur.fetchall()
 
     return {'cars': cars}
