@@ -112,14 +112,6 @@
               <input type="text" id="plate-number" placeholder="Vlož ŠPZ">
             </div>
             <div class="form-group">
-              <label for="state">Status</label>
-              <select id="state">
-                <option value="">Vyber možnosť</option>
-                <option value="available">Aktívne</option>
-                <option value="in-repair">Servis</option>
-              </select>
-            </div>
-            <div class="form-group">
               <label for="location">Lokácia</label>
               <select id="location">
                 <option value="">Vyber možnosť</option>
@@ -174,7 +166,7 @@
           <form>
             <div class="form-group">
               <label for="modal-car-name">Meno auta</label>
-              <input type="text" id="modal-car-name" placeholder="Vlož meno auta">
+              <input type="text" id="modal-car-name" placeholder="Vlož meno auta" maxlength="50">
             </div>
             <div class="form-group">
               <label for="modal-car-type">Typ</label>
@@ -202,15 +194,7 @@
             </div>
             <div class="form-group">
               <label for="modal-plate-number">ŠPZ</label>
-              <input type="text" id="modal-plate-number" placeholder="Vlož ŠPZ">
-            </div>
-            <div class="form-group">
-              <label for="modal-state">Status</label>
-              <select id="modal-state">
-                <option value="">Vyber možnosť</option>
-                <option value="available">Aktívne</option>
-                <option value="in-repair">Servis</option>
-              </select>
+              <input type="text" id="modal-plate-number" placeholder="Vlož ŠPZ" maxlength="7">
             </div>
             <div class="form-group">
               <label for="modal-location">Lokácia</label>
@@ -224,7 +208,7 @@
             <div class="form-group">
               <label for="modal-imageInput">Obrázok</label>
               <input type="file" id="modal-imageInput" accept="image/*">
-              <img id="modal-preview" style="max-width: 300px; margin-top: 10px;">
+              <img id="modal-preview" style="max-width: 100px; margin-top: 10px;">
             </div>
             <div class="form-actions">
               <button type="button" id="modal-edit-car-button">Uprav auto</button>
@@ -239,15 +223,15 @@
         <form>
             <div class="form-group">
               <label for="modal-user-name">Meno</label>
-              <input type="text" id="modal-user-name" placeholder="Vlož celé meno">
+              <input type="text" id="modal-user-name" placeholder="Vlož celé meno" maxlength="50">
             </div>
             <div class="form-group">
               <label for="modal-user-email">Email</label>
-              <input type="email" id="modal-user-email" placeholder="Vlož email">
+              <input type="email" id="modal-user-email" placeholder="Vlož email" maxlength="255">
             </div>
             <div class="form-group">
               <label for="modal-user-password">Heslo</label>
-              <input type="password" id="modal-user-password" placeholder="Vlož heslo">
+              <input type="password" id="modal-user-password" placeholder="Vlož heslo" minlength=8 maxlength="255">
             </div>
             <div class="form-group">
               <label for="modal-user-role">Rola</label>

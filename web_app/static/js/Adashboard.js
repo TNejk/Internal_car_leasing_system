@@ -5,13 +5,15 @@ const clearUser = document.getElementById("clear-user");
 const addCar = document.getElementById("add-car");
 const imageInput = document.getElementById('imageInput');
 const preview = document.getElementById('preview');
+const modalImageInput = document.getElementById('modal-imageInput');
+const modalPreview = document.getElementById('modal-preview');
 
 const modalEditUserButton = document.getElementById('modal-edit-user-button');
 const modalCloseEditUserButton = document.getElementById('modal-close-edit-user-button');
 const modalEditCarButton = document.getElementById('modal-edit-car-button');
 const modalCloseEditCarButton = document.getElementById('modal-close-edit-car-button');
 
-
+let readerModal;
 let reader;
 let editEntityId;
 
@@ -161,7 +163,7 @@ function add_user (){
   let email = document.getElementById('user-email').value;
   let password = document.getElementById('user-password').value;
   let role = document.getElementById('user-role').value;
-  let data = {'name': name, 'email': email, 'password': password, 'role': role, 'requester': requester, 'req_password': req_pass};
+  let data = {'name': name, 'email': email, 'password': password, 'role': role};
   fetch('/admin/create_user',{method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)}).then(res => res.json())
     .then(data => {
       console.log(data);
@@ -173,10 +175,10 @@ function add_car (){
   let type = document.getElementById('car-type').value;
   let gas = document.getElementById('gas-type').value;
   let spz = document.getElementById('plate-number').value;
-  let state = document.getElementById('state').value;
   let location = document.getElementById('location').value;
   let drive_tp = document.getElementById('drive-tp').value;
-  let data = {'name': name, 'type': type, 'status': state, 'location': location, 'spz': spz, 'gas': gas, 'drive_tp': drive_tp, 'image': reader.result};
+  let data = {'name': name, 'type': type, 'location': location, 'spz': spz, 'gas': gas, 'drive_tp': drive_tp, 'image': reader.result};
+  console.log(data);
   fetch('/admin/create_car',{method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)}).then(res => res.json())
     .then(data => {
       console.log(data);
@@ -191,7 +193,7 @@ function deleteEntry(what, id) {
       console.log(data);
     })
   }else if(what === 'car'){
-    let payload = {'role': role, 'car': id};
+    let payload = {'role': role, 'id': id};
     fetch(`/admin/delete_car`,{method: 'POST',headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),})
       .then(res => res.json()).then(data => {
       console.log(data);
@@ -233,10 +235,66 @@ function editUser(){
     data['role'] = role;
   }
 
+  if (data['password'].length > 7) {
+    if (Object.keys(data).length === 1) {
+      console.log("Theres nothing to edit");
+    }else {
+      fetch('/admin/update_user', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)})
+      .then(res => res.json()).then(data => {
+        console.log(data);
+      })
+    }
+  }else{
+    console.log('kratke heslo')
+  }
+
+
+
+} // prijad success msg
+
+function editCar(){
+  let data = {'id': editEntityId};
+
+  let name = document.getElementById('modal-car-name').value;
+  if (name !== ''){
+    data['name'] = name;
+  }
+
+  let _type = document.getElementById('modal-car-type').value;
+  if (_type !== ''){
+    data['type'] = _type;
+  }
+
+  let drive_tp = document.getElementById('modal-drive-tp').value;
+  if (drive_tp !== ''){
+    data['drive_tp'] = drive_tp;
+  }
+
+  let gas = document.getElementById('modal-gas-type').value;
+  if (gas !== ''){
+    data['gas'] = gas;
+  }
+
+  let spz = document.getElementById('modal-plate-number').value;
+  if (spz !== ''){
+    data['spz'] = spz;
+  }
+
+
+  let location = document.getElementById('modal-location').value;
+  if (location !== ''){
+    data['location'] = location;
+  }
+
+  let img = readerModal.result;
+  if (img !== ''){
+    data['img'] = img;
+  }
+
   if (Object.keys(data).length === 1) {
     console.log("Theres nothing to edit");
   }else {
-    fetch('/admin/update_user', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)})
+    fetch('/admin/update_car', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)})
     .then(res => res.json()).then(data => {
       console.log(data);
     })
@@ -257,6 +315,23 @@ modalCloseEditUserButton.addEventListener('click', function (){
 
 })
 
+modalEditCarButton.addEventListener('click', function () {
+  editCar()
+})
+
+modalCloseEditCarButton.addEventListener('click', function (){
+  document.getElementById('modal-edit-car').style.display = 'none';
+  document.getElementById('modal-car-name').value = '';
+  document.getElementById('modal-car-type').value = '';
+  document.getElementById('modal-drive-tp').value = '';
+  document.getElementById('modal-gas-type').value = '';
+  document.getElementById('modal-plate-number').value = '';
+  document.getElementById('modal-location').value = '';
+  document.getElementById('modal-imageInput').value = '';
+  document.getElementById('modal-preview').src = '';
+
+})
+
 addUser.addEventListener('click', function() {
   add_user();
 })
@@ -269,8 +344,15 @@ clearUser.addEventListener('click', () => {
   document.getElementById('user-name').value = '';
   document.getElementById('user-email').value = '';
   document.getElementById('user-password').value = '';
-  document.getElementById('car-name').value = '';
+  document.getElementById('modal-car-name').value = '';
+  document.getElementById('car-type').value = '';
+  document.getElementById('drive-tp').value = '';
+  document.getElementById('gas-type').value = '';
   document.getElementById('plate-number').value = '';
+  document.getElementById('location').value = '';
+  document.getElementById('imageInput').value = '';
+  document.getElementById('preview').src = '';
+
 
 })
 
@@ -287,6 +369,19 @@ imageInput.addEventListener('change', function () {
   }
 });
 
+modalImageInput.addEventListener('change', function () {
+  const file = this.files[0];
+  if (file) {
+    readerModal = new FileReader();
+
+    readerModal.onload = function (e) {
+      modalPreview.src = e.target.result;
+    };
+
+    readerModal.readAsDataURL(file); // converts the image to base64 string
+  }
+});
+
 document.addEventListener("DOMContentLoaded", function() {
   get_data();
   fetch('/get_session_data', {method: 'POST'})
@@ -294,6 +389,6 @@ document.addEventListener("DOMContentLoaded", function() {
   .then(data => {
     role = data.role;
     requester = data.username;
-    req_pass = data.password;
+    // req_pass = data.password;
   })
 })
