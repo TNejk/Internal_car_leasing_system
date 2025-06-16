@@ -359,8 +359,8 @@ def create_car():
 @jwt_required()
 def edit_car():
   claims = get_jwt()
-  email = claims['email']
-  role = claims['role']
+  eemail = claims.get('sub', None)
+  role = claims.get('role', None)
 
   if role != "admin" or email is None:
     return {"status": False, "msg": "Unathorized"}, 400
