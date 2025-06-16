@@ -443,7 +443,7 @@ def del_cars():
     if role != "admin":
        return {"status": False, "msg": "Unathorized"}, 400
     
-    if car_name == "":
+    if car_id == "":
        return {"status": False, "msg": "Missing parameters!"}, 500
 
     #TODO:  Make this into an ID check, not a name check dumbfuck
