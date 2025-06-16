@@ -26,6 +26,9 @@ from firebase_admin import messaging
 
 import smtplib, ssl
 
+UPLOAD_FOLDER = './images'
+NGINX_PUBLIC_URL = 'https://fl.gamo.sosit-wh.net/images/'
+
 def send_firebase_message_safe(message):
     """Send Firebase message with error handling."""
     try:
@@ -281,9 +284,6 @@ def create_car():
     car_image = data['image']
   except:
      return {"status": False, "msg": "Chýbajúce parametre pri vytvorení auta!"}
-
-  UPLOAD_FOLDER = '/home/systemak/icls/api/images'
-  NGINX_PUBLIC_URL = 'https://fl.gamo.sosit-wh.net/images/'
 
   img_url = save_base64_img(car_image)
 
