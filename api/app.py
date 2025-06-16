@@ -286,6 +286,7 @@ def create_car():
      return {"status": False, "msg": "Chýbajúce parametre pri vytvorení auta!"}
 
   img_url = save_base64_img(car_image)
+  print(img_url)
 
   conn, cur = connect_to_db()
 
@@ -1638,7 +1639,7 @@ def save_base64_img(data_url):
   image = Image.open(BytesIO(image_data))
 
   # Generate unique filename
-  unique_filename = f"{uuid.uuid4()}.{file_ext}"
+  unique_filename = f"{uuid.uuid4()}"
   image_path = os.path.join(UPLOAD_FOLDER, unique_filename)
 
   # Save image to disk
