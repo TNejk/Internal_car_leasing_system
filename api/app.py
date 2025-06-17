@@ -1683,7 +1683,7 @@ def approve_requests():
         )
         send_firebase_message_safe(message)
 
-        create_notification(conn,curr,email, car_name, 'user', f"""Súkromná rezervácia auta: {car[0][1]}""")
+        create_notification(conn,curr,email, car_name, 'user', f"Vaša rezervácia bola prijatá!",f"""Súkromná rezervácia auta: {car[0][1]}""")
 
       except Exception as e:
         return {"status": False, "msg": f"Error approving, {e}"}, 400
