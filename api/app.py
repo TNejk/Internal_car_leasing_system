@@ -1491,8 +1491,6 @@ def lease_car():
       con.commit()
     except Exception as e:
       return {"status": False, "private": False, "msg": f"Error has occured! 113"}, 500
-    
-    con.close()
 
 
     message = messaging.Message(
@@ -1505,7 +1503,7 @@ def lease_car():
     send_firebase_message_safe(message)
 
     create_notification(con, cur, recipient, car_name, 'manager', f"Upozornenie o leasingu auta: {car_name}!", f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""")
-
+    con.close()
     #!!!!!!!!!!!!
     #exc_writer.write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
     #send_email(msg="Auto bolo rezervovane!")
