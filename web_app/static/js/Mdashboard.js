@@ -177,7 +177,6 @@ function get_leases(month) {
   })
     .then(res => res.json())
     .then(data => {
-      console.log(data);
       for (let lease of data) {
         lease.push(getRandomColor());
         lease[0] = new Date(lease[0]);

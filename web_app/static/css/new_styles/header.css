@@ -95,3 +95,35 @@
     text-align: center;
     padding: 5px;
 }
+
+.notification-dropdown #dropdown {
+  display: none;
+  position: absolute;
+  background-color: white;
+  list-style: none;
+  padding: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  width: 300px;
+  z-index: 1000;
+}
+
+.notification-dropdown.active ul li:hover #dropdown {
+  display: block;
+}
+
+.notification-dropdown #dropdown li {
+  padding: 5px 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: red;
+  color: white;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 50%;
+  display: none;
+}

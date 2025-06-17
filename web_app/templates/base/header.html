@@ -5,36 +5,152 @@
   {% else %}
   <div class="icons">
     <ul>
+
+
         {% if role == 'manager' %}
           <li><a href="/manager/dashboard"><img src="{{ icons[3] }}" alt="Domcek" style="width: 24px;height: 24px"></a></li>
         {% endif %}
+
+
       <li><a href="/lease"><img src="{{ icons[4] }}" alt="Auticko" style="width: 30px;height: 30px"></a></li>
-      <li>
-        <a href="#"><img src="{{ icons[0] }}" alt="Zvoncek" style="width: 24px;height: 24px"></a>
-        <ul class="dropdown">
-          {% if notifications|length == 0 %}
-            <p id="notification-default">Nemáte žiadne notifikácie.</p>
-          {% else %}
-            {% for notification in notifications %}
-              <li>
-                <h2>{{ notification[0] }}</h2><br>
-                <p>{{ notification[1] }}</p>
-              </li>
-            {% endfor %}
-          {% endif %}
-        </ul>
-      </li>
+
+
+<!--      <li class="notification-dropdown">-->
+<!--        <a href="#" id="notification-bell">-->
+<!--          <img src="{{ icons[0] }}" alt="Zvoncek" style="width: 24px;height: 24px">-->
+<!--          <span id="notification-badge" class="badge">!</span>-->
+<!--        </a>-->
+<!--        <ul class="dropdown" id="notification-list">-->
+<!--          &lt;!&ndash; Notifications will be loaded here &ndash;&gt;-->
+<!--        </ul>-->
+<!--      </li>-->
+
+
+
       <li>
         <a href="#"><img src="{{ icons[1] }}" alt="Panacik" style="width: 24px;height: 24px"></a>
         <ul class="dropdown">
           <li><a href="/reservations">Rezervácie</a></li>
           {% if role == 'manager' %}
             <li><a href="/manager/reports">Reporty</a></li>
+            <li><a href="/manager/private_requests">Súkromné jazdy</a></li>
           {% endif %}
           <li><a href="/logout">Odhlásiť sa</a></li>
         </ul>
       </li>
+
+
     </ul>
   </div>
   {% endif %}
 </header>
+
+<!--<script>-->
+<!--document.addEventListener('DOMContentLoaded', () => {-->
+<!--  const bell = document.getElementById('notification-bell');-->
+<!--  const dropdown = document.getElementById('notification-list');-->
+<!--  const container = document.querySelector('.notification-dropdown');-->
+<!--  const badge = document.getElementById('notification-badge');-->
+<!--  let notificationsLoaded = false;-->
+
+<!--  bell.addEventListener('click', function (e) {-->
+<!--    e.preventDefault();-->
+<!--    container.classList.toggle('active');-->
+
+<!--    if (!notificationsLoaded) {-->
+<!--      fetch('/notifications', {-->
+<!--        method: 'POST',-->
+<!--        headers: {'Content-Type': 'application/json'}-->
+<!--      })-->
+<!--      .then(response => response.json())-->
+<!--      .then(data => {-->
+<!--        dropdown.innerHTML = '';-->
+
+<!--        if (!data.length) {-->
+<!--          dropdown.innerHTML = '<li>Žiadne notifikácie</li>';-->
+<!--          return;-->
+<!--        }-->
+
+<!--        let unreadCount = 0;-->
+
+<!--        data.forEach(notif => {-->
+<!--          const li = document.createElement('li');-->
+<!--          li.classList.add('notification');-->
+
+<!--          let buttons;-->
+
+<!--          const isPrivateRideRequest = notif.title.toLowerCase().includes('private ride request');-->
+
+<!--          if (isPrivateRideRequest && notif.target_role === 'manager') {-->
+<!--            buttons = `-->
+<!--              <button class="approve-btn" data-id="${notif.id}">Schváliť</button>-->
+<!--              <button class="deny-btn" data-id="${notif.id}">Zamietnuť</button>-->
+
+<!--            `;-->
+<!--          }else{-->
+<!--            buttons = `-->
+<!--            <button class="mark-read-btn" data-id="${notif.id}">Označiť ako prečítané</button>-->
+<!--          `;-->
+<!--          }-->
+
+<!--          li.innerHTML = `-->
+<!--            <div>-->
+<!--              <strong>${notif.title}</strong><br>-->
+<!--              <small>${notif.message}</small><br>-->
+<!--              <small style="color:gray">${new Date(notif.created_at).toLocaleString()}</small>-->
+<!--            </div>-->
+<!--            <div class="notification-buttons">-->
+<!--              ${buttons}-->
+<!--            </div>-->
+<!--          `;-->
+
+<!--          if (!notif.is_read) unreadCount++;-->
+<!--          dropdown.appendChild(li);-->
+<!--        });-->
+
+<!--        badge.style.display = unreadCount > 0 ? 'inline' : 'none';-->
+<!--        notificationsLoaded = true;-->
+<!--      })-->
+<!--      .catch(err => {-->
+<!--        console.error('Chyba pri načítaní notifikácií:', err);-->
+<!--        dropdown.innerHTML = '<li>Chyba pri načítaní</li>';-->
+<!--      });-->
+<!--    }-->
+<!--  });-->
+
+<!--  document.addEventListener('click', function (event) {-->
+<!--    if (!container.contains(event.target)) {-->
+<!--      container.classList.remove('active');-->
+<!--    }-->
+<!--  });-->
+
+<!--  dropdown.addEventListener('click', function (e) {-->
+<!--    const id = e.target.dataset.id;-->
+<!--    if (!id) return;-->
+
+<!--    if (e.target.classList.contains('mark-read-btn')) {-->
+<!--      fetch(`/notifications/mark-as-read/`, { method: 'POST' , headers: {'Content-Type': 'application/json'}, body: JSON.stringify({'id': id})})-->
+<!--        .then(() => {-->
+<!--          const li = e.target.closest('li');-->
+<!--          li.remove();-->
+<!--        });-->
+
+<!--     } //else if (e.target.classList.contains('approve-btn')) {-->
+<!--    //   fetch(`/notifications/private-ride/`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({'id': id})})-->
+<!--    //     .then(() => {-->
+<!--    //       alert('Schválené');-->
+<!--    //       const li = e.target.closest('li');-->
+<!--    //       li.remove();-->
+<!--    //     });-->
+<!--    //-->
+<!--    // } else if (e.target.classList.contains('deny-btn')) {-->
+<!--    //   fetch(`/notifications/private-ride/`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({'id': id, 'a'}) })-->
+<!--    //     .then(() => {-->
+<!--    //       alert('Zamietnuté');-->
+<!--    //       const li = e.target.closest('li');-->
+<!--    //       li.remove();-->
+<!--    //     });-->
+<!--    // }-->
+<!--  });-->
+<!--});-->
+<!--</script>-->

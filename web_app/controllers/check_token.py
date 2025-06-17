@@ -25,6 +25,8 @@ def check_token():
         print(result)
         if result != 'success':  # If login fails, redirect
           return redirect('/sign-in')
+        if result == 'Nesprávne meno alebo heslo!':
+          return redirect('/sign-in')
 
       # If token is valid (or refreshed successfully), proceed to the original function
       return func(*args, **kwargs)

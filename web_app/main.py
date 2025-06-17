@@ -1,4 +1,5 @@
 import sys, os, logging
+
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, Response
 
 sys.path.append('controllers')
@@ -23,6 +24,13 @@ from delete_car import delete_car
 from delete_user import delete_user
 from edit_user import edit_user
 from edit_car import edit_car
+from return_car import return_car
+from cancel_lease import cancel_lease
+from notifications import notifications
+from approve_requests import approve_requests
+from get_requests import get_requests
+from decommission import decommission
+from activation import activation
 
 sys.path.append('misc')
 from load_icons import load_icons
@@ -74,6 +82,7 @@ def logout():
 def lease():
   location = request.args.get('location', None)
   cars = request_all_car_data(location)
+  print(cars)
   username = session['username']
   role = session['role']
   if session.get('role') == 'manager':
@@ -118,20 +127,27 @@ def get_session_data():
   }
   return jsonify(data)
 
-
-@app.route('/save_notification', methods=['POST'])
-@require_role('user', 'manager')
-def save_notification():
+@app.route('/return_car', methods=['POST'])
+@require_role('user','manager')
+def return_car_p():
   data = request.get_json()
-  session['notifications'] = [data['notifications']]
-  return jsonify("success")
+  response = return_car(data)
+  return response
 
+@app.route('/cancel_lease', methods=['POST'])
+@require_role('user','manager')
+def cancelLease():
+  data = request.get_json()
+  response = cancel_lease(data)
+  return response
 
-@app.route('/get_notifications', methods=['POST'])
+@app.route('/notifications', methods=['POST'])
 @require_role('user', 'manager')
-def get_notifications():
-  data = session['notifications']
-  return jsonify(data)
+def get_notification():
+  response = notifications()
+  return response
+
+
 
 
 #################################
@@ -205,6 +221,27 @@ def get_cars():
   data = get_all_cars(session['username'],session['role'])
   return data
 
+@app.route('/manager/private_requests', methods=['GET'])
+@require_role('manager')
+@check_token()
+def private_requests():
+  return render_template('dashboards/private_requests.html', icons=load_icons(), show_header=True, role=session.get('role'))
+
+@app.route('/manager/get_requests', methods=['GET'])
+@require_role('manager')
+@check_token()
+def get_requests_d():
+  return get_requests()
+
+
+@app.route('/manager/approve_requests', methods=['POST'])
+@require_role('manager')
+@check_token()
+def approve_requests_d():
+  data = request.get_json()
+  response = approve_requests(data)
+  return response
+
 #################################
 #             Admin             #
 #################################
@@ -263,14 +300,18 @@ def admin_delete_car():
 @require_role('admin')
 @check_token()
 def admin_decommission():
-  return 1
+  data = request.json
+  response = decommission(data)
+  return response
 
 
 @app.route('/admin/activation', methods=['POST'])
 @require_role('admin')
 @check_token()
 def admin_activation():
-  return 1
+  data = request.json
+  response = activation(data)
+  return response
 
 
 @app.route('/admin/create_user', methods=['POST'])

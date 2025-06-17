@@ -32,11 +32,11 @@ function get_leases() {
   .then(data => {
     role = data.role;
     username = data.username;
-
+    let payload;
     if (role === 'manager'){
-      payload = JSON.stringify({car_name: carList.value, email: userList.value, timeof: timeof, timeto: timeto, istrue: statusTrue.checked, isfalse: statusFalse.checked})
+      payload = JSON.stringify({car_name: carList.value, email: userList.value, timeof: timeof.value, timeto: timeto.value, istrue: statusTrue.checked, isfalse: statusFalse.checked})
     }else {
-      payload = JSON.stringify({car_name: '', email: username, timeof: timeof, timeto: timeto, istrue: statusTrue.checked, isfalse: statusFalse.checked})
+      payload = JSON.stringify({car_name: '', email: username, timeof: timeof.value, timeto: timeto.value, istrue: statusTrue.checked, isfalse: statusFalse.checked})
     }
 
     fetch('/get_user_leases', {
@@ -45,7 +45,6 @@ function get_leases() {
       body: payload,})
     .then(res => res.json())
     .then(data => {
-      console.log(data);
       if (!data){
         document.getElementById('default-message').style.display = 'block';
       }else {
@@ -151,52 +150,49 @@ function render_cards(data){
 function finishReservation(){
   function formatDate() {
     const date = new Date();
-    return date.toISOString().replace('T', ' ').replace('Z', '') + "+0000";
+    return date.toISOString().replace('T', ' ').replace('Z', '').split('.')[0];
   }
 
   const location = document.getElementById("car-location").value;
-  let damaged = document.getElementById("car-damaged").value;
-  if (damaged === 'on'){damaged = true}else if(damaged === 'off'){damaged = false}
-  let dirty = document.getElementById("car-dirty").value;
-  if (dirty === 'on'){dirty = true}else if(dirty === 'off'){dirty = false}
-  let intDmg = document.getElementById("car-int-dmg").value;
-  if (intDmg === 'on'){intDmg = true}else if(intDmg === 'off'){intDmg = false}
-  let extDmg = document.getElementById("car-ext-dmg").value;
-  if (extDmg === 'on'){extDmg = true}else if(extDmg === 'off'){extDmg = false}
-  let collision = document.getElementById("car-collision").value;
-  if (collision === 'on'){collision = true}else if(collision === 'off'){collision = false}
+  let damaged = document.getElementById("car-damaged").checked;
+  let dirty = document.getElementById("car-dirty").checked;
+  let intDmg = document.getElementById("car-int-dmg").checked;
+  let extDmg = document.getElementById("car-ext-dmg").checked;
+  let collision = document.getElementById("car-collision").checked;
+
   const note = document.getElementById("note").value;
 
   fetch('/get_session_data', {method: 'POST'})
     .then(response => response.json())
     .then(data => {
-  let token = data.token;
-  const returnTime = formatDate();
-  const payload = {
-    'id_lease': leaseId,
-    'time_of_return': returnTime,
-    'note': note,
-    'location': location,
-    'damaged': damaged,
-    'dirty': dirty,
-    'int_damage': intDmg,
-    'ext_damage': extDmg,
-    'collision': collision
-  };
-  fetch('https://icls.sosit-wh.net/return_car', {
-    method: 'POST',
-    headers: {
-      Authorization: 'Bearer ' + token,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  }).then((response) => response.json())
-    .then((data) => {
-      closeModalF();
-      modalReturnCar.style.display = 'none';
-      reload(data);
-      get_leases();
-    }).catch((error) => console.error('Error fetching car details:', error));
+      let token = data.token;
+      const returnTime = formatDate();
+      const payload = {
+        'id_lease': leaseId,
+        'time_of_return': returnTime,
+        'note': note,
+        'location': location,
+        'damaged': damaged,
+        'dirty': dirty,
+        'int_damage': intDmg,
+        'ext_damage': extDmg,
+        'collision': collision
+      };
+      console.log(JSON.stringify(payload))
+      fetch('/return_car', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      }).then((response) => response.json())
+        .then((data) => {
+          closeModalF();
+          modalReturnCar.style.display = 'none';
+          reload(data);
+          get_leases();
+        }).catch((error) => console.error('Error fetching car details:', error));
     });} // finished
 
 function scrapReservation(){
@@ -212,12 +208,10 @@ function scrapReservation(){
         email = document.getElementById('modal-user').innerHTML.split('>')[1];
       }
 
-      console.log(car, email);
-
-      fetch('https://icls.sosit-wh.net/cancel_lease', {
+      fetch('/cancel_lease', {
         method: 'POST',
         headers: {
-          Authorization: 'Bearer ' + token,
+          'Authorization': 'Bearer ' + token,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({"car_name": car, "recipient": email}),

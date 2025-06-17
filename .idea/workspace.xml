@@ -6,8 +6,16 @@
   <component name="ChangeListManager">
     <list default="true" id="5a5adc11-9cf5-4dec-8a0c-f5d08dee5caa" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/controllers/check_token.py" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/controllers/check_token.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/static/css/new_styles/header.css" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/static/css/new_styles/header.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web_app/static/js/Adashboard.js" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/static/js/Adashboard.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/static/js/Mdashboard.js" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/static/js/Mdashboard.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/static/js/lease.js" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/static/js/lease.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/static/js/reservations.js" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/static/js/reservations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/templates/base/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/templates/base/header.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web_app/templates/dashboards/Adashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/templates/dashboards/Adashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_app/workers/request_user_leases.py" beforeDir="false" afterPath="$PROJECT_DIR$/web_app/workers/request_user_leases.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,6 +25,9 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
+        <option value="HTML File" />
+        <option value="CSS File" />
+        <option value="JavaScript File" />
         <option value="Python Script" />
       </list>
     </option>
@@ -50,23 +61,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_MARK_IGNORED_FILES_AS_EXCLUDED&quot;: &quot;true&quot;,
-    &quot;Python.app.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.testscratch.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;web__development__branch&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/misen/Documents/GitHub/Internal_car_leasing_system/web_app/workers&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_MARK_IGNORED_FILES_AS_EXCLUDED": "true",
+    "DefaultHtmlFileTemplate": "HTML File",
+    "Python.app.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.testscratch.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "web__development__branch",
+    "last_opened_file_path": "D:/misen/Documents/GitHub/Internal_car_leasing_system/web_app/workers",
+    "list.type.of.created.stylesheet": "CSS",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\misen\Documents\GitHub\Internal_car_leasing_system\web_app\workers" />
@@ -120,6 +133,7 @@
       <updated>1750069418555</updated>
       <workItem from="1750069422275" duration="883000" />
       <workItem from="1750071491092" duration="954000" />
+      <workItem from="1750149484879" duration="12361000" />
     </task>
     <servers />
   </component>
@@ -135,7 +149,7 @@
     <SUITE FILE_PATH="coverage/internal_car_leasing_system$client.coverage" NAME="client Coverage Results" MODIFIED="1738602962724" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/Downloads" />
     <SUITE FILE_PATH="coverage/internal_car_leasing_system$token_testing.coverage" NAME="token_testing Coverage Results" MODIFIED="1732186522166" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$APPLICATION_CONFIG_DIR$/scratches" />
     <SUITE FILE_PATH="coverage/internal_car_leasing_system$app.coverage" NAME="app Coverage Results" MODIFIED="1733999892415" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/api" />
-    <SUITE FILE_PATH="coverage/Internal_car_leasing_system$main.coverage" NAME="main Coverage Results" MODIFIED="1750092586156" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/web_app" />
+    <SUITE FILE_PATH="coverage/Internal_car_leasing_system$main.coverage" NAME="main Coverage Results" MODIFIED="1750164947745" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/web_app" />
     <SUITE FILE_PATH="coverage/Internal_car_leasing_system$app.coverage" NAME="app Coverage Results" MODIFIED="1750032866140" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/api" />
     <SUITE FILE_PATH="coverage/internal_car_leasing_system$api.coverage" NAME="api Coverage Results" MODIFIED="1731582116512" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/api" />
     <SUITE FILE_PATH="coverage/internal_car_leasing_system$main.coverage" NAME="main Coverage Results" MODIFIED="1747302610207" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/web_app" />

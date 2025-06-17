@@ -13,15 +13,23 @@ const modalCloseEditUserButton = document.getElementById('modal-close-edit-user-
 const modalEditCarButton = document.getElementById('modal-edit-car-button');
 const modalCloseEditCarButton = document.getElementById('modal-close-edit-car-button');
 
+const modalDecomButton = document.getElementById('modal-decom-button');
+const modalCloseDecomButton = document.getElementById('modal-close-decom-button');
+
 let readerModal;
 let reader;
 let editEntityId;
+let decomEntity;
 
 let role;
 let requester;
 let req_pass;
 
 function get_data() {
+
+  document.getElementById('user-data-input').innerHTML = '';
+  document.getElementById('car-data-input').innerHTML = '';
+
   fetch('/admin/get_car_list', {method: 'POST'}).then(res => res.json()).then(data => {
       // [16, 'Wolksvagen Golf', 'personal', 'stand_by', 'good', 1, 'BB', 'https://fl.gamo.sosit-wh.net/wolks.jpg', 'BB676GF', 'BENZÍN', 'AUTOMAT']
     for (let car of data) {
@@ -90,6 +98,31 @@ function get_data() {
 
         buttontd.appendChild(edit);
         buttontd.appendChild(remove);
+
+        if (car[3] === 'stand_by') {
+          const decom = document.createElement('button');
+          decom.classList.add('remove');
+          decom.type = 'submit';
+          decom.textContent = 'Odstavenie';
+          decom.addEventListener('click', () => {
+            // your delete logic here
+            decomModal(car[1]);
+          });
+          buttontd.appendChild(decom);
+
+        }else if(car[3] === 'service'){
+          const activate = document.createElement('button');
+          activate.classList.add('remove');
+          activate.type = 'submit';
+          activate.textContent = 'Aktivácia';
+          activate.addEventListener('click', () => {
+            // your delete logic here
+            activEntry(car[1]);
+          });
+          buttontd.appendChild(activate);
+
+        }
+
 
         newLine.appendChild(buttontd);
 
@@ -166,7 +199,7 @@ function add_user (){
   let data = {'name': name, 'email': email, 'password': password, 'role': role};
   fetch('/admin/create_user',{method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)}).then(res => res.json())
     .then(data => {
-      console.log(data);
+      get_data()
     })
 }
 
@@ -178,10 +211,9 @@ function add_car (){
   let location = document.getElementById('location').value;
   let drive_tp = document.getElementById('drive-tp').value;
   let data = {'name': name, 'type': type, 'location': location, 'spz': spz, 'gas': gas, 'drive_tp': drive_tp, 'image': reader.result};
-  console.log(data);
   fetch('/admin/create_car',{method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)}).then(res => res.json())
     .then(data => {
-      console.log(data);
+      get_data()
     })
 }
 
@@ -190,13 +222,13 @@ function deleteEntry(what, id) {
     let payload = {'role': role, 'email': id};
     fetch(`/admin/delete_user`,{method: 'POST',headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),})
       .then(res => res.json()).then(data => {
-      console.log(data);
+      get_data()
     })
   }else if(what === 'car'){
     let payload = {'role': role, 'id': id};
     fetch(`/admin/delete_car`,{method: 'POST',headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),})
       .then(res => res.json()).then(data => {
-      console.log(data);
+        get_data()
     })
   }
 }
@@ -241,7 +273,8 @@ function editUser(){
     }else {
       fetch('/admin/update_user', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)})
       .then(res => res.json()).then(data => {
-        console.log(data);
+        document.getElementById('modal-edit-user').style.display = 'none';
+        get_data()
       })
     }
   }else{
@@ -296,10 +329,41 @@ function editCar(){
   }else {
     fetch('/admin/update_car', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)})
     .then(res => res.json()).then(data => {
-      console.log(data);
+      document.getElementById('modal-edit-car').style.display = 'none';
+      get_data()
     })
   }
 
+}
+
+function decomModal(name){
+  decomEntity = name;
+  document.getElementById('modal-decom-car').style.display = 'block';
+  document.getElementById('modal-h1-decom').innerText = `Odstávka auta ${name}`;
+}
+
+function decomEntry(){
+  let time = document.getElementById('modal-decom-time').value
+  time = time.replace('T', ' ')
+  let data = {
+    'car_name': decomEntity,
+    'timeto': time,
+  }
+
+  fetch('/admin/decommission', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)}).then(r => r.json()).then(data => {
+    get_data()
+  })
+
+}
+
+function activEntry(name){
+  let data = {
+    'car_name': name,
+  }
+
+  fetch('/admin/activation', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)}).then(r => r.json()).then(data => {
+    get_data()
+  })
 }
 
 modalEditUserButton.addEventListener('click', function () {
@@ -329,6 +393,16 @@ modalCloseEditCarButton.addEventListener('click', function (){
   document.getElementById('modal-location').value = '';
   document.getElementById('modal-imageInput').value = '';
   document.getElementById('modal-preview').src = '';
+
+})
+
+modalDecomButton.addEventListener('click', function () {
+  decomEntry()
+})
+
+modalCloseDecomButton.addEventListener('click', function (){
+  document.getElementById('modal-decom-car').style.display = 'none';
+  document.getElementById('modal-decom-time').value = '';
 
 })
 

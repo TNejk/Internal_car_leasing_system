@@ -12,7 +12,6 @@ def request_user_leases(role,filters):
           'isfalse': filters.get('isfalse', True),}
   url = 'https://icls.sosit-wh.net/get_leases'
   request = requests.post(url=url, headers=headers, json=body)
-  print(request.text)
   response = request.json()['active_leases']
 
   # Assuming time is comparable (like a datetime object or a timestamp)
