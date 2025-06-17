@@ -1883,6 +1883,31 @@ def get_notifications():
     conn.close()
 
 
+@app.route('/notifications/mark-as-read/', methods=['POST'])
+@jwt_required()
+def mark_notification_as_read():
+
+  data = request.get_json()
+
+  _id = data['id']
+  if not _id:
+    return jsonify({'error': 'Chýba parameter'}), 404
+
+  conn, cur = connect_to_db()
+  if conn is None:
+    return jsonify({'error': 'Zlihala kominukacia s db'}), 404
+
+  query = """UPDATE notification SET is_read = true WHERE id = %s;"""
+  try:
+    cur.execute(query, (_id,))
+    conn.commit()
+    return jsonify({'status': true}), 200
+  except psycopg2.Error as e:
+    conn.rollback()
+    return jsonify({'error': str(e)}), 501
+
+
+
 def _usage_metric(id_car, conn):
   try:
     with conn.cursor() as cur:
