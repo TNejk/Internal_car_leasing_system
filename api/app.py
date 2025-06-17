@@ -839,7 +839,7 @@ def get_full_car_info():
     if not car or car == 'none':
         return jsonify({'error': 'The "carid" parameter is missing or invalid'}), 500
 
-    query = "SELECT * FROM car WHERE id_car = %s;"
+    query = "SELECT * FROM car WHERE id_car = %s AND is_deleted = false;"
     cur.execute(query, (car,))
     res = cur.fetchall()
 
