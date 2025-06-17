@@ -1827,7 +1827,7 @@ def return_car():
     conn.close()
 
 
-@notifications_bp.route('/notifications', methods=['POST'])
+@app.route('/notifications', methods=['POST'])
 @jwt_required()
 def get_notifications():
   claims = get_jwt()
