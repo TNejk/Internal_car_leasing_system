@@ -1827,6 +1827,39 @@ def return_car():
     conn.close()
 
 
+
+
+@app.route('/read_notification', methods = ['POST'])
+@jwt_required()
+def read_notification():
+  claims = get_jwt()
+  email = claims.get('sub', None)
+  role = claims.get('role', None)
+
+  data = request.get_json()
+
+  # Notification ID to set as read
+  try:
+    notification_id = data["not_id"]
+
+  except: 
+     return {"status": False, "msg": "Chýbajúce parametre"}
+  
+  # Zmen stqv notifkacie na precitanu
+  try:
+    conn, cur = connect_to_db()
+    cur.execute("UPDATE notifications SET is_read = TRUE WHERE id_notification = %s", (notification_id, ))
+
+    cur.commit()
+    conn.close()
+  except:
+     return {"status": False, "msg": "Chyba pri zmene stavu notifikacie"}
+  
+  return {
+     "status": True, "msg": ""
+  }
+
+
 @app.route('/notifications', methods=['GET'])
 @jwt_required()
 def get_notifications():
