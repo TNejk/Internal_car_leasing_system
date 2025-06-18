@@ -1872,7 +1872,7 @@ def get_notifications():
 
   cur = conn.cursor()
 
-  # Get the current user ID and role
+  # Get the current user ID and role #TODO replace getting role from the JWT token
   try:
     cur.execute("SELECT id_driver, role FROM driver WHERE email = %s;", (email,))
     res = cur.fetchone()
@@ -1887,7 +1887,7 @@ def get_notifications():
       cur.execute("""
                 SELECT id_notification, id_driver, id_car, target_role, title, message, is_read, created_at
                 FROM notifications
-                WHERE target_role = 'manager'
+                WHERE target_role = 'manager' OR target_role = 'system'
                 ORDER BY created_at DESC
             """)
     else:
@@ -1895,7 +1895,7 @@ def get_notifications():
       cur.execute("""
                 SELECT id_notification, id_driver, id_car, target_role, title, message, is_read, created_at
                 FROM notifications
-                WHERE id_driver = %s AND target_role = 'user'
+                WHERE id_driver = %s AND target_role = 'user' OR target_role = 'system'
                 ORDER BY created_at DESC
             """, (id_driver,))
 
