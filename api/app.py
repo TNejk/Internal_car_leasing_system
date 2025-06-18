@@ -631,6 +631,7 @@ def get_car_list():
               query = """
                   SELECT id_car, name, status, url, stk
                   FROM car
+                  WHERE is_deleted = FALSE
                   ORDER BY 
                       CASE 
                           WHEN status = 'leased' THEN 1
