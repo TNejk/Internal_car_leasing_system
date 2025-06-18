@@ -1860,6 +1860,19 @@ def read_notification():
   }
 
 
+
+
+# TODO: This lacks any proper support for a real returned notifications
+# It needs to join the driver and car tables for the real email and name
+        # "car": 18,
+        # "created_at": "2025-06-17T12:33:17.806520",
+        # "driver": 1,
+        # "id": 3,
+        # "is_read": false,
+        # "message": "email: test@user.sk \n Od: 19-06-2025 06:00:00 \n Do: 20-06-2025 06:30:00",
+        # "target_role": "manager",
+        # "title": "Upozornenie o leasingu auta: Škoda Scala 2!"
+
 @app.route('/notifications', methods=['GET'])
 @jwt_required()
 def get_notifications():
@@ -1885,21 +1898,43 @@ def get_notifications():
     if role == 'manager':
       # Managers see ALL notifications where target_role = 'manager'
       cur.execute("""
-                SELECT id_notification, id_driver, id_car, target_role, title, message, is_read, created_at
-                FROM notifications
-                WHERE target_role = 'manager' OR target_role = 'system'
-                ORDER BY created_at DESC
+              SELECT 
+                n.id_notification, 
+                d.email AS driver_email, 
+                c.name AS car_name, 
+                n.target_role, 
+                n.title, 
+                n.message, 
+                n.is_read, 
+                n.created_at
+              FROM notifications n
+              JOIN driver d ON n.id_driver = d.id_driver
+              JOIN car c ON n.id_car = c.id_car
+              WHERE n.target_role IN ('manager', 'system')
+              ORDER BY n.created_at DESC;
             """)
     else:
       # Users see only THEIR notifications where target_role = 'user'
       cur.execute("""
-                SELECT id_notification, id_driver, id_car, target_role, title, message, is_read, created_at
-                FROM notifications
-                WHERE id_driver = %s AND target_role = 'user' OR target_role = 'system'
-                ORDER BY created_at DESC
+              SELECT 
+                n.id_notification, 
+                d.email AS driver_email, 
+                c.name AS car_name, 
+                n.target_role, 
+                n.title, 
+                n.message, 
+                n.is_read, 
+                n.created_at
+              FROM notifications n
+              JOIN driver d ON n.id_driver = d.id_driver
+              JOIN car c ON n.id_car = c.id_car        
+              WHERE id_driver = %s AND target_role IN ('user', 'system')
+              ORDER BY created_at DESC
             """, (id_driver,))
 
     notifs = cur.fetchall()
+
+    # Should not return an email string and a car name string instead of an ID, target role is allready a string
     notifications = [{
       'id': n[0],
       'driver': n[1],
@@ -1932,11 +1967,11 @@ def mark_notification_as_read():
   if conn is None:
     return jsonify({'error': 'Zlihala kominukacia s db'}), 404
 
-  query = """UPDATE notification SET is_read = true WHERE id = %s;"""
+  query = """"UPDATE notifications SET is_read = TRUE WHERE id_notification = %s"""
   try:
     cur.execute(query, (_id,))
     conn.commit()
-    return jsonify({'status': true}), 200
+    return jsonify({'status': True}), 200
   except psycopg2.Error as e:
     conn.rollback()
     return jsonify({'error': str(e)}), 501
