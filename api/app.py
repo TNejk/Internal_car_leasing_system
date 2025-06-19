@@ -1289,7 +1289,7 @@ def cancel_lease():
       )
       send_firebase_message_safe(message)
 
-      create_notification(conn, cur, recipient, car_name,'user', f"Vaša rezervácia bola zrušená!",f"""Rezervácia pre auto: {car_name} bola zrušená.""")
+      create_notification(conn, cur, recipient, car_name,'user', f"Vaša rezervácia bola zrušená!",f"""Rezervácia pre auto: {car_name} bola zrušená.""", is_system_wide=False)
  
   conn.commit()
   conn.close()
@@ -1478,6 +1478,7 @@ def lease_car():
       return {"status": False, "private": False, "msg": f"Error has occured! 113"}, 500
 
 
+    # Notification informing the manager of a lease
     message = messaging.Message(
               notification=messaging.Notification(
               title=f"Upozornenie o leasingu auta: {car_name}!",
@@ -1487,7 +1488,17 @@ def lease_car():
           )
     send_firebase_message_safe(message)
 
+    # Create role-based notification for managers (not tied to specific user)
+    create_notification(con, cur, None, car_name, 'manager', 
+                       f"Upozornenie o leasingu auta: {car_name}!", 
+                       f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""",
+                       is_system_wide=False)
+    con.close()
+
+    #! BUG: The manager will not see this notification, as the function that returns them assignes this notification to the user leasing the car, while the role does exist its only performative
     create_notification(con, cur, recipient, car_name, 'manager', f"Upozornenie o leasingu auta: {car_name}!", f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""")
+
+
     con.close()
     #!!!!!!!!!!!!
     #exc_writer.write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
@@ -1519,7 +1530,11 @@ def lease_car():
             )
       send_firebase_message_safe(message)
 
-      create_notification(con, cur, recipient, car_name, 'manager', f"Nová rezervácia auta: {car_name}!", f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""")
+      # Create role-based notification for managers (not tied to specific user)
+      create_notification(con, cur, None, car_name, 'manager', 
+                         f"Nová rezervácia auta: {car_name}!", 
+                         f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""",
+                         is_system_wide=False)
 
     except Exception as e:
       return {"status": False, "private": False, "msg": f"Error has occured! 112"}, 500
@@ -1801,6 +1816,9 @@ def return_car():
 
       create_notification(conn, cur, email, id_car, 'manager', 'Poškodenie auta!', f"""Email: {email}\nVrátil auto s poškodením!""")
     
+    # Create role-based notification for managers about car damage
+    create_notification(conn, cur, None, None, 'manager', 'Poškodenie auta!', f"""Email: {email}\nVrátil auto s poškodením!""", is_system_wide=True)
+    
     return jsonify({'status': "returned"}), 200
 
   except psycopg2.Error as e:
@@ -1857,12 +1875,12 @@ def read_notification():
         # "title": "Upozornenie o leasingu auta: Škoda Scala 2!"
 
 # i cannot send notifs by user role, as sytem should go to evveryone 
-
 @app.route('/notifications', methods=['GET'])
 @jwt_required()
 def get_notifications():
     claims = get_jwt()
     email = claims.get('sub', None)
+    role = claims.get('role', None)
 
     conn, error = connect_to_db()
     if conn is None:
@@ -1871,15 +1889,15 @@ def get_notifications():
     cur = conn.cursor()
 
     try:
-        cur.execute("SELECT id_driver, role FROM driver WHERE email = %s;", (email,))
+        cur.execute("SELECT id_driver FROM driver WHERE email = %s;", (email,))
         res = cur.fetchone()
 
         if res is None:
             return jsonify({'error': 'User not found'}), 404
 
-        id_driver, role = res
+        id_driver = res[0]
 
-        # Get personal notifications (targeted to this specific user)
+        # Get personal notifications (targeted to this specific user by email)
         personal_notifications_query = """
             SELECT 
                 n.id_notification, 
@@ -1897,6 +1915,28 @@ def get_notifications():
             LEFT JOIN car c ON n.id_car = c.id_car
             WHERE n.is_system_wide = FALSE 
             AND n.id_driver = %s
+            AND n.target_role = 'user'
+        """
+
+        # Get role-based notifications (notifications intended for this user's role)
+        role_notifications_query = """
+            SELECT 
+                n.id_notification, 
+                COALESCE(d.email, 'System') AS driver_email, 
+                COALESCE(c.name, 'N/A') AS car_name, 
+                n.target_role, 
+                n.title, 
+                n.message, 
+                n.is_read, 
+                n.created_at,
+                n.is_system_wide,
+                'role_based' as notification_type
+            FROM notifications n
+            LEFT JOIN driver d ON n.id_driver = d.id_driver
+            LEFT JOIN car c ON n.id_car = c.id_car
+            WHERE n.is_system_wide = FALSE 
+            AND n.target_role = %s
+            AND n.target_role IN ('manager', 'admin')
         """
 
         # Get system-wide notifications with user's read status
@@ -1918,15 +1958,21 @@ def get_notifications():
             WHERE n.is_system_wide = TRUE
         """
 
-        # Execute both queries
+        # Execute queries
         cur.execute(personal_notifications_query, (id_driver,))
         personal_notifications = cur.fetchall()
+
+        # Only get role-based notifications if user is manager or admin
+        role_notifications = []
+        if role in ['manager', 'admin']:
+            cur.execute(role_notifications_query, (role,))
+            role_notifications = cur.fetchall()
 
         cur.execute(system_notifications_query, (id_driver,))
         system_notifications = cur.fetchall()
 
         # Combine and sort by creation date
-        all_notifications = personal_notifications + system_notifications
+        all_notifications = personal_notifications + role_notifications + system_notifications
         all_notifications.sort(key=lambda x: x[7], reverse=True)  # Sort by created_at
 
         notifications = [{
@@ -1953,6 +1999,7 @@ def get_notifications():
 def mark_notification_as_read():
     claims = get_jwt()
     email = claims.get('sub', None)
+    role = claims.get('role', None)
     
     data = request.get_json()
     notification_id = data.get('id')
@@ -1972,13 +2019,13 @@ def mark_notification_as_read():
             return jsonify({'error': 'User not found'}), 404
         id_driver = res[0]
 
-        # Check if it's a system-wide notification
-        cur.execute("SELECT is_system_wide FROM notifications WHERE id_notification = %s", (notification_id,))
+        # Get notification details
+        cur.execute("SELECT is_system_wide, target_role, id_driver FROM notifications WHERE id_notification = %s", (notification_id,))
         res = cur.fetchone()
         if not res:
             return jsonify({'error': 'Notification not found'}), 404
         
-        is_system_wide = res[0]
+        is_system_wide, target_role, notification_owner_id = res
 
         if is_system_wide:
             # Update system notification read status
@@ -1989,12 +2036,27 @@ def mark_notification_as_read():
                 DO UPDATE SET is_read = TRUE, read_at = CURRENT_TIMESTAMP
             """, (notification_id, id_driver))
         else:
-            # Update regular notification
-            cur.execute("""
-                UPDATE notifications 
-                SET is_read = TRUE 
-                WHERE id_notification = %s AND id_driver = %s
-            """, (notification_id, id_driver))
+            # For role-based notifications, check if user has the appropriate role
+            if target_role in ['manager', 'admin']:
+                if role == target_role:
+                    # Mark as read by updating the notification itself
+                    cur.execute("""
+                        UPDATE notifications 
+                        SET is_read = TRUE 
+                        WHERE id_notification = %s
+                    """, (notification_id,))
+                else:
+                    return jsonify({'error': 'Unauthorized to mark this notification as read'}), 403
+            else:
+                # Personal notification - check ownership
+                if notification_owner_id == id_driver:
+                    cur.execute("""
+                        UPDATE notifications 
+                        SET is_read = TRUE 
+                        WHERE id_notification = %s AND id_driver = %s
+                    """, (notification_id, id_driver))
+                else:
+                    return jsonify({'error': 'Unauthorized to mark this notification as read'}), 403
 
         if cur.rowcount == 0:
             return jsonify({'error': 'Notification not found or already read'}), 404
