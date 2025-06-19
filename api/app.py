@@ -1495,12 +1495,7 @@ def lease_car():
                        is_system_wide=False)
     con.close()
 
-    #! BUG: The manager will not see this notification, as the function that returns them assignes this notification to the user leasing the car, while the role does exist its only performative
-    create_notification(con, cur, recipient, car_name, 'manager', f"Upozornenie o leasingu auta: {car_name}!", f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""")
 
-
-    con.close()
-    #!!!!!!!!!!!!
     #exc_writer.write_report(recipient, car_name,stk,drive_type, form_timeof, form_timeto)
     #send_email(msg="Auto bolo rezervovane!")
     return {"status": True, "private": private}
