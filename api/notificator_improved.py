@@ -30,7 +30,7 @@ def create_notification(conn, cur, email=None, car_name=None, target_role=None, 
     Args:
         conn: Database connection
         cur: Database cursor
-        email: User email (optional for system notifications)
+        email: User email (optional for system notifications and role-based notifications)
         car_name: Car name (optional for system notifications)
         target_role: Target role ('user', 'manager', 'admin', 'system')
         title: Notification title
@@ -41,10 +41,10 @@ def create_notification(conn, cur, email=None, car_name=None, target_role=None, 
         id_driver = None
         id_car = None
         
-        # For system-wide notifications, we don't need specific user/car associations
-        if not is_system_wide:
+        # For system-wide notifications and role-based notifications (manager/admin), we don't need specific user associations
+        if not is_system_wide and target_role not in ['manager', 'admin', 'system']:
             if not email or not isinstance(email, str):
-                print(f"[NOTIF ERROR] Email required for non-system notifications")
+                print(f"[NOTIF ERROR] Email required for user-specific notifications")
                 return False
                 
             cur.execute("SELECT id_driver FROM driver WHERE email = %s", (email,))
@@ -54,11 +54,12 @@ def create_notification(conn, cur, email=None, car_name=None, target_role=None, 
                 return False
             id_driver = res[0]
 
-            if car_name and isinstance(car_name, str):
-                cur.execute("SELECT id_car FROM car WHERE name = %s", (car_name,))
-                res = cur.fetchone()
-                if res:
-                    id_car = res[0]
+        # Car name is optional for all notification types
+        if car_name and isinstance(car_name, str):
+            cur.execute("SELECT id_car FROM car WHERE name = %s", (car_name,))
+            res = cur.fetchone()
+            if res:
+                id_car = res[0]
 
         # Insert notification
         cur.execute("""
@@ -81,7 +82,8 @@ def create_notification(conn, cur, email=None, car_name=None, target_role=None, 
                 """, (notification_id, driver_id, False))
 
         conn.commit()
-        print(f"[NOTIF] Notification created - Role: {target_role}, Driver: {email or 'System'}, Car: {car_name or 'N/A'}")
+        notif_type = "system-wide" if is_system_wide else "targeted"
+        print(f"[NOTIF] {notif_type} notification created - Role: {target_role}, Driver: {email or 'N/A'}, Car: {car_name or 'N/A'}")
         return True
 
     except Exception as e:
@@ -236,7 +238,7 @@ class CarLeaseNotificator:
                         is_system_wide=False
                     )
                     
-                    # Send notification to managers (system-wide for managers)
+                    # Send notification to managers (role-based for managers)
                     create_notification(
                         cursor.connection, cursor,
                         email=None,
@@ -244,7 +246,7 @@ class CarLeaseNotificator:
                         target_role='manager',
                         title="Neskoré odovzdanie auta!",
                         message=f"Zamestnanec {driver_email} nestihol odovzdať auto: {car_name}.",
-                        is_system_wide=True
+                        is_system_wide=False
                     )
                     
                     # Send Firebase notifications
@@ -316,6 +318,17 @@ class CarLeaseNotificator:
                 cursor.execute(
                     "UPDATE lease SET status = false WHERE id_lease = %s AND status = true",
                     (next_lease_id,)
+                )
+                
+                # Create database notification for cancelled lease
+                create_notification(
+                    cursor.connection, cursor,
+                    email=next_driver_email,
+                    car_name=car_name,
+                    target_role='user',
+                    title="Rezervácia zrušená",
+                    message="Vaša rezervácia na auto bola zrušená, pretože predchádzajúci prenájom neskončil načas.",
+                    is_system_wide=False
                 )
                 
                 # Send cancellation notification
