@@ -1789,10 +1789,15 @@ def return_car():
                 WHERE id_lease = %s;"""
       cur.execute(query, (False, tor, note, damaged, dirty, ext_damage, int_damage, collision, id_lease, ))
 
-      # Get the car ID
+      # Get the car ID and name
       query = "SELECT id_car FROM lease WHERE id_lease = %s;"
       cur.execute(query, (id_lease,))
       id_car, = cur.fetchone()
+      
+      # Get car name for notifications
+      query = "SELECT name FROM car WHERE id_car = %s;"
+      cur.execute(query, (id_car,))
+      car_name = cur.fetchone()[0]
 
       # Update the car table
       um = _usage_metric(id_car, conn)
@@ -1801,6 +1806,9 @@ def return_car():
       cur.execute(query, (health, 'stand_by', um, location, id_car ))
 
     conn.commit()
+    
+    # Create a new cursor for notifications since the with block closed the previous one
+    cur = conn.cursor()
     
     if (damaged == True):
       message = messaging.Message(
@@ -1812,10 +1820,8 @@ def return_car():
       )
       send_firebase_message_safe(message)
 
-      create_notification(conn, cur, email, id_car, 'manager', 'Poškodenie auta!', f"""Email: {email}\nVrátil auto s poškodením!""")
-    
-    # Create role-based notification for managers about car damage
-    create_notification(conn, cur, None, None, 'manager', 'Poškodenie auta!', f"""Email: {email}\nVrátil auto s poškodením!""", is_system_wide=True)
+      # Create role-based notification for managers about car damage
+      create_notification(conn, cur, None, car_name, 'manager', 'Poškodenie auta!', f"""Email: {email}\nVrátil auto s poškodením!""", is_system_wide=False)
     
     return jsonify({'status': "returned"}), 200
 
