@@ -692,14 +692,16 @@ def decommission():
       lease_update_query = """
           UPDATE lease AS l
           SET status = FALSE
-          FROM driver AS d
+          FROM driver AS d, car AS c
           WHERE l.id_driver = d.id_driver
+            AND l.id_car = c.id_car
+            AND c.name = %s
             AND l.status = TRUE
             AND l.start_of_lease > %s
             AND l.end_of_lease   < %s
           RETURNING d.email
       """
-      cur.execute(lease_update_query, (time_of, time_to))
+      cur.execute(lease_update_query, (car_name, time_of, time_to))
 
       affected_emails = list(set([row[0] for row in cur.fetchall()])) # Remove duplicate emails using set to list conversion
 
