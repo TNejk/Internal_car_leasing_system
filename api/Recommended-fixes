@@ -1,0 +1,109 @@
+
+Here is a condensed “code-review / improvement plan” for the leasing life-cycle (lease → cancel → return) and for the notification system.  I kept the list actionable so you can turn every bullet into a ticket or a PR.
+
+────────────────────────────────────────
+1.  GENERAL ARCHITECTURE
+────────────────────────────────────────
+• Separate concerns  
+  – Put DB access in its own module (or move to an ORM).  
+  – Put date-&-time helpers in one utility file.  
+  – Have one Notifications service instead of two almost-identical `create_notification` functions.
+
+• Blueprints / FastAPI style routers  
+  The file already has >2 200 LOC.  Split endpoints by bounded context (`cars`, `leases`, `users`, `reports`, `notifications`).
+
+• Replace raw psycopg2 with SQLAlchemy or another ORM  
+  – Gives automatic transactions, relationship loading, migrations, dataclass-like models, input sanitising.  
+  – Allows “serialisable” isolation for race-condition sensitive calls (`lease_car`, `cancel_lease`, `return_car`).
+
+• Environment & config  
+  Centralise reading the env vars once; fail fast if required keys are missing.
+
+────────────────────────────────────────
+2.  DATE / TIME HANDLING
+────────────────────────────────────────
+• All timestamps should be UTC in the DB; convert to Europe/Bratislava only at the API boundary.  
+• Replace the multiple ad-hoc `convert_to_datetime` / `convert_to_bratislava_timezone` variants with:
+  ```python
+  def sk_now() -> datetime:
+      return datetime.now(pytz.timezone("Europe/Bratislava"))
+  def to_utc(dt: datetime) -> datetime: ...
+  ```
+• Use `fromisoformat` or `dateutil.parser.parse` once; do not hand-roll `strptime` with two alternate formats.
+
+• Validate ranges in one place (start < end, neither is in the past, etc.).  Right now almost-identical checks live in `lease_car`, `get_leases`, `decommission`.
+
+────────────────────────────────────────
+3.  LEASING MAIN LOOP
+────────────────────────────────────────
+A. lease_car  
+   • Conflict check only covers some overlap patterns.  Use `NOT (new_end ≤ start OR new_start ≥ end)` to catch all.  
+   • Add a DB UNIQUE partial index to guard against race conditions:  
+     `CREATE UNIQUE INDEX one_active_lease_per_car ON lease(id_car) WHERE status = TRUE;`  
+   • Wrap the whole reservation in a single SERIALIZABLE transaction; retry on
+     `psycopg2.errors.SerializationFailure`.
+
+B. cancel_lease  
+   • Endpoint silently returns 200 even when nothing is updated (e.g. wrong id).  Return 404/409.  
+   • `recipient` logic allows any authenticated user to cancel if he supplies someone else’s email but the role check fails to catch every path.  Simplify:
+     – Load lease by ID, verify current user is owner OR has manager/admin role.  
+     – Then cancel.
+
+C. return_car  
+   • `cur.commit()` is a bug (should be `conn.commit()`).  
+   • `damaged`, `dirty`, … come in as strings/booleans?  Validate with a schema (Pydantic / Marshmallow).  
+   • `_usage_metric` sometimes returns a Flask `jsonify`, which breaks calling code.  Let helpers raise and let the route handle exceptions.  
+   • Health/location mapping can be a lookup dict instead of `match`.
+
+────────────────────────────────────────
+4.  NOTIFICATION PIPELINE
+────────────────────────────────────────
+• Remove duplication: keep one `create_notification` service used by both the API and the background `notificator_improved.py`.
+
+• Make Firebase sending non-blocking  
+  – Off-load to a Celery / RQ worker or at least `ThreadPoolExecutor`.  
+  – Capture and log `messaging.send()` failures without blocking the main request.
+
+• Schema  
+  – Add foreign keys & ON DELETE CASCADE to `system_notification_read_status`.  
+  – Add composite index `(id_driver, is_read)` to speed up unread queries.
+
+• Read status  
+  – `/notifications/mark-as-read` mixes personal vs role vs system logic; consider three dedicated endpoints or a single table that contains per-user rows for *every* notification (simplifies querying and marking).  
+  – Use `RETURNING id_notification` + check `rowcount` to confirm update.
+
+────────────────────────────────────────
+5.  SECURITY & HARDENING
+────────────────────────────────────────
+• Password hashing: a fixed `LOGIN_SALT` undermines SHA-256; switch to `passlib.hash.bcrypt` with per-user salts.  
+• Image upload: verify MIME type *after* decoding; limit file size; store in S3/GCS instead of local disk if multiserver.  
+• CORS: open `Access-Control-Allow-Origin: *` plus allowing credentials is disallowed by browsers; restrict to known domains.  
+• Input validation: replace many `try/except: return 500` blocks with schema validation and return 400.
+
+────────────────────────────────────────
+6.  TESTABILITY & CI
+────────────────────────────────────────
+• Add unit tests for:
+  – leasing overlap logic  
+  – notifications generation  
+  – date/time utilities.  
+• Use pytest and a temporary Postgres instance (docker-compose).  
+• Lint with ruff / flake8, type-check with mypy; the code currently has several obvious typos that linters would catch (`cur.commit`, misuse of `curr` vs `cur`, etc.).
+
+────────────────────────────────────────
+7.  DEVELOPER & USER EXPERIENCE
+────────────────────────────────────────
+• Return consistent JSON structure: `{status: bool, data: {...}, error: str | null}`.  
+• Replace ad-hoc error strings with i18n-ready codes (`E_LEASE_CONFLICT`) and let the UI map to Slovak text.  
+• Document every endpoint in an OpenAPI spec → Swagger UI → easier to consume and test.
+
+────────────────────────────────────────
+8.  LOW-HANGING QUICK FIXES
+────────────────────────────────────────
+1. Replace all `cur.commit()` with `conn.commit()`.  
+2. Remove duplicated `create_notification`, keep one canonical version.  
+3. Factor out `convert_to_bratislava_timezone` once.  
+4. Add `try/except` specific catches: `except psycopg2.Error as e`, not bare `except:`.  
+5. Delete dead comments / memes (they hinder maintainability).
+
+Implementing the above will make the service far more robust, auditable, and pleasant for both users and future maintainers.

@@ -215,7 +215,10 @@ def register():
   return {"status": True}
 
 
-
+#!!! Remove the salting part, its useless when its just fixed salt
+# TODO: Replace with bcrupt or smth: passlib.hash.bcrypt
+# Since a salt should be random and unique for each user, not just fixed salt for all users!!! 
+# mah baad :()
 @app.route('/login', methods=['POST'])
 def login():
   data = request.get_json()
@@ -1425,13 +1428,12 @@ def lease_car():
   conflict_query = """
     SELECT COUNT(*) FROM lease 
     WHERE status = true AND id_car = %s  
-    AND (
-        (start_of_lease < %s AND end_of_lease > %s) OR
-        (start_of_lease < %s AND end_of_lease > %s) OR
-        (start_of_lease >= %s AND start_of_lease < %s)
+    AND NOT (
+        end_of_lease <= %s OR  -- existing lease ends before new lease starts
+        start_of_lease >= %s   -- existing lease starts after new lease ends
     )
   """
-  cur.execute(conflict_query, (car_id, timeof, timeof, timeto, timeto, timeof, timeto))
+  cur.execute(conflict_query, (car_id, timeof, timeto))
   
   conflicting_leases = cur.fetchone()
   if conflicting_leases[0] > 0:
@@ -1847,7 +1849,7 @@ def read_notification():
     conn, cur = connect_to_db()
     cur.execute("UPDATE notifications SET is_read = TRUE WHERE id_notification = %s", (notification_id, ))
 
-    cur.commit()
+    conn.commit()
     conn.close()
   except:
      return {"status": False, "msg": "Chyba pri zmene stavu notifikacie"}
