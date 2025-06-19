@@ -21,6 +21,76 @@ db_user = os.getenv('POSTGRES_USER')
 db_pass = os.getenv('POSTGRES_PASS')
 db_name = os.getenv('POSTGRES_DB')
 
+
+
+def create_notification(conn, cur, email=None, car_name=None, target_role=None, title=None, message=None, is_system_wide=False):
+    """
+    Create a notification in the database.
+    
+    Args:
+        conn: Database connection
+        cur: Database cursor
+        email: User email (optional for system notifications)
+        car_name: Car name (optional for system notifications)
+        target_role: Target role ('user', 'manager', 'admin', 'system')
+        title: Notification title
+        message: Notification message
+        is_system_wide: Boolean indicating if this is a system-wide notification
+    """
+    try:
+        id_driver = None
+        id_car = None
+        
+        # For system-wide notifications, we don't need specific user/car associations
+        if not is_system_wide:
+            if not email or not isinstance(email, str):
+                print(f"[NOTIF ERROR] Email required for non-system notifications")
+                return False
+                
+            cur.execute("SELECT id_driver FROM driver WHERE email = %s", (email,))
+            res = cur.fetchone()
+            if not res:
+                print(f"[NOTIF ERROR] Driver not found for email: {email}")
+                return False
+            id_driver = res[0]
+
+            if car_name and isinstance(car_name, str):
+                cur.execute("SELECT id_car FROM car WHERE name = %s", (car_name,))
+                res = cur.fetchone()
+                if res:
+                    id_car = res[0]
+
+        # Insert notification
+        cur.execute("""
+            INSERT INTO notifications (id_driver, id_car, target_role, title, message, is_system_wide)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id_notification
+        """, (id_driver, id_car, target_role, title, message, is_system_wide))
+
+        notification_id = cur.fetchone()[0]
+
+        # If it's a system-wide notification, create read status entries for all users
+        if is_system_wide:
+            cur.execute("SELECT id_driver FROM driver WHERE is_deleted = FALSE")
+            all_drivers = cur.fetchall()
+            
+            for (driver_id,) in all_drivers:
+                cur.execute("""
+                    INSERT INTO system_notification_read_status (id_notification, id_driver, is_read)
+                    VALUES (%s, %s, %s)
+                """, (notification_id, driver_id, False))
+
+        conn.commit()
+        print(f"[NOTIF] Notification created - Role: {target_role}, Driver: {email or 'System'}, Car: {car_name or 'N/A'}")
+        return True
+
+    except Exception as e:
+        conn.rollback()
+        print(f"[NOTIF EXCEPTION] {e}")
+        return False
+
+
+
 # Firebase initialization
 try:
     cred = credentials.Certificate("icls-56e37-firebase-adminsdk-2d4e2-be93ca6a35.json")
@@ -93,6 +163,17 @@ class CarLeaseNotificator:
                         topic="system"
                     )
                     
+                    # Create system-wide notification
+                    create_notification(
+                        cursor.connection, cursor,
+                        email=None,
+                        car_name=car_name,
+                        target_role='system',
+                        title=f"Auto {car_name} je k dispozíci!",
+                        message="Je možné znova auto rezervovať v aplikácií.",
+                        is_system_wide=True
+                    )
+                    
                     if self.send_firebase_message(message):
                         print(f"INFO: Reactivated car: {car_name}")
                     else:
@@ -144,17 +225,38 @@ class CarLeaseNotificator:
                         
                     car_name = car_result[0]
                     
-                    # Send notification to driver
+                    # Send notification to driver (personal notification)
+                    create_notification(
+                        cursor.connection, cursor,
+                        email=driver_email,
+                        car_name=car_name,
+                        target_role='user',
+                        title="Prekročenie limitu na odovzdanie auta",
+                        message="Skončil sa limit na vrátenie auta, prosím odovzdajte auto v aplikácií!",
+                        is_system_wide=False
+                    )
+                    
+                    # Send notification to managers (system-wide for managers)
+                    create_notification(
+                        cursor.connection, cursor,
+                        email=None,
+                        car_name=car_name,
+                        target_role='manager',
+                        title="Neskoré odovzdanie auta!",
+                        message=f"Zamestnanec {driver_email} nestihol odovzdať auto: {car_name}.",
+                        is_system_wide=True
+                    )
+                    
+                    # Send Firebase notifications
                     driver_topic = driver_email.replace("@", "_")
                     driver_message = messaging.Message(
                         notification=messaging.Notification(
-                            title="Prekrocenie limitu na odovzdanie auta",
+                            title="Prekročenie limitu na odovzdanie auta",
                             body="Skončil sa limit na vrátenie auta, prosím odovzdajte auto v aplikácií!"
                         ),
                         topic=driver_topic
                     )
                     
-                    # Send notification to managers
                     manager_message = messaging.Message(
                         notification=messaging.Notification(
                             title="Neskoré odovzdanie auta!",

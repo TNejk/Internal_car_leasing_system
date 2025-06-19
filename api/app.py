@@ -677,7 +677,7 @@ def decommission():
   try:
       conn, cur = connect_to_db()
 
-      # UPdate car status so it shows as decommisioned to the user
+      # Update car status so it shows as decommisioned to the user
       car_update_query = "UPDATE car SET status = 'service' WHERE name = %s and not status = 'service'"
       cur.execute(car_update_query, (car_name,))
 
@@ -702,6 +702,11 @@ def decommission():
 
       conn.commit()
       for email in affected_emails:
+        # Send personal notification to each affected user
+        create_notification(conn, cur, email, car_name, 'user', 
+                          f"Vaša rezervácia pre: {car_name} je zrušená",
+                          "Objednané auto bolo de-aktivované správcom.",
+                          is_system_wide=False)
 
         message = messaging.Message(
           notification=messaging.Notification(
@@ -712,28 +717,11 @@ def decommission():
         )
         send_firebase_message_safe(message)
 
-        create_notification(conn, cur, email, car_name, 'user', f"Vaša rezervácia pre: {car_name} je zrušená", "Objednané auto bolo de-aktivované správcom.")
-
-        driver_q = """SELECT id FROM driver WHERE email = %s"""
-        cur.execute(driver_q, email)
-        res = cur.fetchone()
-        if not res:
-          return jsonify({'error': 'Driver not found'}), 404
-        id_driver = res[0]
-
-        car_q = """SELECT id FROM car WHERE name = %s"""
-        cur.execute(car_q, car_name)
-        res = cur.fetch()
-        if not res:
-          return jsonify({'error': 'Car not found'}), 404
-        id_car = res[0]
-
-        web_notif_query = """INSERT INTO notifications (id_driver, id_car, target_role, title, message) values (%s, %s, %s, %s, %s)"""
-        title = f"Vaša rezervácia pre: {car_name} je zrušená"
-        message = "Objednané auto bolo de-aktivované správcom."
-        cur.execute(web_notif_query, (id_driver, id_car, 'user', title, message))
-
-
+      # Send system-wide notification about car decommissioning
+      create_notification(conn, cur, None, car_name, 'system',
+                        f"Auto: {car_name}, bolo deaktivované!",
+                        "Skontrolujte si prosím vaše rezervácie.",
+                        is_system_wide=True)
 
       message = messaging.Message(
         notification=messaging.Notification(
@@ -745,14 +733,12 @@ def decommission():
       
       send_firebase_message_safe(message)
 
-    # create_notification
-
       return {
           "status": True,
           "msg": f"Decommissioned {car_name}."
       }, 200
 
-  except Exception as e: # This is also cool, you can rollback changes if an error occured
+  except Exception as e:
       if conn:
           conn.rollback()
       return {"status": False, "msg": f"Decomission error: {e}"}, 500
@@ -779,9 +765,12 @@ def activate_car():
   # Update decommision status so it wont trigger the notificator again
   dec_query = "UPDATE decommissioned_cars SET status = FALSE where car_name = %s"
   cur.execute(dec_query, (car_name, ))
-  
-  conn.commit()
-  conn.close()
+
+  # Send system-wide notification about car activation
+  create_notification(conn, cur, None, car_name, 'system',
+                     f"Auto {car_name} je k dispozíci!",
+                     "Je možné znova auto rezervovať v aplikácií.",
+                     is_system_wide=True)
 
   message = messaging.Message(
           notification=messaging.Notification(
@@ -791,15 +780,9 @@ def activate_car():
           topic="system"
       )
   send_firebase_message_safe(message)
-
-  # create_notification
-  # kamo neviem dpc uz chcem spat je mi smutno tu samemu pomoc chyba mi frajerka je tu tma iba lampa, monitor, miska,
-  # klavesnica a sluchadlova led mi svietia som zufaly, idem robim tofikikacie od spodu hore a ja fakt nemam mozgove
-  # kapacity riesit systemove notifikacie bude to musiet pockat ked to budeme vypelsovat s miskom druhym ja fakt nemam
-  # silu na toto fakt pooc frajerka mi chyba ohromne vola sa Any, velmi ju milujem, chodime spolu dneska uz sets a pol
-  # mesiaca a vidime spolocnu buducnost spoli fakt velmi mi chyba jej comfor objatie dotyk pery ale no o niekolko hodin
-  # budeme znova vo svojom naruci a bude na super, leb by som fakt bral keby lezy nedaleko mna aby som mohol pocut jej
-  # pofufkavanie spankove je to strasne cute a milujem to na nej <3
+  
+  conn.commit()
+  conn.close()
 
   return {"status": True, "msg": f"Car {car_name} was activated!"}
 
@@ -1536,7 +1519,7 @@ def lease_car():
             )
       send_firebase_message_safe(message)
 
-      create_notification(con, cur, email, car_name, 'manager', f"Nová rezervácia auta: {car_name}!", f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""")
+      create_notification(con, cur, recipient, car_name, 'manager', f"Nová rezervácia auta: {car_name}!", f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""")
 
     except Exception as e:
       return {"status": False, "private": False, "msg": f"Error has occured! 112"}, 500
@@ -1862,8 +1845,8 @@ def read_notification():
 
 
 
-# TODO: This lacks any proper support for a real returned notifications
-# It needs to join the driver and car tables for the real email and name
+
+
         # "car": 18,
         # "created_at": "2025-06-17T12:33:17.806520",
         # "driver": 1,
@@ -1873,109 +1856,157 @@ def read_notification():
         # "target_role": "manager",
         # "title": "Upozornenie o leasingu auta: Škoda Scala 2!"
 
+# i cannot send notifs by user role, as sytem should go to evveryone 
+
 @app.route('/notifications', methods=['GET'])
 @jwt_required()
 def get_notifications():
-  claims = get_jwt()
-  email = claims.get('sub', None)
+    claims = get_jwt()
+    email = claims.get('sub', None)
 
-  conn, error = connect_to_db()
-  if conn is None:
-    return jsonify({'error': error}), 500
+    conn, error = connect_to_db()
+    if conn is None:
+        return jsonify({'error': error}), 500
 
-  cur = conn.cursor()
+    cur = conn.cursor()
 
-  # Get the current user ID and role #TODO replace getting role from the JWT token
-  try:
-    cur.execute("SELECT id_driver, role FROM driver WHERE email = %s;", (email,))
-    res = cur.fetchone()
+    try:
+        cur.execute("SELECT id_driver, role FROM driver WHERE email = %s;", (email,))
+        res = cur.fetchone()
 
-    if res is None:
-      return jsonify({'error': 'User not found'}), 404
+        if res is None:
+            return jsonify({'error': 'User not found'}), 404
 
-    id_driver, role = res
+        id_driver, role = res
 
-    if role == 'manager':
-      # Managers see ALL notifications where target_role = 'manager'
-      cur.execute("""
-              SELECT 
+        # Get personal notifications (targeted to this specific user)
+        personal_notifications_query = """
+            SELECT 
                 n.id_notification, 
-                d.email AS driver_email, 
-                c.name AS car_name, 
+                COALESCE(d.email, 'System') AS driver_email, 
+                COALESCE(c.name, 'N/A') AS car_name, 
                 n.target_role, 
                 n.title, 
                 n.message, 
                 n.is_read, 
-                n.created_at
-              FROM notifications n
-              JOIN driver d ON n.id_driver = d.id_driver
-              JOIN car c ON n.id_car = c.id_car
-              WHERE n.target_role IN ('manager', 'system')
-              ORDER BY n.created_at DESC;
-            """)
-    else:
-      # Users see only THEIR notifications where target_role = 'user'
-      cur.execute("""
-              SELECT 
+                n.created_at,
+                n.is_system_wide,
+                'personal' as notification_type
+            FROM notifications n
+            LEFT JOIN driver d ON n.id_driver = d.id_driver
+            LEFT JOIN car c ON n.id_car = c.id_car
+            WHERE n.is_system_wide = FALSE 
+            AND n.id_driver = %s
+        """
+
+        # Get system-wide notifications with user's read status
+        system_notifications_query = """
+            SELECT 
                 n.id_notification, 
-                d.email AS driver_email, 
-                c.name AS car_name, 
+                'System' AS driver_email, 
+                COALESCE(c.name, 'System') AS car_name, 
                 n.target_role, 
                 n.title, 
                 n.message, 
-                n.is_read, 
-                n.created_at
-              FROM notifications n
-              JOIN driver d ON n.id_driver = d.id_driver
-              JOIN car c ON n.id_car = c.id_car        
-              WHERE id_driver = %s AND target_role IN ('user', 'system')
-              ORDER BY created_at DESC
-            """, (id_driver,))
+                COALESCE(snrs.is_read, FALSE) AS is_read, 
+                n.created_at,
+                n.is_system_wide,
+                'system' as notification_type
+            FROM notifications n
+            LEFT JOIN car c ON n.id_car = c.id_car
+            LEFT JOIN system_notification_read_status snrs ON n.id_notification = snrs.id_notification AND snrs.id_driver = %s
+            WHERE n.is_system_wide = TRUE
+        """
 
-    notifs = cur.fetchall()
+        # Execute both queries
+        cur.execute(personal_notifications_query, (id_driver,))
+        personal_notifications = cur.fetchall()
 
-    # Should not return an email string and a car name string instead of an ID, target role is allready a string
-    notifications = [{
-      'id': n[0],
-      'driver': n[1],
-      'car': n[2],
-      'target_role': n[3],
-      'title': n[4],
-      'message': n[5],
-      'is_read': n[6],
-      'created_at': n[7].isoformat()
-    } for n in notifs]
+        cur.execute(system_notifications_query, (id_driver,))
+        system_notifications = cur.fetchall()
 
-    return jsonify(notifications)
+        # Combine and sort by creation date
+        all_notifications = personal_notifications + system_notifications
+        all_notifications.sort(key=lambda x: x[7], reverse=True)  # Sort by created_at
 
-  finally:
-    cur.close()
-    conn.close()
+        notifications = [{
+            'id': n[0],
+            'driver': n[1],
+            'car': n[2],
+            'target_role': n[3],
+            'title': n[4],
+            'message': n[5],
+            'is_read': n[6],
+            'created_at': n[7].isoformat(),
+            'is_system_wide': n[8],
+            'notification_type': n[9]
+        } for n in all_notifications]
 
+        return jsonify(notifications)
+
+    finally:
+        cur.close()
+        conn.close()
 
 @app.route('/notifications/mark-as-read/', methods=['POST'])
 @jwt_required()
 def mark_notification_as_read():
+    claims = get_jwt()
+    email = claims.get('sub', None)
+    
+    data = request.get_json()
+    notification_id = data.get('id')
+    
+    if not notification_id:
+        return jsonify({'error': 'Missing notification ID'}), 400
 
-  data = request.get_json()
+    conn, cur = connect_to_db()
+    if conn is None:
+        return jsonify({'error': 'Database connection failed'}), 500
 
-  _id = data['id']
-  if not _id:
-    return jsonify({'error': 'Chýba parameter'}), 404
+    try:
+        # Get user ID
+        cur.execute("SELECT id_driver FROM driver WHERE email = %s", (email,))
+        res = cur.fetchone()
+        if not res:
+            return jsonify({'error': 'User not found'}), 404
+        id_driver = res[0]
 
-  conn, cur = connect_to_db()
-  if conn is None:
-    return jsonify({'error': 'Zlihala kominukacia s db'}), 404
+        # Check if it's a system-wide notification
+        cur.execute("SELECT is_system_wide FROM notifications WHERE id_notification = %s", (notification_id,))
+        res = cur.fetchone()
+        if not res:
+            return jsonify({'error': 'Notification not found'}), 404
+        
+        is_system_wide = res[0]
 
-  query = """"UPDATE notifications SET is_read = TRUE WHERE id_notification = %s"""
-  try:
-    cur.execute(query, (_id,))
-    conn.commit()
-    return jsonify({'status': True}), 200
-  except psycopg2.Error as e:
-    conn.rollback()
-    return jsonify({'error': str(e)}), 501
+        if is_system_wide:
+            # Update system notification read status
+            cur.execute("""
+                INSERT INTO system_notification_read_status (id_notification, id_driver, is_read, read_at)
+                VALUES (%s, %s, TRUE, CURRENT_TIMESTAMP)
+                ON CONFLICT (id_notification, id_driver) 
+                DO UPDATE SET is_read = TRUE, read_at = CURRENT_TIMESTAMP
+            """, (notification_id, id_driver))
+        else:
+            # Update regular notification
+            cur.execute("""
+                UPDATE notifications 
+                SET is_read = TRUE 
+                WHERE id_notification = %s AND id_driver = %s
+            """, (notification_id, id_driver))
 
+        if cur.rowcount == 0:
+            return jsonify({'error': 'Notification not found or already read'}), 404
+
+        conn.commit()
+        return jsonify({'status': True}), 200
+
+    except psycopg2.Error as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
 
 
 def _usage_metric(id_car, conn):
@@ -2058,41 +2089,82 @@ def save_base64_img(data_url):
   # Return public URL
   return NGINX_PUBLIC_URL + unique_filename
 
-def create_notification(conn, cur, email, car_name, target_role, title, message):
-  try:
-    # Fetch driver ID
-    if type(email) == str:
-      cur.execute("SELECT id_driver FROM driver WHERE email = %s", (email,))
-      res = cur.fetchone()
-      if not res:
-        print(f"[NOTIF ERROR] Driver not found for email: {email}")
+
+
+
+def create_notification(conn, cur, email=None, car_name=None, target_role=None, title=None, message=None, is_system_wide=False):
+    """
+    Create a notification in the database.
+    
+    Args:
+        conn: Database connection
+        cur: Database cursor
+        email: User email (optional for system notifications)
+        car_name: Car name (optional for system notifications)
+        target_role: Target role ('user', 'manager', 'admin') - represents sender/context, not recipient
+        title: Notification title
+        message: Notification message
+        is_system_wide: Boolean - if True, notification goes to all users
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        id_driver = None
+        id_car = None
+        
+        # For system-wide notifications, we don't need specific user/car associations
+        if not is_system_wide:
+            # For regular notifications, we need email
+            if not email or not isinstance(email, str):
+                print(f"[NOTIF ERROR] Email required for non-system notifications")
+                return False
+                
+            cur.execute("SELECT id_driver FROM driver WHERE email = %s", (email,))
+            res = cur.fetchone()
+            if not res:
+                print(f"[NOTIF ERROR] Driver not found for email: {email}")
+                return False
+            id_driver = res[0]
+
+            # Car name is optional even for regular notifications
+            if car_name and isinstance(car_name, str):
+                cur.execute("SELECT id_car FROM car WHERE name = %s", (car_name,))
+                res = cur.fetchone()
+                if res:
+                    id_car = res[0]
+                else:
+                    print(f"[NOTIF WARNING] Car not found: {car_name}")
+
+        # Insert notification
+        cur.execute("""
+            INSERT INTO notifications (id_driver, id_car, target_role, title, message, is_system_wide)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id_notification
+        """, (id_driver, id_car, target_role, title, message, is_system_wide))
+
+        notification_id = cur.fetchone()[0]
+
+        # If it's a system-wide notification, create read status entries for all users
+        if is_system_wide:
+            cur.execute("SELECT id_driver FROM driver WHERE is_deleted = FALSE")
+            all_drivers = cur.fetchall()
+            
+            for (driver_id,) in all_drivers:
+                cur.execute("""
+                    INSERT INTO system_notification_read_status (id_notification, id_driver, is_read)
+                    VALUES (%s, %s, %s)
+                """, (notification_id, driver_id, False))
+
+        conn.commit()
+        notif_type = "system-wide" if is_system_wide else "targeted"
+        print(f"[NOTIF] {notif_type} notification created - Role: {target_role}, Driver: {email or 'N/A'}, Car: {car_name or 'N/A'}")
+        return True
+
+    except Exception as e:
+        conn.rollback()
+        print(f"[NOTIF EXCEPTION] {e}")
         return False
-      id_driver = res[0]
-
-    # Fetch car ID
-    if type(car_name) == str:
-      cur.execute("SELECT id_car FROM car WHERE name = %s", (car_name,))
-      res = cur.fetchone()
-      if not res:
-        print(f"[NOTIF ERROR] Car not found: {car_name}")
-        return False
-      id_car = res[0]
-
-    # Insert notification
-    cur.execute("""
-            INSERT INTO notifications (id_driver, id_car, target_role, title, message)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (id_driver, id_car, target_role, title, message))
-
-    conn.commit()
-    print(f"[NOTIF] Notification added for {email} ({target_role})")
-
-    return True
-
-  except Exception as e:
-    conn.rollback()
-    print(f"[NOTIF EXCEPTION] {e}")
-    return False
 
 
 if __name__ == "__main__":
