@@ -1489,6 +1489,7 @@ def lease_car():
     send_firebase_message_safe(message)
 
     # Create role-based notification for managers (not tied to specific user)
+    # Here the old function has a problem where it asks for a user email, but we dont have one here
     create_notification(con, cur, None, car_name, 'manager', 
                        f"Upozornenie o leasingu auta: {car_name}!", 
                        f"""email: {recipient} \n Od: {form_timeof} \n Do: {form_timeto}""",
@@ -2156,25 +2157,21 @@ def create_notification(conn, cur, email=None, car_name=None, target_role=None, 
     Args:
         conn: Database connection
         cur: Database cursor
-        email: User email (optional for system notifications)
+        email: User email (optional for system notifications and role-based notifications)
         car_name: Car name (optional for system notifications)
-        target_role: Target role ('user', 'manager', 'admin') - represents sender/context, not recipient
+        target_role: Target role ('user', 'manager', 'admin', 'system')
         title: Notification title
         message: Notification message
-        is_system_wide: Boolean - if True, notification goes to all users
-    
-    Returns:
-        bool: True if successful, False otherwise
+        is_system_wide: Boolean indicating if this is a system-wide notification
     """
     try:
         id_driver = None
         id_car = None
         
-        # For system-wide notifications, we don't need specific user/car associations
-        if not is_system_wide:
-            # For regular notifications, we need email
+        # For system-wide notifications and role-based notifications (manager/admin), we don't need specific user associations
+        if not is_system_wide and target_role not in ['manager', 'admin', 'system']:
             if not email or not isinstance(email, str):
-                print(f"[NOTIF ERROR] Email required for non-system notifications")
+                print(f"[NOTIF ERROR] Email required for user-specific notifications")
                 return False
                 
             cur.execute("SELECT id_driver FROM driver WHERE email = %s", (email,))
@@ -2184,14 +2181,12 @@ def create_notification(conn, cur, email=None, car_name=None, target_role=None, 
                 return False
             id_driver = res[0]
 
-            # Car name is optional even for regular notifications
-            if car_name and isinstance(car_name, str):
-                cur.execute("SELECT id_car FROM car WHERE name = %s", (car_name,))
-                res = cur.fetchone()
-                if res:
-                    id_car = res[0]
-                else:
-                    print(f"[NOTIF WARNING] Car not found: {car_name}")
+        # Car name is optional for all notification types
+        if car_name and isinstance(car_name, str):
+            cur.execute("SELECT id_car FROM car WHERE name = %s", (car_name,))
+            res = cur.fetchone()
+            if res:
+                id_car = res[0]
 
         # Insert notification
         cur.execute("""
