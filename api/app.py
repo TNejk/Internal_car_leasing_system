@@ -534,7 +534,7 @@ def get_cars():
 
   conn, cur = connect_to_db()
   try:
-    cur.execute('SELECT name FROM car WHERE is_deleted = FALSE;')
+    cur.execute('SELECT name, id_car FROM car WHERE is_deleted = FALSE;')
     cars = cur.fetchall()
 
     return {'cars': cars}
@@ -1717,6 +1717,71 @@ def approve_requests():
 
 
 
+
+# Modified existing return_car endpoint to handle trips
+# TODO: IMPLEMENTOVAT 
+@app.route('/return_car_enhanced', methods=['POST'])
+@jwt_required()
+def return_car_enhanced():
+    """Enhanced car return that handles both regular leases and trips."""
+    claims = get_jwt()
+    user_email = claims.get('sub', None)
+    
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data'}), 501
+    
+    lease_id = data.get("id_lease")
+    if not lease_id:
+        return {"status": False, "msg": "Missing lease_id"}, 400
+    
+    conn, cur = connect_to_db()
+    
+    try:
+        # Check if this lease is part of a trip
+        cur.execute("""
+            SELECT l.id_trip, t.trip_name, t.creator_id, d.email as creator_email
+            FROM lease l
+            LEFT JOIN trips t ON l.id_trip = t.id_trip
+            LEFT JOIN driver d ON t.creator_id = d.id_driver
+            WHERE l.id_lease = %s
+        """, (lease_id,))
+        
+        lease_info = cur.fetchone()
+        if not lease_info:
+            return {"status": False, "msg": "Lease not found"}, 404
+        
+        trip_id, trip_name, creator_id, creator_email = lease_info
+        
+        if trip_id:
+            # This is a trip lease
+            cur.execute("SELECT id_driver FROM driver WHERE email = %s", (user_email,))
+            user_id = cur.fetchone()[0]
+            
+            if creator_id != user_id:
+                return {
+                    "status": False, 
+                    "msg": "This car is part of a trip. Only the trip creator can return cars.",
+                    "trip_id": trip_id,
+                    "trip_name": trip_name,
+                    "creator_email": creator_email
+                }, 403
+            
+            # If user is trip creator, redirect to trip car return
+            return return_trip_car()
+        else:
+            # Regular lease - use existing logic
+            # Call the existing return_car function logic here
+            # (Copy the existing return_car code)
+            pass
+    
+    except Exception as e:
+        return {"status": False, "msg": f"Error processing car return: {e}"}, 500
+    finally:
+        conn.close() 
+
+
+
 # CAR RETURN NO LONGER NEEDS TO WRITE TO AN EXCEL FILE
 @app.route('/return_car', methods = ['POST'])
 @jwt_required() 
@@ -2405,31 +2470,6 @@ def get_users():
     finally:
         cur.close()
         conn.close()
-
-
-@app.route('/get_cars', methods=['GET'])
-@jwt_required()
-def get_cars():
-  # Authentication check
-  claims = get_jwt()
-  email = claims.get('sub', None)
-  role = claims.get('role', None)
-
-  if role != "manager" and role != "admin":
-    return {"error": "Unauthorized"}, 400
-
-  conn, cur = connect_to_db()
-  try:
-    cur.execute('SELECT name FROM car WHERE is_deleted = FALSE;')
-    cars = cur.fetchall()
-
-    return {'cars': cars}
-  except Exception as e:
-
-    return {"error": str(e)}, 500
-  finally:
-    cur.close()
-    conn.close()
 
 
 #! IM LEAVING THIS EMPTY FOR NOW, AFTER WE GET ACCESS TO THE GAMO AD SYSTEM I WILL HAVE TO REFACTOR IT ANYWAY
@@ -5252,67 +5292,6 @@ def return_all_trip_cars():
         conn.close()
 
 
-# Modified existing return_car endpoint to handle trips
-# TODO: IMPLEMENTOVAT 
-@app.route('/return_car_enhanced', methods=['POST'])
-@jwt_required()
-def return_car_enhanced():
-    """Enhanced car return that handles both regular leases and trips."""
-    claims = get_jwt()
-    user_email = claims.get('sub', None)
-    
-    data = request.get_json()
-    if not data:
-        return jsonify({'error': 'No data'}), 501
-    
-    lease_id = data.get("id_lease")
-    if not lease_id:
-        return {"status": False, "msg": "Missing lease_id"}, 400
-    
-    conn, cur = connect_to_db()
-    
-    try:
-        # Check if this lease is part of a trip
-        cur.execute("""
-            SELECT l.id_trip, t.trip_name, t.creator_id, d.email as creator_email
-            FROM lease l
-            LEFT JOIN trips t ON l.id_trip = t.id_trip
-            LEFT JOIN driver d ON t.creator_id = d.id_driver
-            WHERE l.id_lease = %s
-        """, (lease_id,))
-        
-        lease_info = cur.fetchone()
-        if not lease_info:
-            return {"status": False, "msg": "Lease not found"}, 404
-        
-        trip_id, trip_name, creator_id, creator_email = lease_info
-        
-        if trip_id:
-            # This is a trip lease
-            cur.execute("SELECT id_driver FROM driver WHERE email = %s", (user_email,))
-            user_id = cur.fetchone()[0]
-            
-            if creator_id != user_id:
-                return {
-                    "status": False, 
-                    "msg": "This car is part of a trip. Only the trip creator can return cars.",
-                    "trip_id": trip_id,
-                    "trip_name": trip_name,
-                    "creator_email": creator_email
-                }, 403
-            
-            # If user is trip creator, redirect to trip car return
-            return return_trip_car()
-        else:
-            # Regular lease - use existing logic
-            # Call the existing return_car function logic here
-            # (Copy the existing return_car code)
-            pass
-    
-    except Exception as e:
-        return {"status": False, "msg": f"Error processing car return: {e}"}, 500
-    finally:
-        conn.close() 
 
 @app.route('/reassign_trip_driver', methods=['POST'])
 @jwt_required()
