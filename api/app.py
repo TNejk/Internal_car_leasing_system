@@ -2247,15 +2247,11 @@ def create_notification(conn, cur, email=None, car_name=None, target_role=None, 
 # Add these to your Flask app
 
 
-#TODO: Understand hjow the passanger driver relationship works
-# A car needs to have a driver, and passangers, everyone should get a lease made for them for that trip, but it would be diplayed as a trip not a car reservation
-# From the trip the users can cancel out, even the driver, if he isnt the creator, but drives another added car, after which the cars un allowed hours are removed the reservation made for the driver is cancelled
-# AND the trip creator is informed of what happend, but what about the passangers? They all still have a lease made in the db for that car no? # TODO: MAKE SURE THE PASSANGERS HAVE THEIR LEASE UPDATED with a new car
-#! The first person added to a car is designated as DRIVER, others are passangers
 #! So in the fronted make sure to differentiate using an ICON or smthing that tells the user he added a driver, this means the creator can add himself as a passanger as well.
 @app.route('/create_trip', methods=['POST'])
 @jwt_required()
-def create_trip():
+def create_trip_enhanced():
+    """Enhanced trip creation with explicit driver selection."""
     claims = get_jwt()
     creator_email = claims.get('sub', None)
     role = claims.get('role', None)
@@ -2264,11 +2260,11 @@ def create_trip():
     
     try:
         trip_name = data['trip_name']
-        destination_name = data['destination_name']  # 
+        destination_name = data['destination_name']
         start_time = data['start_time']
         end_time = data['end_time']
         selected_cars = data['cars']  # List of car IDs
-        car_assignments = data['car_assignments']  # Dict: {car_id: [list of user emails]}
+        car_assignments = data['car_assignments']  # Dict: {car_id: {driver: email, passengers: [emails]}}
         description = data.get('description', '')
         destination_lat = data.get('destination_lat')
         destination_lon = data.get('destination_lon')
@@ -2293,7 +2289,7 @@ def create_trip():
         
         trip_id = cur.fetchone()[0]
         
-        # Add cars to the trip
+        # Add cars and participants with explicit driver assignment
         for car_id in selected_cars:
             cur.execute("""
                 INSERT INTO trip_cars (id_trip, id_car)
@@ -2303,42 +2299,53 @@ def create_trip():
             
             trip_car_id = cur.fetchone()[0]
             
-            # Add participants for this car
             if str(car_id) in car_assignments:
-                for user_email in car_assignments[str(car_id)]:
-                    # Get user ID
-                    cur.execute("SELECT id_driver FROM driver WHERE email = %s", (user_email,))
-                    user_result = cur.fetchone()
-                    if user_result:
-                        user_id = user_result[0]
-                        
-                        # Determine role (first person is driver)
-                        participant_role = 'driver' if user_email == car_assignments[str(car_id)][0] else 'passenger'
+                car_assignment = car_assignments[str(car_id)]
+                driver_email = car_assignment.get('driver')
+                passengers = car_assignment.get('passengers', [])
+                
+                # Add driver first
+                if driver_email:
+                    cur.execute("SELECT id_driver FROM driver WHERE email = %s", (driver_email,))
+                    driver_result = cur.fetchone()
+                    if driver_result:
+                        driver_id = driver_result[0]
                         
                         cur.execute("""
                             INSERT INTO trip_participants (id_trip, id_trip_car, id_driver, role)
                             VALUES (%s, %s, %s, %s)
-                        """, (trip_id, trip_car_id, user_id, participant_role))
+                        """, (trip_id, trip_car_id, driver_id, 'driver'))
                         
-                        # Send notification to invited user
-                        if user_email != creator_email:
+                        # Send notification to driver
+                        if driver_email != creator_email:
                             create_notification(
-                                conn, cur, user_email, None, 'user',
-                                f"Pozvánka na výlet: {trip_name}",
-                                f"Boli ste pozvaní na výlet do {destination_name}. Skontrolujte podrobnosti v aplikácii.",
+                                conn, cur, driver_email, None, 'user',
+                                f"Pozvánka na výlet: {trip_name} (Vodič)",
+                                f"Boli ste pozvaní ako vodič na výlet do {destination_name}.",
                                 is_system_wide=False
                             )
-
-                            cleaned_email = user_email.replace("@", "_")
-                            message = messaging.Message(
-                              notification=messaging.Notification(
-                                  title=f"Pozvánka na výlet: {trip_name}",
-                                  body=f"Boli ste pozvaní na výlet do {destination_name}.\n Skontrolujte podrobnosti v aplikácii."
-                              ),
-                              topic=cleaned_email
-                            )
-                            send_firebase_message_safe(message)
-    
+                
+                # Add passengers
+                for passenger_email in passengers:
+                    if passenger_email != driver_email:  # Don't add driver as passenger too
+                        cur.execute("SELECT id_driver FROM driver WHERE email = %s", (passenger_email,))
+                        passenger_result = cur.fetchone()
+                        if passenger_result:
+                            passenger_id = passenger_result[0]
+                            
+                            cur.execute("""
+                                INSERT INTO trip_participants (id_trip, id_trip_car, id_driver, role)
+                                VALUES (%s, %s, %s, %s)
+                            """, (trip_id, trip_car_id, passenger_id, 'passenger'))
+                            
+                            # Send notification to passenger
+                            if passenger_email != creator_email:
+                                create_notification(
+                                    conn, cur, passenger_email, None, 'user',
+                                    f"Pozvánka na výlet: {trip_name} (Spolujazdec)",
+                                    f"Boli ste pozvaní ako spolujazdec na výlet do {destination_name}.",
+                                    is_system_wide=False
+                                )
         
         conn.commit()
         return {"status": True, "trip_id": trip_id, "msg": "Trip created successfully"}, 200
@@ -2347,7 +2354,7 @@ def create_trip():
         conn.rollback()
         return {"status": False, "msg": f"Error creating trip: {e}"}, 500
     finally:
-        conn.close()
+        conn.close() 
 
 
 
@@ -3672,6 +3679,13 @@ def manage_trip_participants():
         return {"status": False, "msg": f"Error managing participants: {e}"}, 500
     finally:
         conn.close()
+
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
