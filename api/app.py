@@ -4127,7 +4127,6 @@ def create_notification(conn, cur, email=None, car_name=None, target_role=None, 
                                     #TRIP HANDLING
 
 
-
 #########################################################################################
 # Example API endpoints for the trips system
 # Add these to your Flask app
@@ -5254,6 +5253,7 @@ def return_all_trip_cars():
 
 
 # Modified existing return_car endpoint to handle trips
+# TODO: IMPLEMENTOVAT 
 @app.route('/return_car_enhanced', methods=['POST'])
 @jwt_required()
 def return_car_enhanced():
