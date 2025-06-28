@@ -272,7 +272,7 @@ class CarLeaseNotificator:
                     
                     print(f"INFO: Late return notification sent to {driver_email} for car {car_name}")
                     
-                    # Check for upcoming lease to cancel
+                    # TODO: REMAKE TO NOT CANCEL SHIT, BUT JUST NOTIFY THE USERS PROPELRY
                     self.handle_upcoming_lease_cancellation(cursor, current_time, id_car, car_name)
                     
                     # Mark lease as under review
@@ -312,13 +312,13 @@ class CarLeaseNotificator:
             next_driver_id, upcoming_start, next_lease_id, next_driver_email = next_lease
             time_difference = upcoming_start - current_time
             
-            # Cancel if lease starts within 30 minutes
-            if time_difference <= timedelta(minutes=30):
-                # Cancel the lease
-                cursor.execute(
-                    "UPDATE lease SET status = false WHERE id_lease = %s AND status = true",
-                    (next_lease_id,)
-                )
+            # Give the next lease user an early warning, ak je rezervácia nasledujúca do 24 hodín
+            if time_difference <= timedelta(hours=24):
+                # # Cancel the lease
+                # cursor.execute(
+                #     "UPDATE lease SET status = false WHERE id_lease = %s AND status = true",
+                #     (next_lease_id,)
+                # )
                 
                 # Create database notification for cancelled lease
                 create_notification(
@@ -326,8 +326,8 @@ class CarLeaseNotificator:
                     email=next_driver_email,
                     car_name=car_name,
                     target_role='user',
-                    title="Rezervácia zrušená",
-                    message="Vaša rezervácia na auto bola zrušená, pretože predchádzajúci prenájom neskončil načas.",
+                    title="Dôležitá informácia o rezervácií!",
+                    message="Vami rezervované auto nebolo včas odovzdané, je možné že nastane problém s vašou rezerváciou.",
                     is_system_wide=False
                 )
                 
@@ -335,8 +335,8 @@ class CarLeaseNotificator:
                 cancel_topic = next_driver_email.replace("@", "_")
                 cancel_notification = messaging.Message(
                     notification=messaging.Notification(
-                        title="Rezervácia zrušená",
-                        body="Vaša rezervácia na auto bola zrušená, pretože predchádzajúci prenájom neskončil načas."
+                        title="Dôležitá informácia o rezervácií!",
+                        body="Vami rezervované auto nebolo včas odovzdané, je možné že nastane problém s vašou rezerváciou."
                     ),
                     topic=cancel_topic
                 )
