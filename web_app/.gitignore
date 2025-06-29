@@ -1,4 +1,6 @@
 
+docker-compose.yml
+Dockerfile
 /.idea
 /.venv
 web_app/controllers/__pycache__/require_role.cpython-312.pyc
