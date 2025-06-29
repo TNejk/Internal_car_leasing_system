@@ -1014,44 +1014,6 @@ def get_reports(filename):
 
 
 
-# returns a wierd string but i can work with it 
-@app.route('/starting_date', methods = ['POST'])
-@jwt_required()
-def allowed_dates():
-    bratislava_tz = pytz.timezone('Europe/Bratislava')
-    def convert_to_bratislava_timezone(dt_obj):
-      # Ensure the datetime is in UTC before converting
-      if dt_obj == None: return "null"
-      utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
-      bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
-      return bratislava_time.strftime("%Y-%m-%d %H:%M:%S") 
-    
-    try: 
-       name = request.get_json()["name"]
-    except: 
-       return 500
-
-    # Get the last allowed time for a car to be leased, so it can be put into the apps limiter
-    con, curr = connect_to_db()
-    query = """SELECT id_car FROM car WHERE name = %s"""
-    
-    curr.execute(query, (name, ))
-    id_car = curr.fetchone()
-
-    query ="""SELECT end_of_lease 
-            FROM lease
-            WHERE status = true 
-            AND id_car = %s
-            ORDER BY end_of_lease DESC
-            LIMIT 1
-            """
-    curr.execute(query, (id_car,))
-    res = curr.fetchone()
-    if res:
-      return {"starting_date": convert_to_bratislava_timezone(res[0])}, 200
-    else:
-      return {"starting_date": "null"}
-
 
 # Only get active leases!!! 
 # And leases that need aproval
