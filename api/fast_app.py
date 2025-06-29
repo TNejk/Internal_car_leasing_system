@@ -1,9 +1,9 @@
 # New API 
 # Uses SQL Alchermy and FastAPI 
 from pathlib import Path
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, HTTPException, Header
 from pydantic import BaseModel
-from typing import Annotated
+from typing import Annotated, Optional
 from datetime import datetime, timedelta, timezone
 from dateutil.parser import parse
 import pytz
@@ -260,75 +260,145 @@ app = FastAPI()
 
 @app.get("/")
 async def root():
-    return {"message": "Hellow"}
+    return {"message": "Hello"}
 
-# This will get the json, convert it to the Item object (if possible) and then return that object for you to work with
-# ! THJIS USES A DEFAULT ERROR RESPONSE MODEL FROM PYDANTIC, DO IT LIKE THIS FOR EVERY ROUTE
-@app.post("/sss", responses={500: {"model": ErrorResponse}}) 
-def return_sdsd():
+@app.post("/logout", response_model=default_response)
+async def logout(authorization: str = Header(None)):
+    """Logout endpoint to revoke JWT token"""
+    pass
 
-    ss = car_decommision.time_from
+@app.post("/register", response_model=default_response)
+async def register(request: register_obj, authorization: str = Header(None)):
+    """Register a new user (admin only)"""
+    pass
 
+@app.post("/login", response_model=login_response)
+async def login(request: login_obj):
+    """Login endpoint for user authentication"""
+    pass
 
+@app.post("/edit_user", response_model=default_response)
+async def edit_user(request: user_edit_req, authorization: str = Header(None)):
+    """Edit user information (admin only)"""
+    pass
 
+@app.post("/create_car", response_model=default_response)
+async def create_car(request: car_creation_req, authorization: str = Header(None)):
+    """Create a new car (admin only)"""
+    pass
 
-@app.route("/logout", methods=["POST"])
+@app.post("/edit_car", response_model=default_response)
+async def edit_car(request: car_editing_req, authorization: str = Header(None)):
+    """Edit car information (admin only)"""
+    pass
 
+@app.post("/delete_car", response_model=default_response)
+async def delete_car(request: car_deletion_req, authorization: str = Header(None)):
+    """Delete a car (admin only)"""
+    pass
 
-@app.route('/register', methods = ['POST'])
+@app.post("/delete_user", response_model=default_response)
+async def delete_user(request: user_deletion_req, authorization: str = Header(None)):
+    """Delete a user (admin only)"""
+    pass
 
-@app.route('/login', methods=['POST'])
+@app.get("/get_users", response_model=user_list_response)
+async def get_users(authorization: str = Header(None)):
+    """Get list of all users (manager/admin only)"""
+    pass
 
-@app.route('/edit_user', methods = ['POST'])
+@app.post("/get_single_car", response_model=single_car_response)
+async def get_single_car(request: single_car_req, authorization: str = Header(None)):
+    """Get detailed information about a single car"""
+    pass
 
-@app.route('/create_car', methods = ['POST'])
+@app.get("/get_car_list", response_model=list[list_car_reponse])
+async def get_car_list(authorization: str = Header(None)):
+    """Get list of all cars with basic information"""
+    pass
 
-@app.route('/edit_car', methods = ['POST'])
+@app.post("/decommision_car", response_model=default_response)
+async def decommision_car(request: car_decommision_req, authorization: str = Header(None)):
+    """Decommission a car for maintenance (manager/admin only)"""
+    pass
 
-@app.route('/delete_car', methods=['POST'])
+@app.post("/activate_car", response_model=default_response)
+async def activate_car(request: car_activation_req, authorization: str = Header(None)):
+    """Activate a decommissioned car (manager/admin only)"""
+    pass
 
-@app.route('/delete_user', methods=['POST'])
+@app.post("/get_full_car_info", response_model=car_info_response)
+async def get_full_car_info(request: car_information_req, authorization: str = Header(None)):
+    """Get complete car information including availability"""
+    pass
 
-@app.route('/get_users', methods=['GET'])
+@app.post("/get_all_car_info", response_model=list[car_info_response])
+async def get_all_car_info(authorization: str = Header(None)):
+    """Get information about all cars (admin only)"""
+    pass
 
-#@app.route('/get_single_user', methods=['POST'])
-@app.route('/get_single_car', methods=['POST'])
+@app.post("/get_all_user_info", response_model=list[user_info_response])
+async def get_all_user_info(authorization: str = Header(None)):
+    """Get information about all users (admin only)"""
+    pass
 
-@app.route('/get_car_list', methods=['GET'])
+@app.post("/list_reports", response_model=report_list_response)
+async def list_reports(authorization: str = Header(None)):
+    """List available reports (manager/admin only)"""
+    pass
 
-@app.route('/decommision_car', methods= ['POST'])
+@app.get("/get_report/{filename}")
+async def get_report(filename: str, authorization: str = Header(None)):
+    """Download a specific report file (manager/admin only)"""
+    pass
 
-@app.route('/activate_car', methods= ['POST'])
+@app.post("/get_leases", response_model=leaseListResponse)
+async def get_leases(request: leases_list_req, authorization: str = Header(None)):
+    """Get list of leases with optional filtering"""
+    pass
 
-@app.route('/get_full_car_info', methods=['POST', 'OPTIONS'])
+@app.post("/cancel_lease", response_model=leaseCancelResponse)
+async def cancel_lease(request: cancel_lease_req, authorization: str = Header(None)):
+    """Cancel an active lease"""
+    pass
 
-@app.route('/get_all_car_info', methods=['POST'])
+@app.post("/get_monthly_leases", response_model=list[monthlyLeasesResponse])
+async def get_monthly_leases(request: monthly_leases_req, authorization: str = Header(None)):
+    """Get leases for a specific month (manager/admin only)"""
+    pass
 
-@app.route('/get_all_user_info', methods=['POST'])
+@app.post("/lease_car", response_model=leaseCarResponse)
+async def lease_car(request: lease_car_req, authorization: str = Header(None)):
+    """Create a new lease for a car"""
+    pass
 
-@app.route('/list_reports', methods = ['POST'])
+@app.post("/get_requests", response_model=requestListResponse)
+async def get_requests(authorization: str = Header(None)):
+    """Get pending private ride requests (manager/admin only)"""
+    pass
 
-@app.route('/get_report/<path:filename>', methods=['GET'])
+@app.post("/approve_req", response_model=default_response)
+async def approve_request(request: approve_pvr_req, authorization: str = Header(None)):
+    """Approve or reject a private ride request (manager/admin only)"""
+    pass
 
-@app.route('/get_leases', methods = ['POST'])
+@app.post("/return_car", response_model=default_response)
+async def return_car(request: return_car_req, authorization: str = Header(None)):
+    """Return a leased car"""
+    pass
 
-@app.route('/cancel_lease', methods = ['POST'])
+@app.get("/notifications", response_model=list[dict])
+async def get_notifications(authorization: str = Header(None)):
+    """Get user notifications"""
+    pass
 
-@app.route('/get_monthly_leases', methods = ['POST'])
+@app.post("/notifications/mark-as-read", response_model=default_response)
+async def mark_notification_as_read(request: read_notification_req, authorization: str = Header(None)):
+    """Mark a notification as read"""
+    pass
 
-@app.route('/lease_car', methods = ['POST'])
-
-@app.route('/get_requests', methods = ['POST'])
-
-@app.route('/approve_req', methods = ['POST'])
-
-@app.route('/return_car', methods = ['POST'])
-
-#@app.route('/read_notification', methods = ['POST'])
-
-@app.route('/notifications', methods=['GET'])
-
-@app.route('/notifications/mark-as-read/', methods=['POST'])
-
-@app.route('/check_token', methods = ['POST'])
+@app.post("/check_token", response_model=default_response)
+async def check_token(authorization: str = Header(None)):
+    """Validate JWT token"""
+    pass
 
