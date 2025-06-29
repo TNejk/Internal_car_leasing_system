@@ -1,0 +1,52 @@
+.btn{
+  background: var(--primary);
+  padding: 0.75rem 1.25rem 0.75rem 1.25rem;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: var(--font-m);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-m);
+  margin-top: var(--space-s);
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+.btn:hover{
+  background: var(--secondary);
+  border: 1px solid var(--secondary);
+
+}
+
+.bt--secondary{
+  background: var(--bg-light);
+  border-color: var(--secondary);
+}
+
+.bt--secondary:hover{
+  background: var(--secondary);
+}
+
+.action-button {
+  width: 2.5rem;
+  background: var(--bg-light);
+  border-radius: var(--radius-f);
+  border: 1px solid var(--border);
+  margin: var(--space-s);
+  padding: var(--space-xs);
+  box-shadow: var(--shadow);
+}
+
+.show-pass-btn {
+  width: 2.5rem;
+  padding: var(--space-xs);
+  border: var(--border-card);
+  border-bottom-right-radius: var(--radius-s);
+  border-top-right-radius: var(--radius-s);
+  border-color: var(--border-muted);
+  border-left-color: hsl(0, 0%, 100%);
+  background: hsl(0, 0%, 100%);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  clip-path: inset(0 -1px -4px 0);
+}

@@ -1,78 +1,17 @@
 {% extends 'base/base.html' %}
 
 {% block head %}
-<link rel="stylesheet" href="../../static/css/new_styles/lease.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/header.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/new_styles/calendar.css') }}">
+<!--<link rel="stylesheet" href="../../static/old_css/new_styles/lease.css">-->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='old_css/new_styles/calendar.css') }}">
 <title>ICLS - Gamo</title>
 {% endblock %}
 
 {% block body %}
 <div class="container">
-  <div class="sidebar">
-    <div class="car-list">
-      {% if cars|length == 0 %}
-        <p>Neexistuje žiadne auto!</p>
-      {% else %}
-        {% for car in cars %}
-          <div class="car-item" onclick='fetchCarData("{{ car[0] }}", "{{ token }}", "{{ username }}","{{ role }}")'>
-            <img src="{{ car[3] }}" alt="{{ car[1] }} image">
-            <p><strong>{{ car[1] }}</strong><br>
-              {% if car[2] == 'stand_by' %}
-                Voľné
-              {% else %}
-                Obsadené
-              {% endif %}
-            </p>
-          </div>
-        {% endfor %}
-      {% endif %}
-    </div>
-  </div>
-
-
-  <div class="main-content">
-    <div id="default-message">Vyber si auto</div>
-
-    <div id="car-details" style="display: none;">
-
-      <div id="car-details-left">
-        <div id="calendar"></div>
-      </div>
-
-      <div id="car-details-right">
-        <img id="car-image" src="" alt="">
-        <div id="car-details-info">
-          <h3 id="car-name"></h3>
-          <p id="car-type"></p>
-          <p id="car-status"></p>
-          <p id="car-health"></p>
-          <p id="car-frequency"></p>
-          <p id="car-location"></p>
-          <p id="car-spz"></p>
-          <form>
-            <label for="isPrivate">Súkromná jazda?</label>
-            <input type="checkbox" id="isPrivate">
-          </form>
-          {% if role == 'manager' %}
-            <label for="car-renter">Objednávané: </label>
-            <select id="car-renter">
-            {% for user in users %}
-              <option value="{{ user['email'] }}">{{ user['email'] }}</option>
-            {% endfor %}
-            </select>
-          {% endif %}
-        </div>
-      </div>
-
-
-    </div>
-  </div>
-  <div id="modal" class="modal">
-    <div class="modal-inner">
-      <h2></h2>
-      <p></p>
-      <button id="close-modal">OK</button>
+  <div class="navbar">
+    <div class="card">
+      <h1>lease</h1>
     </div>
   </div>
 </div>
@@ -82,4 +21,5 @@
 {% endblock %}
 
 {% block script %}
+{{ super() }}
 {% endblock %}

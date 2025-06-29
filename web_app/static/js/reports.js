@@ -28,7 +28,7 @@ function get_reports() {
         card.appendChild(name);
 
         const img = document.createElement('img');
-        img.src = '../static/sources/images/download.svg';
+        img.src = '../static/src/images/download.svg';
         card.appendChild(img);
 
         cardContainer.appendChild(card);

@@ -1,0 +1,60 @@
+.header {
+  justify-content: space-between;
+  padding: var(--space-m) var(--space-s);
+  background: var(--bg);
+  border-bottom: var(--border-card);
+  box-shadow: var(--shadow);
+}
+
+.header .icons ul li a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xs);
+    border-radius: var(--radius-f);
+    transition: background-color 0.3s ease;
+}
+
+/* Common dropdown styles */
+.header .icons ul li .dropdown {
+    position: absolute;
+    top: calc(100%); /* Adds a small gap to avoid accidental hover loss */
+    right: 0;
+    background-color: #fff;
+    min-width: 150px;
+    padding: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border-radius: 5px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+.header .icons ul li:hover > .dropdown,
+.header .icons ul li .dropdown:hover {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Show Dropdown on Hover */
+.header .icons ul li:hover .dropdown {
+    display: block;
+}
+
+/* Dropdown List Items */
+.header .icons ul li .dropdown li {
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+/* Dropdown Links */
+.header .icons ul li .dropdown li a {
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.header .icons ul li .dropdown li a:hover {
+    color: #bc2026;
+}

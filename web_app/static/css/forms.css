@@ -1,0 +1,42 @@
+.form-container {
+  background: var(--bg-light);
+  margin: var(--space-s);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow);
+}
+
+/* Form group styling */
+.form-group {
+  padding: var(--space-m);
+  background: var(--bg-light);
+  border-radius: var(--radius-m);
+  width: 100%;
+}
+
+.form-group label {
+  display: block;
+  padding-bottom: var(--space-s);
+}
+
+.form-group input,
+.form-group select {
+  padding: var(--space-s);
+  box-shadow: var(--shadow);
+  border: var(--border-card);
+  border-color: var(--border-muted);
+  border-radius: var(--space-xs);
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-group input.pass {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right-color: hsl(0 0% 100%);
+}

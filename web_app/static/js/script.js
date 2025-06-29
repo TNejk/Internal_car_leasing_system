@@ -1,6 +1,41 @@
-function add_notification(title, content, route){
-  const date = new Date().toISOString();
-  const formattedDate = date.toISOString().replace('T', ' ').replace('Z', '') + "+0000";
-  body = {'seen': false, 'title': title, 'content': content, 'time': formattedDate, 'route': route};
-  fetch('/save_notification', {method: 'POST', body: JSON.stringify(formattedDate)})
+
+document.addEventListener('DOMContentLoaded', () => {
+  function setFullHeight() {
+    const el = document.querySelector('.full-height');
+    if (el) {
+      el.style.height = window.innerHeight + 'px';
+    }
+  }
+  setFullHeight();
+  window.addEventListener('resize', setFullHeight);
+
+  let thm = localStorage.getItem('theme')
+  if (thm === null){
+    set_dark();
+  }else if (thm === 'dark'){
+    set_dark();
+  }else if (thm === 'light'){
+    set_light();
+  }
+});
+
+function set_dark(){
+  localStorage.setItem('theme', 'dark')
+  localStorage.setItem('dlb', '/static/src/images/on-off-white.svg')
+  document.documentElement.setAttribute('data-theme', localStorage.getItem('theme'));
+  document.getElementById('toggle-btn').src = localStorage.getItem('dlb');
+}
+
+function set_light(){
+  localStorage.setItem('theme', 'light');
+  localStorage.setItem('dlb', '/static/src/images/on-off.svg')
+  document.documentElement.setAttribute('data-theme', localStorage.getItem('theme'));
+  document.getElementById('toggle-btn').src = localStorage.getItem('dlb');
+}
+function toggle() {
+  if (localStorage.getItem('theme') === 'dark'){
+    set_light();
+  } else {
+    set_dark();
+  }
 }

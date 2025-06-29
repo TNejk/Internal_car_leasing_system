@@ -1,0 +1,63 @@
+{% extends 'base/base.html' %}
+
+{% block head %}
+<!--<link rel="stylesheet" href="{{ url_for('static', filename='old_css/new_styles/auth.css') }}">-->
+<!--<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">-->
+<script src="{{ url_for('static', filename='js/signs/sign_in.js' )}}"></script>
+<title>ICLS - Prihlásenie</title>
+{% endblock %}
+
+{% block body %}
+  <div class="flex-center full-height">
+    <img src="{{ url_for('static', filename='src/images/on-off-white.svg' )}}" id='toggle-btn' class="action-button" alt="On/Off" onclick="toggle()">
+    <div class="card">
+      <div class="flex-center">
+        <img src="../static/src/images/logo.svg" alt="GAMO" class="gamo-logo">
+      </div>
+      <form action="/sign-in" method="POST">
+        <div class="form-container">
+          <div class="form-group">
+            <label for="sign-in-email">Email</label>
+            <input type="email" id="sign-in-email" name="email" required autocomplete="wthit">
+          </div>
+          <div class="form-group">
+            <label for="sign-in-password">Heslo</label>
+            <div class="flex-inline no-gap">
+              <input type="password" id="sign-in-password" name="password" class="pass" required >
+              <img src="{{ url_for('static', filename='src/images/show-pass.svg' )}}" id='show-pass' class="show-pass-btn" alt="On/Off" onclick="show_pass()">
+            </div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <input class="btn" type="submit" id="sign-in-button" value="Prihlás sa">
+        </div>
+        {% if data %}
+        <div class="card danger">
+          <h3>Nastala chyba!</h3>
+          <p>{{ data }}</p>
+        </div>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+
+{% endblock %}
+
+{% block script %}
+  {{ super() }}
+  <script>
+    function show_pass(){
+      let intp = document.getElementById('sign-in-password');
+      let img = document.getElementById('show-pass');
+      if (intp.type === 'password'){
+        intp.type = 'text';
+        img.src = '/static/src/images/hide-pass.svg'
+      } else {
+        intp.type = 'password';
+        img.src = '/static/src/images/show-pass.svg'
+      }
+
+    }
+  </script>
+{% endblock %}

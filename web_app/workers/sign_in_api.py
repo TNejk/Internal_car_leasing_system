@@ -21,7 +21,8 @@ def sign_in_api(username, password, SALT):
 
         salted = SALT + password + SALT
         hashed = hashlib.sha256(salted.encode()).hexdigest()
-        session['username'] = username
+        session['email'] = username
+        session['name'] = 'unnamed_user'
         session['password'] = hashed
         session['token'] = response['access_token']
         session['role'] = response['role']
