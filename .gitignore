@@ -1,3 +1,4 @@
 *.pyc
 api/dump_2025-06-25_11_33_15.sql
 api/trips_schema.sql
+api/new.py

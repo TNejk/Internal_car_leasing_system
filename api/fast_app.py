@@ -1,12 +1,16 @@
+import pytz
+import os
+import jwt
 from pathlib import Path
-from fastapi import FastAPI, Query, HTTPException, Header
+from fastapi import FastAPI, Query, HTTPException, Header, status, Depends
 from pydantic import BaseModel, Field
 from typing import Annotated, Optional
 from datetime import datetime, timedelta, timezone
 from dateutil.parser import parse
-import pytz
-
-
+from typing import Annotated
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jwt.exceptions import InvalidTokenError
+from passlib.context import CryptContext
 ##################################################################
 #                   Default multi use models                     #
 ##################################################################
@@ -249,16 +253,119 @@ class requestEntry(BaseModel):
 
 class requestListResponse(BaseModel):
     active_requests: list[requestEntry]
+#######################################################
+#                   UTILITY MODELS                    #
+#######################################################
+USER_ROLES = {
+    "user",
+    "manager",
+    "admin",
+    "system"
+}
+
+class Token(BaseModel):
+    JWT: str
+    token_type: str
+
+class TokenData(BaseModel):
+    email: str
+    role:  Annotated[str, Field(examples=["manager", "user", "admin", "system"])]
+
+class User(BaseModel):
+    email: str
+    role: Annotated[str, Field(examples=["manager", "user", "admin", "system"])]
+    username: str
+    disabled: bool
+
+#######################################################
+#                 APP INITIALIZATION                  #
+#######################################################
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
+ALGORITHM = "HS256"
+TOKEN_EXPIRATION_MINUTES = 30
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated ="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+app = FastAPI()
+
+def connect_to_db():
+    con = ""
+    cur = ""
+    return con, cur
+
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def authenticate_user(email: str, password: str ) -> User:
+    # Call connect_to_db() and close the connection!!!
+    # Check if user email exists in DB, and is not disabled by admin
+    # Return a USEER OBJECT
+    return User()
+
+#* data is a dictionary of all metadata we want, if the expire date is not specified its set at 15 minutes
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def get_existing_user(email, role) -> User:
+    # Check in the databse for a non disabled user that matches the email role combo
+    conn, cur = connect_to_db()
+
+    # Query here!!!
+    result = []
+    if not result:
+        return None
+    
+    return User(
+        email = "",
+        role = "",
+        username = "",
+        disabled = False
+    )
+
+def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
+    cred_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Error validating credentials",
+        headers={"WWW-Authenticate" : "Bearer"}
+    )
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        role  = payload.get("role")
+        if email is None or role is None:
+            raise cred_exception
+        token_data = TokenData(email, role)
+    
+    except InvalidTokenError:
+        raise cred_exception
+    # check and get a user that exists, is not disabled, and his email, role matches the one you proivde
+    user = get_existing_user(email=email, role= role)
+    if not user:
+        raise cred_exception
+    return user
+
 
 
 #######################################################
 #                  ENDPOINTS SECTION                  #
 #######################################################
-app = FastAPI()
 
-@app.get("/")
-async def root():
-    return {"message": "Hello"}
 
 @app.post("/logout", response_model=DefaultResponse)
 async def logout(authorization: str = Header(None)):
@@ -271,9 +378,20 @@ async def register(request: RegisterRequest, authorization: str = Header(None)):
     pass
 
 @app.post("/login", response_model=login_response)
-async def login(request: login_obj):
-    """Login endpoint for user authentication"""
-    pass
+async def login(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends() ]):
+    user: User = authenticate_user(email= form_data.username, password=form_data.password)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Wrong username or password",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+    access_token= create_access_token(data={"sub": user.username, "role": user.role}, expires_delta= timedelta(TOKEN_EXPIRATION_MINUTES))
+    return login_response(token= access_token, email=user.email, role=user.role)
+
 
 @app.post("/edit_user", response_model=DefaultResponse)
 async def edit_user(request: user_edit_req, authorization: str = Header(None)):
