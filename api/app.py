@@ -5,7 +5,6 @@ import hashlib
 import uuid
 from PIL import Image
 from io import BytesIO
-from dateutil import parser 
 import psycopg2
 from flask_mail import Mail, Message
 from flask import Flask, request, jsonify, send_from_directory, Blueprint
@@ -14,7 +13,6 @@ from flask_jwt_extended import JWTManager, create_access_token, create_refresh_t
 from flask_cors import CORS, cross_origin
 from functools import wraps
 from datetime import datetime, timedelta, timezone
-from dateutil.parser import parse
 import pytz
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
@@ -23,8 +21,10 @@ import glob
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import messaging
-
 import smtplib, ssl
+from dotenv import load_dotenv, dotenv_values
+load_dotenv()
+from db.models import *
 
 
 
@@ -53,6 +53,7 @@ db_pass = os.getenv('POSTGRES_PASS')
 db_name = os.getenv('POSTGRES_DB')
 app_secret_key = os.getenv('APP_SECRET_KEY')
 login_salt = os.getenv('LOGIN_SALT')
+
 
 cred = credentials.Certificate("icls-56e37-firebase-adminsdk-2d4e2-be93ca6a35.json")
 firebase_admin.initialize_app(cred)
