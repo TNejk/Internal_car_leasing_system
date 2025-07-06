@@ -11,6 +11,7 @@ from typing import Annotated
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
+
 ##################################################################
 #                   Default multi use models                     #
 ##################################################################
@@ -367,17 +368,17 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
 #######################################################
 
 
-@app.post("/logout", response_model=DefaultResponse)
+@app.post("/v2/logout", response_model=DefaultResponse)
 async def logout(authorization: str = Header(None)):
     """Logout endpoint to revoke JWT token"""
     pass
 
-@app.post("/register", response_model=DefaultResponse)
+@app.post("/v2/register", response_model=DefaultResponse)
 async def register(request: RegisterRequest, authorization: str = Header(None)):
     """Register a new user (admin only)"""
     pass
 
-@app.post("/login", response_model=login_response)
+@app.post("/v2/login", response_model=login_response)
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends() ]):
     user: User = authenticate_user(email= form_data.username, password=form_data.password)
@@ -393,127 +394,127 @@ async def login(
     return login_response(token= access_token, email=user.email, role=user.role)
 
 
-@app.post("/edit_user", response_model=DefaultResponse)
+@app.post("/v2/edit_user", response_model=DefaultResponse)
 async def edit_user(request: user_edit_req, authorization: str = Header(None)):
     """Edit user information (admin only)"""
     pass
 
-@app.post("/create_car", response_model=DefaultResponse)
+@app.post("/v2/create_car", response_model=DefaultResponse)
 async def create_car(request: car_creation_req, authorization: str = Header(None)):
     """Create a new car (admin only)"""
     pass
 
-@app.post("/edit_car", response_model=DefaultResponse)
+@app.post("/v2/edit_car", response_model=DefaultResponse)
 async def edit_car(request: car_editing_req, authorization: str = Header(None)):
     """Edit car information (admin only)"""
     pass
 
-@app.post("/delete_car", response_model=DefaultResponse)
+@app.post("/v2/delete_car", response_model=DefaultResponse)
 async def delete_car(request: car_deletion_req, authorization: str = Header(None)):
     """Delete a car (admin only)"""
     pass
 
-@app.post("/delete_user", response_model=DefaultResponse)
+@app.post("/v2/delete_user", response_model=DefaultResponse)
 async def delete_user(request: user_deletion_req, authorization: str = Header(None)):
     """Delete a user (admin only)"""
     pass
 
-@app.get("/get_users", response_model=user_list_response)
+@app.get("/v2/get_users", response_model=user_list_response)
 async def get_users(authorization: str = Header(None)):
-    """Get list of all users (manager/admin only)"""
+    """Get list of all users (manager/v2/admin only)"""
     pass
 
-@app.post("/get_single_car", response_model=single_car_response)
+@app.post("/v2/get_single_car", response_model=single_car_response)
 async def get_single_car(request: single_car_req, authorization: str = Header(None)):
     """Get detailed information about a single car"""
     pass
 
-@app.get("/get_car_list", response_model=list[list_car_reponse])
+@app.get("/v2/get_car_list", response_model=list[list_car_reponse])
 async def get_car_list(authorization: str = Header(None)):
     """Get list of all cars with basic information"""
     pass
 
-@app.post("/decommision_car", response_model=DefaultResponse)
+@app.post("/v2/decommision_car", response_model=DefaultResponse)
 async def decommision_car(request: car_decommision_req, authorization: str = Header(None)):
-    """Decommission a car for maintenance (manager/admin only)"""
+    """Decommission a car for maintenance (manager/v2/admin only)"""
     pass
 
-@app.post("/activate_car", response_model=DefaultResponse)
+@app.post("/v2/activate_car", response_model=DefaultResponse)
 async def activate_car(request: car_activation_req, authorization: str = Header(None)):
-    """Activate a decommissioned car (manager/admin only)"""
+    """Activate a decommissioned car (manager/v2/admin only)"""
     pass
 
-@app.post("/get_full_car_info", response_model=car_info_response)
+@app.post("/v2/get_full_car_info", response_model=car_info_response)
 async def get_full_car_info(request: car_information_req, authorization: str = Header(None)):
     """Get complete car information including availability"""
     pass
 
-@app.post("/get_all_car_info", response_model=list[car_info_response])
+@app.post("/v2/get_all_car_info", response_model=list[car_info_response])
 async def get_all_car_info(authorization: str = Header(None)):
     """Get information about all cars (admin only)"""
     pass
 
-@app.post("/get_all_user_info", response_model=list[user_info_response])
+@app.post("/v2/get_all_user_info", response_model=list[user_info_response])
 async def get_all_user_info(authorization: str = Header(None)):
     """Get information about all users (admin only)"""
     pass
 
-@app.post("/list_reports", response_model=report_list_response)
+@app.post("/v2/list_reports", response_model=report_list_response)
 async def list_reports(authorization: str = Header(None)):
-    """List available reports (manager/admin only)"""
+    """List available reports (manager/v2/admin only)"""
     pass
 
-@app.get("/get_report/{filename}")
+@app.get("/v2/get_report/v2/{filename}")
 async def get_report(filename: str, authorization: str = Header(None)):
-    """Download a specific report file (manager/admin only)"""
+    """Download a specific report file (manager/v2/admin only)"""
     pass
 
-@app.post("/get_leases", response_model=leaseListResponse)
+@app.post("/v2/get_leases", response_model=leaseListResponse)
 async def get_leases(request: leases_list_req, authorization: str = Header(None)):
     """Get list of leases with optional filtering"""
     pass
 
-@app.post("/cancel_lease", response_model=leaseCancelResponse)
+@app.post("/v2/cancel_lease", response_model=leaseCancelResponse)
 async def cancel_lease(request: cancel_lease_req, authorization: str = Header(None)):
     """Cancel an active lease"""
     pass
 
-@app.post("/get_monthly_leases", response_model=list[monthlyLeasesResponse])
+@app.post("/v2/get_monthly_leases", response_model=list[monthlyLeasesResponse])
 async def get_monthly_leases(request: monthly_leases_req, authorization: str = Header(None)):
-    """Get leases for a specific month (manager/admin only)"""
+    """Get leases for a specific month (manager/v2/admin only)"""
     pass
 
-@app.post("/lease_car", response_model=leaseCarResponse)
+@app.post("/v2/lease_car", response_model=leaseCarResponse)
 async def lease_car(request: lease_car_req, authorization: str = Header(None)):
     """Create a new lease for a car"""
     pass
 
-@app.post("/get_requests", response_model=requestListResponse)
+@app.post("/v2/get_requests", response_model=requestListResponse)
 async def get_requests(authorization: str = Header(None)):
-    """Get pending private ride requests (manager/admin only)"""
+    """Get pending private ride requests (manager/v2/admin only)"""
     pass
 
-@app.post("/approve_req", response_model=DefaultResponse)
+@app.post("/v2/approve_req", response_model=DefaultResponse)
 async def approve_request(request: approve_pvr_req, authorization: str = Header(None)):
-    """Approve or reject a private ride request (manager/admin only)"""
+    """Approve or reject a private ride request (manager/v2/admin only)"""
     pass
 
-@app.post("/return_car", response_model=DefaultResponse)
+@app.post("/v2/return_car", response_model=DefaultResponse)
 async def return_car(request: return_car_req, authorization: str = Header(None)):
     """Return a leased car"""
     pass
 
-@app.get("/notifications", response_model=list[dict])
+@app.get("/v2/notifications", response_model=list[dict])
 async def get_notifications(authorization: str = Header(None)):
     """Get user notifications"""
     pass
 
-@app.post("/notifications/mark-as-read", response_model=DefaultResponse)
+@app.post("/v2/notifications/v2/mark-as-read", response_model=DefaultResponse)
 async def mark_notification_as_read(request: read_notification_req, authorization: str = Header(None)):
     """Mark a notification as read"""
     pass
 
-@app.post("/check_token", response_model=DefaultResponse)
+@app.post("/v2/check_token", response_model=DefaultResponse)
 async def check_token(authorization: str = Header(None)):
     """Validate JWT token"""
     pass
