@@ -51,7 +51,7 @@ class car_creation_req(BaseModel):
     spz:        Annotated[str, Field(min_length=7)]
     gas_type:   Annotated[str, Field(examples=['benzine','naft','diesel','electric'])]
     drive_type: Annotated[str, Field(examples=["manual", "automatic"])]
-    car_image:  Annotated[bytearray, Field(description=".jpg or .png only")]
+    car_image:  Annotated[str, Field(description=".jpg or .png only")]
 
 class car_editing_req(BaseModel):
     car_name:   Annotated[str | None, Field(default=None)]
@@ -60,7 +60,7 @@ class car_editing_req(BaseModel):
     spz:        Annotated[str | None, Field(default=None, min_length=7)]
     gas_type:   Annotated[str | None, Field(default=None, examples=['benzine','naft','diesel','electric'])]
     drive_type: Annotated[str | None, Field(default=None, examples=['manual','automatic'])]
-    car_image:  Annotated[bytearray | None, Field(default=None)]
+    car_image:  Annotated[str | None, Field(default=None)]
 
 class car_deletion_req(BaseModel):
     car_id: int
