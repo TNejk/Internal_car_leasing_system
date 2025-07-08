@@ -291,7 +291,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated ="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 #! app = FastAPI(docs_url=None, redoc_url=None)
-#!
+#! 
 # V produkcií, nenechať otvorenú dokumentáciu svetu!!
 app = FastAPI(docs_url=None, redoc_url=None)
 
@@ -369,6 +369,10 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
 #######################################################
 #                  ENDPOINTS SECTION                  #
 #######################################################
+
+@app.get("jjj")
+async def hi():
+    return {"msg": "gheloo"}
 
 
 @app.post("/v2/logout", response_model=DefaultResponse)
