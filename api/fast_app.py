@@ -119,6 +119,8 @@ class lease_car_req(BaseModel):
     recipient:    Annotated[str | None, Field(default=None)]
     car_id:       int
     private_ride: bool
+    private_trip: bool
+    trip_participants: Annotated[list[str] | None, Field(examples=["['user@gamo.sk', 'user2@gamo.sk']"], default=None)] 
     time_from:    Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
     time_to:      Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
 
@@ -143,6 +145,16 @@ class return_car_req(BaseModel):
 class read_notification_req(BaseModel):
     notification_id: int
 
+class trip_join_request_req(BaseModel):
+    trip_id: int
+
+class trip_invite_response_req(BaseModel):
+    invite_id: int
+    accepted: bool
+
+class trip_join_response_req(BaseModel):
+    request_id: int
+    approved: bool
 
 #################################################################
 #                    API RESPONSE MODELS                        #
@@ -259,6 +271,43 @@ class requestEntry(BaseModel):
 
 class requestListResponse(BaseModel):
     active_requests: list[requestEntry]
+
+class tripEntry(BaseModel):
+    trip_id: int
+    trip_name: str
+    creator_email: str
+    car_name: str
+    is_public: bool
+    status: Annotated[str, Field(examples=['scheduled', 'active', 'completed', 'cancelled'])]
+    free_seats: int
+    destination_name: str
+    destination_lat: float
+    destination_lon: float
+    created_at: Annotated[datetime, Field(examples=["CET time"])]
+
+class tripListResponse(BaseModel):
+    trips: list[tripEntry]
+
+class tripJoinRequestEntry(BaseModel):
+    request_id: int
+    trip_id: int
+    user_email: str
+    status: Annotated[str, Field(examples=['pending', 'accepted', 'rejected'])]
+    requested_at: Annotated[datetime, Field(examples=["CET time"])]
+
+class tripJoinRequestListResponse(BaseModel):
+    join_requests: list[tripJoinRequestEntry]
+
+class tripInviteEntry(BaseModel):
+    invite_id: int
+    trip_id: int
+    user_email: str
+    status: Annotated[str, Field(examples=['pending', 'accepted', 'rejected'])]
+    invited_at: Annotated[datetime, Field(examples=["CET time"])]
+
+class tripInviteListResponse(BaseModel):
+    invites: list[tripInviteEntry]
+
 #######################################################
 #                   UTILITY MODELS                    #
 #######################################################
@@ -268,6 +317,14 @@ USER_ROLES = {
     "admin",
     "system"
 }
+
+bratislava_tz = pytz.timezone('Europe/Bratislava')
+
+
+def admin_or_manager(role: str):
+    if role == "manager" or role == "admin": 
+        return True
+    return False
 
 class Token(BaseModel):
     JWT: str
@@ -286,6 +343,51 @@ class User(BaseModel):
     class Config:
         from_attributes = True  # Allows conversion from SQLAlchemy model
 
+class Car(BaseModel):
+    car_id: int
+    plate_number: str
+    name: str
+    category: str
+    gearbox_type: str
+    fuel_type: str
+    region: str
+    status: str
+    seats: int
+    usage_metric: int
+    img_url: str
+    created_at: datetime
+    is_deleted: bool
+
+    class Config:
+        from_attributes = True
+
+def convert_to_datetime(string):
+    try:
+        # Parse string, handling timezone if present
+        dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
+        return dt_obj
+    except: #? Ok now bear with me, it may look stupid, be stupid and make me look stupid, but it works :) Did i mention how much i hate dates
+        try:
+            dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
+            return dt_obj
+        except ValueError as e:
+            raise ValueError(f"Invalid datetime format: {string}") from e
+        
+
+def ten_minute_tolerance(a_timeof, today):
+    """ Gives user 10 minutes ofleaniency to lease a car before a lease from the past error. """
+    timeof = convert_to_datetime(string=a_timeof)
+    diff = today - timeof
+    if (diff.total_seconds()/60) >= 10:
+        return True
+
+def get_sk_date():
+    # Ensure the datetime is in UTC before converting
+    dt_obj = datetime.now()
+    utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
+    bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
+    return bratislava_time
+
 #######################################################
 #                 APP INITIALIZATION                  #
 #######################################################
@@ -303,7 +405,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 # V produkcií, nenechať otvorenú dokumentáciu svetu!!
 app = FastAPI()
 
-def connect_to_db() -> Session:
+def connect_to_db():
     # Get the running session from sqlalchemy's engine
     db = SessionLocal()
     try:
@@ -414,6 +516,15 @@ async def logout(current_user: Annotated[User, Depends(get_current_user)]):
 @app.post("/v2/register", response_model=DefaultResponse)
 async def register(request: RegisterRequest, current_user: Annotated[User, Depends(get_current_user)]):
     """Register a new user (admin only)"""
+    
+    http_exception = HTTPException(status_code=401, detail="Unauthorized.")
+    
+    if admin_or_manager() == False:
+        return http_exception
+
+
+
+    
     pass
 
 
@@ -450,6 +561,7 @@ async def login(
 @app.post("/v2/edit_user", response_model=DefaultResponse)
 async def edit_user(request: user_edit_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Edit user information (admin only)"""
+    
     pass
 
 @app.post("/v2/create_car", response_model=DefaultResponse)
@@ -540,9 +652,307 @@ async def get_monthly_leases(request: monthly_leases_req, current_user: Annotate
     pass
 
 @app.post("/v2/lease_car", response_model=leaseCarResponse)
-async def lease_car(request: lease_car_req, current_user: Annotated[User, Depends(get_current_user)]):
-    """Create a new lease for a car"""
-    pass
+async def lease_car(request: lease_car_req, current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+    """Create a lease for a car and optionally create a trip with participants"""
+    try:
+        car_id = request.car_id
+        time_from = request.time_from
+        time_to = request.time_to
+        recipient = request.recipient or current_user.email
+        private_ride = request.private_ride
+        private_trip = request.private_trip
+        trip_participants = request.trip_participants or []
+        
+        # Check privilege
+        has_privilege = admin_or_manager(current_user.role)
+
+        # Check if leasing for someone else
+        if current_user.email != recipient:
+            if not has_privilege:
+                raise HTTPException(
+                    status_code=401,
+                    detail="Unauthorized lease.",
+                    headers={"WWW-Authenticate": "Bearer"}
+                )
+        
+        # Date validation
+        if not time_from or not time_to:
+            return ErrorResponse(msg="Time from and time to are required.", status=False)
+            
+        today = get_sk_date()
+        
+        # Convert datetime to timezone-aware if needed
+        if time_to.replace(tzinfo=None) < today.replace(tzinfo=None):
+            return ErrorResponse(msg=f"Nemožno rezervovať do minulosti. \nDnes: {today}\nDO: {time_to}", status=False)
+        
+        if ten_minute_tolerance(str(time_from), today.replace(tzinfo=None)):
+            return ErrorResponse(msg=f"Nemožno rezervovať z minulosti. \nDnes: {today}\nOD: {time_from}", status=False)
+
+        # Get car and validate availability
+        car = db.query(model.Cars).filter(
+            model.Cars.id == car_id,
+            model.Cars.status != CarStatus.decommissioned,
+            model.Cars.is_deleted == False
+        ).first()
+        
+        if not car:
+            return ErrorResponse(msg="Auto nie je dostupné alebo neexistuje.", status=False)
+
+        # Check for conflicting leases
+        conflicting_lease = db.query(model.Leases).filter(
+            model.Leases.id_car == car_id,
+            model.Leases.status.in_([LeaseStatus.scheduled, LeaseStatus.active]),
+            ~((model.Leases.end_time <= time_from) | (model.Leases.start_time >= time_to))
+        ).first()
+        
+        if conflicting_lease:
+            return ErrorResponse(msg="Zabratý dátum (hodina typujem)", status=False)
+
+        # Get recipient user
+        recipient_user = db.query(model.Users).filter(
+            model.Users.email == recipient,
+            model.Users.is_deleted == False
+        ).first()
+        
+        if not recipient_user:
+            return ErrorResponse(msg="Príjemca neexistuje.", status=False)
+
+        # If private ride and user is not manager/admin, create a request instead
+        if private_ride and not has_privilege:
+            # Create lease request for approval
+            lease_request = model.LeaseRequests(
+                id_car=car_id,
+                id_user=recipient_user.id,
+                start_time=time_from,
+                end_time=time_to,
+                status=RequestStatus.pending
+            )
+            db.add(lease_request)
+            db.commit()
+            
+            # TODO: Send notification to managers
+            
+            return leaseCarResponse(status=True, private=True, msg="Request for a private ride was sent!")
+
+        # Create the lease
+        new_lease = model.Leases(
+            id_car=car_id,
+            id_user=recipient_user.id,
+            start_time=time_from,
+            end_time=time_to,
+            status=LeaseStatus.scheduled,
+            private=private_ride,
+            region_tag=Regions.local  # Default to local
+        )
+        
+        db.add(new_lease)
+        db.flush()  # Get the lease ID
+        
+        # Update car status
+        car.status = CarStatus.away
+        
+        # Create trip for the lease
+        trip_name = f"Trip for {car.name} - {recipient}"
+        new_trip = model.Trips(
+            trip_name=trip_name,
+            id_lease=new_lease.id,
+            id_car=car_id,
+            creator=recipient_user.id,
+            is_public=not private_trip,
+            status=TripsStatuses.scheduled,
+            free_seats=car.seats - 1,  # -1 for the driver
+            destination_name="Not specified",
+            destination_lat=0.0,
+            destination_lon=0.0
+        )
+        
+        db.add(new_trip)
+        db.flush()  # Get the trip ID
+        
+        # Add creator as participant
+        trip_participant = model.TripsParticipants(
+            id_trip=new_trip.id,
+            id_user=recipient_user.id,
+            seat_number=1,  # Driver seat
+            trip_finished=False
+        )
+        db.add(trip_participant)
+        
+        # Send invites to trip participants if provided
+        if trip_participants:
+            for participant_email in trip_participants:
+                participant_user = db.query(model.Users).filter(
+                    model.Users.email == participant_email,
+                    model.Users.is_deleted == False
+                ).first()
+                
+                if participant_user and participant_user.id != recipient_user.id:
+                    trip_invite = model.TripsInvites(
+                        id_trip=new_trip.id,
+                        id_user=participant_user.id,
+                        status=TripsInviteStatus.pending
+                    )
+                    db.add(trip_invite)
+                    new_trip.free_seats -= 1  # Reserve seat for invited participant
+        
+        db.commit()
+        
+        # TODO: Send notifications
+        
+        return leaseCarResponse(status=True, private=private_ride, msg="Lease created successfully!")
+        
+    except Exception as e:
+        db.rollback()
+        return ErrorResponse(msg=f"Error creating lease: {str(e)}", status=False)
+
+
+@app.post("/v2/trips/join_request", response_model=DefaultResponse)
+async def request_trip_join(request: trip_join_request_req, current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+    """Request to join a public trip"""
+    try:
+        trip = db.query(model.Trips).filter(
+            model.Trips.id == request.trip_id,
+            model.Trips.is_public == True,
+            model.Trips.status == TripsStatuses.scheduled
+        ).first()
+        
+        if not trip:
+            return DefaultResponse(status=False, msg="Trip not found or not available for joining")
+        
+        if trip.free_seats <= 0:
+            return DefaultResponse(status=False, msg="No free seats available")
+        
+        user = db.query(model.Users).filter(model.Users.email == current_user.email).first()
+        
+        # Check if user already has a request or is already a participant
+        existing_request = db.query(model.TripsJoinRequests).filter(
+            model.TripsJoinRequests.id_trip == request.trip_id,
+            model.TripsJoinRequests.id_user == user.id,
+            model.TripsJoinRequests.status == TripsInviteStatus.pending
+        ).first()
+        
+        if existing_request:
+            return DefaultResponse(status=False, msg="You already have a pending request for this trip")
+        
+        existing_participant = db.query(model.TripsParticipants).filter(
+            model.TripsParticipants.id_trip == request.trip_id,
+            model.TripsParticipants.id_user == user.id
+        ).first()
+        
+        if existing_participant:
+            return DefaultResponse(status=False, msg="You are already a participant in this trip")
+        
+        # Create join request
+        join_request = model.TripsJoinRequests(
+            id_trip=request.trip_id,
+            id_user=user.id,
+            status=TripsInviteStatus.pending
+        )
+        
+        db.add(join_request)
+        db.commit()
+        
+        return DefaultResponse(status=True, msg="Join request sent successfully")
+        
+    except Exception as e:
+        db.rollback()
+        return DefaultResponse(status=False, msg=f"Error sending join request: {str(e)}")
+
+
+@app.post("/v2/trips/respond_invite", response_model=DefaultResponse)
+async def respond_trip_invite(request: trip_invite_response_req, current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+    """Accept or reject a trip invite"""
+    try:
+        user = db.query(model.Users).filter(model.Users.email == current_user.email).first()
+        
+        invite = db.query(model.TripsInvites).filter(
+            model.TripsInvites.id == request.invite_id,
+            model.TripsInvites.id_user == user.id,
+            model.TripsInvites.status == TripsInviteStatus.pending
+        ).first()
+        
+        if not invite:
+            return DefaultResponse(status=False, msg="Invite not found or already responded")
+        
+        trip = db.query(model.Trips).filter(model.Trips.id == invite.id_trip).first()
+        
+        if request.accepted:
+            if trip.free_seats <= 0:
+                return DefaultResponse(status=False, msg="No free seats available")
+            
+            # Accept invite - add as participant
+            invite.status = TripsInviteStatus.accepted
+            
+            # Find next available seat number
+            existing_participants = db.query(model.TripsParticipants).filter(
+                model.TripsParticipants.id_trip == invite.id_trip
+            ).all()
+            
+            used_seats = [p.seat_number for p in existing_participants]
+            seat_number = 2  # Start from 2 (driver is seat 1)
+            while seat_number in used_seats:
+                seat_number += 1
+            
+            participant = model.TripsParticipants(
+                id_trip=invite.id_trip,
+                id_user=user.id,
+                seat_number=seat_number,
+                trip_finished=False
+            )
+            
+            db.add(participant)
+            trip.free_seats -= 1
+            
+        else:
+            # Reject invite
+            invite.status = TripsInviteStatus.rejected
+        
+        db.commit()
+        
+        status_msg = "Invite accepted" if request.accepted else "Invite rejected"
+        return DefaultResponse(status=True, msg=status_msg)
+        
+    except Exception as e:
+        db.rollback()
+        return DefaultResponse(status=False, msg=f"Error responding to invite: {str(e)}")
+
+
+@app.get("/v2/trips", response_model=tripListResponse)
+async def get_trips(current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+    """Get list of available trips"""
+    try:
+        user = db.query(model.Users).filter(model.Users.email == current_user.email).first()
+        
+        # Get public trips and trips created by the user
+        trips = db.query(model.Trips).filter(
+            (model.Trips.is_public == True) | (model.Trips.creator == user.id),
+            model.Trips.status == TripsStatuses.scheduled
+        ).all()
+        
+        trip_list = []
+        for trip in trips:
+            creator = db.query(model.Users).filter(model.Users.id == trip.creator).first()
+            car = db.query(model.Cars).filter(model.Cars.id == trip.id_car).first()
+            
+            trip_list.append(tripEntry(
+                trip_id=trip.id,
+                trip_name=trip.trip_name,
+                creator_email=creator.email,
+                car_name=car.name,
+                is_public=trip.is_public,
+                status=trip.status.value,
+                free_seats=trip.free_seats,
+                destination_name=trip.destination_name,
+                destination_lat=float(trip.destination_lat),
+                destination_lon=float(trip.destination_lon),
+                created_at=trip.created_at
+            ))
+        
+        return tripListResponse(trips=trip_list)
+        
+    except Exception as e:
+        return tripListResponse(trips=[])
+
 
 @app.post("/v2/get_requests", response_model=requestListResponse)
 async def get_requests(current_user: Annotated[User, Depends(get_current_user)]):
