@@ -293,7 +293,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 #! app = FastAPI(docs_url=None, redoc_url=None)
 #! 
 # V produkcií, nenechať otvorenú dokumentáciu svetu!!
-app = FastAPI(docs_url=None, redoc_url=None)
+app = FastAPI()
 
 def connect_to_db():
     con = ""
