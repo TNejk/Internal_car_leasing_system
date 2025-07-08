@@ -290,7 +290,10 @@ TOKEN_EXPIRATION_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated ="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-app = FastAPI()
+#! app = FastAPI(docs_url=None, redoc_url=None)
+#!
+# V produkcií, nenechať otvorenú dokumentáciu svetu!!
+app = FastAPI(docs_url=None, redoc_url=None)
 
 def connect_to_db():
     con = ""
