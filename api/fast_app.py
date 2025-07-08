@@ -280,8 +280,11 @@ class TokenData(BaseModel):
 class User(BaseModel):
     email: str
     role: Annotated[str, Field(examples=["manager", "user", "admin", "system"])]
-    username: str
-    disabled: bool
+    username: str  # This maps to name in the database
+    disabled: bool # This maps to is_deleted in the database
+
+    class Config:
+        from_attributes = True  # Allows conversion from SQLAlchemy model
 
 #######################################################
 #                 APP INITIALIZATION                  #
@@ -314,22 +317,26 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-def authenticate_user(email: str, password: str , db: Session) -> User:
-    """Checks if the user exists, and is not diabled by admin. Also verifys password using the verify_password func"""
-    user: User = db.query(User).filter(User.email == email, User.disabled == False).first()
+def authenticate_user(email: str, password: str, db: Session) -> User:
+    """Checks if the user exists and verifies password"""
+    # Query the SQLAlchemy Users model
+    db_user = db.query(model.Users).filter(
+        model.Users.email == email,
+        model.Users.is_deleted == False
+    ).first()
 
-    if not User:
+    if not db_user:
         return None
     
-    hashed_pass = get_password_hash(password)
-    if not verify_password(password,  hashed_pass):
+    if not verify_password(password, db_user.password):
         return None
 
+    # Convert SQLAlchemy model to Pydantic model
     return User(
-        email=email,
-        role=user.role,
-        username=user.username,
-        disabled=user.disabled
+        email=db_user.email,
+        role=db_user.role.value,  # Since role is an Enum
+        username=db_user.name,    # Using name as username
+        disabled=db_user.is_deleted
     )
 
 #* data is a dictionary of all metadata we want, if the expire date is not specified its set at 15 minutes
@@ -344,41 +351,46 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     return encoded_jwt
 
 
-def get_existing_user(email, role) -> User:
-    # Check in the databse for a non disabled user that matches the email role combo
-    conn, cur = connect_to_db()
+def get_existing_user(email: str, role: str, db: Session) -> User:
+    """Check in the database for a non-deleted user that matches the email role combo"""
+    db_user = db.query(model.Users).filter(
+        model.Users.email == email,
+        model.Users.role == role,
+        model.Users.is_deleted == False
+    ).first()
 
-    # Query here!!!
-    result = []
-    if not result:
+    if not db_user:
         return None
     
     return User(
-        email = "",
-        role = "",
-        username = "",
-        disabled = False
+        email=db_user.email,
+        role=db_user.role.value,
+        username=db_user.name,
+        disabled=db_user.is_deleted
     )
 
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
+def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Session = Depends(connect_to_db)
+) -> User:
     cred_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Error validating credentials",
-        headers={"WWW-Authenticate" : "Bearer"}
+        headers={"WWW-Authenticate": "Bearer"}
     )
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
-        role  = payload.get("role")
+        role = payload.get("role")
         if email is None or role is None:
             raise cred_exception
-        token_data = TokenData(email, role)
+        token_data = TokenData(email=email, role=role)
     
     except InvalidTokenError:
         raise cred_exception
-    # check and get a user that exists, is not disabled, and his email, role matches the one you proivde
-    user = get_existing_user(email=email, role= role)
+
+    user = get_existing_user(email=email, role=role, db=db)
     if not user:
         raise cred_exception
     return user
