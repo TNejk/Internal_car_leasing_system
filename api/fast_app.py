@@ -11,6 +11,11 @@ from typing import Annotated
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+from api.db.db.database import SessionLocal, Session
+import api.db.db.models as model
+from api.db.db.enums import *
+
 
 ##################################################################
 #                   Default multi use models                     #
@@ -295,11 +300,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 # V produkcií, nenechať otvorenú dokumentáciu svetu!!
 app = FastAPI()
 
-def connect_to_db():
-    con = ""
-    cur = ""
-    return con, cur
-
+def connect_to_db() -> Session:
+    # Get the running session from sqlalchemy's engine
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -307,11 +314,23 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-def authenticate_user(email: str, password: str ) -> User:
-    # Call connect_to_db() and close the connection!!!
-    # Check if user email exists in DB, and is not disabled by admin
-    # Return a USEER OBJECT
-    return User()
+def authenticate_user(email: str, password: str , db: Session) -> User:
+    """Checks if the user exists, and is not diabled by admin. Also verifys password using the verify_password func"""
+    user: User = db.query(User).filter(User.email == email, User.disabled == False).first()
+
+    if not User:
+        return None
+    
+    hashed_pass = get_password_hash(password)
+    if not verify_password(password,  hashed_pass):
+        return None
+
+    return User(
+        email=email,
+        role=user.role,
+        username=user.username,
+        disabled=user.disabled
+    )
 
 #* data is a dictionary of all metadata we want, if the expire date is not specified its set at 15 minutes
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
@@ -385,10 +404,17 @@ async def register(request: RegisterRequest, authorization: str = Header(None)):
     """Register a new user (admin only)"""
     pass
 
+
 @app.post("/v2/login", response_model=login_response)
 async def login(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends() ]):
-    user: User = authenticate_user(email= form_data.username, password=form_data.password)
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: Session = Depends(connect_to_db)):
+    """ Login user to app, returns a login_response obj that includes a token and role email combo. """
+    user = authenticate_user(
+        email=form_data.username, 
+        password=form_data.password,
+        db=db
+    )
 
     if not user:
         raise HTTPException(
@@ -397,8 +423,16 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"}
         )
     
-    access_token= create_access_token(data={"sub": user.username, "role": user.role}, expires_delta= timedelta(TOKEN_EXPIRATION_MINUTES))
-    return login_response(token= access_token, email=user.email, role=user.role)
+    access_token = create_access_token(
+        data={"sub": user.email, "role": user.role},
+        expires_delta=timedelta(minutes=TOKEN_EXPIRATION_MINUTES)
+    )
+    
+    return login_response(
+        token=access_token,
+        email=user.email,
+        role=user.role
+    )
 
 
 @app.post("/v2/edit_user", response_model=DefaultResponse)
