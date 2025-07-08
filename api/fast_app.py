@@ -407,12 +407,12 @@ async def hi():
 
 
 @app.post("/v2/logout", response_model=DefaultResponse)
-async def logout(authorization: str = Header(None)):
+async def logout(current_user: Annotated[User, Depends(get_current_user)]):
     """Logout endpoint to revoke JWT token"""
     pass
 
 @app.post("/v2/register", response_model=DefaultResponse)
-async def register(request: RegisterRequest, authorization: str = Header(None)):
+async def register(request: RegisterRequest, current_user: Annotated[User, Depends(get_current_user)]):
     """Register a new user (admin only)"""
     pass
 
@@ -448,127 +448,129 @@ async def login(
 
 
 @app.post("/v2/edit_user", response_model=DefaultResponse)
-async def edit_user(request: user_edit_req, authorization: str = Header(None)):
+async def edit_user(request: user_edit_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Edit user information (admin only)"""
     pass
 
 @app.post("/v2/create_car", response_model=DefaultResponse)
-async def create_car(request: car_creation_req, authorization: str = Header(None)):
+async def create_car(request: car_creation_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Create a new car (admin only)"""
     pass
 
 @app.post("/v2/edit_car", response_model=DefaultResponse)
-async def edit_car(request: car_editing_req, authorization: str = Header(None)):
+async def edit_car(request: car_editing_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Edit car information (admin only)"""
     pass
 
 @app.post("/v2/delete_car", response_model=DefaultResponse)
-async def delete_car(request: car_deletion_req, authorization: str = Header(None)):
+async def delete_car(request: car_deletion_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Delete a car (admin only)"""
     pass
 
 @app.post("/v2/delete_user", response_model=DefaultResponse)
-async def delete_user(request: user_deletion_req, authorization: str = Header(None)):
+async def delete_user(request: user_deletion_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Delete a user (admin only)"""
     pass
 
 @app.get("/v2/get_users", response_model=user_list_response)
-async def get_users(authorization: str = Header(None)):
+async def get_users(current_user: Annotated[User, Depends(get_current_user)]):
     """Get list of all users (manager/v2/admin only)"""
     pass
 
 @app.post("/v2/get_single_car", response_model=single_car_response)
-async def get_single_car(request: single_car_req, authorization: str = Header(None)):
+async def get_single_car(request: single_car_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Get detailed information about a single car"""
     pass
 
 @app.get("/v2/get_car_list", response_model=list[list_car_reponse])
-async def get_car_list(authorization: str = Header(None)):
+async def get_car_list(
+    current_user: Annotated[User, Depends(get_current_user)],
+):
     """Get list of all cars with basic information"""
     pass
 
 @app.post("/v2/decommision_car", response_model=DefaultResponse)
-async def decommision_car(request: car_decommision_req, authorization: str = Header(None)):
+async def decommision_car(request: car_decommision_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Decommission a car for maintenance (manager/v2/admin only)"""
     pass
 
 @app.post("/v2/activate_car", response_model=DefaultResponse)
-async def activate_car(request: car_activation_req, authorization: str = Header(None)):
+async def activate_car(request: car_activation_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Activate a decommissioned car (manager/v2/admin only)"""
     pass
 
 @app.post("/v2/get_full_car_info", response_model=car_info_response)
-async def get_full_car_info(request: car_information_req, authorization: str = Header(None)):
+async def get_full_car_info(request: car_information_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Get complete car information including availability"""
     pass
 
 @app.post("/v2/get_all_car_info", response_model=list[car_info_response])
-async def get_all_car_info(authorization: str = Header(None)):
+async def get_all_car_info(current_user: Annotated[User, Depends(get_current_user)]):
     """Get information about all cars (admin only)"""
     pass
 
 @app.post("/v2/get_all_user_info", response_model=list[user_info_response])
-async def get_all_user_info(authorization: str = Header(None)):
+async def get_all_user_info(current_user: Annotated[User, Depends(get_current_user)]):
     """Get information about all users (admin only)"""
     pass
 
 @app.post("/v2/list_reports", response_model=report_list_response)
-async def list_reports(authorization: str = Header(None)):
+async def list_reports(current_user: Annotated[User, Depends(get_current_user)]):
     """List available reports (manager/v2/admin only)"""
     pass
 
 @app.get("/v2/get_report/v2/{filename}")
-async def get_report(filename: str, authorization: str = Header(None)):
+async def get_report(filename: str, current_user: Annotated[User, Depends(get_current_user)]):
     """Download a specific report file (manager/v2/admin only)"""
     pass
 
 @app.post("/v2/get_leases", response_model=leaseListResponse)
-async def get_leases(request: leases_list_req, authorization: str = Header(None)):
+async def get_leases(request: leases_list_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Get list of leases with optional filtering"""
     pass
 
 @app.post("/v2/cancel_lease", response_model=leaseCancelResponse)
-async def cancel_lease(request: cancel_lease_req, authorization: str = Header(None)):
+async def cancel_lease(request: cancel_lease_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Cancel an active lease"""
     pass
 
 @app.post("/v2/get_monthly_leases", response_model=list[monthlyLeasesResponse])
-async def get_monthly_leases(request: monthly_leases_req, authorization: str = Header(None)):
+async def get_monthly_leases(request: monthly_leases_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Get leases for a specific month (manager/v2/admin only)"""
     pass
 
 @app.post("/v2/lease_car", response_model=leaseCarResponse)
-async def lease_car(request: lease_car_req, authorization: str = Header(None)):
+async def lease_car(request: lease_car_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Create a new lease for a car"""
     pass
 
 @app.post("/v2/get_requests", response_model=requestListResponse)
-async def get_requests(authorization: str = Header(None)):
+async def get_requests(current_user: Annotated[User, Depends(get_current_user)]):
     """Get pending private ride requests (manager/v2/admin only)"""
     pass
 
 @app.post("/v2/approve_req", response_model=DefaultResponse)
-async def approve_request(request: approve_pvr_req, authorization: str = Header(None)):
+async def approve_request(request: approve_pvr_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Approve or reject a private ride request (manager/v2/admin only)"""
     pass
 
 @app.post("/v2/return_car", response_model=DefaultResponse)
-async def return_car(request: return_car_req, authorization: str = Header(None)):
+async def return_car(request: return_car_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Return a leased car"""
     pass
 
 @app.get("/v2/notifications", response_model=list[dict])
-async def get_notifications(authorization: str = Header(None)):
+async def get_notifications(current_user: Annotated[User, Depends(get_current_user)]):
     """Get user notifications"""
     pass
 
 @app.post("/v2/notifications/v2/mark-as-read", response_model=DefaultResponse)
-async def mark_notification_as_read(request: read_notification_req, authorization: str = Header(None)):
+async def mark_notification_as_read(request: read_notification_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Mark a notification as read"""
     pass
 
 @app.post("/v2/check_token", response_model=DefaultResponse)
-async def check_token(authorization: str = Header(None)):
+async def check_token(current_user: Annotated[User, Depends(get_current_user)]):
     """Validate JWT token"""
     pass
 
