@@ -30,6 +30,89 @@ class DefaultResponse(BaseModel):
     msg: Annotated[str | None, Field(default=None)]
 
 
+
+#######################################################
+#                   UTILITY MODELS                    #
+#######################################################
+USER_ROLES = {
+    "user",
+    "manager",
+    "admin",
+    "system"
+}
+
+bratislava_tz = pytz.timezone('Europe/Bratislava')
+
+
+def admin_or_manager(role: str):
+    if role == "manager" or role == "admin": 
+        return True
+    return False
+
+class Token(BaseModel):
+    JWT: str
+    token_type: str
+
+class TokenData(BaseModel):
+    email: str
+    role:  Annotated[str, Field(examples=["manager", "user", "admin", "system"])]
+
+class User(BaseModel):
+    email: str
+    role: Annotated[str, Field(examples=["manager", "user", "admin", "system"])]
+    username: str  # This maps to name in the database
+    disabled: bool # This maps to is_deleted in the database
+
+    class Config:
+        from_attributes = True  # Allows conversion from SQLAlchemy model
+
+class Car(BaseModel):
+    car_id: int
+    plate_number: str
+    name: str
+    category: str
+    gearbox_type: str
+    fuel_type: str
+    region: str
+    status: str
+    seats: int
+    usage_metric: int
+    img_url: str
+    created_at: datetime
+    is_deleted: bool
+
+    class Config:
+        from_attributes = True
+
+def convert_to_datetime(string):
+    try:
+        # Parse string, handling timezone if present
+        dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
+        return dt_obj
+    except: #? Ok now bear with me, it may look stupid, be stupid and make me look stupid, but it works :) Did i mention how much i hate dates
+        try:
+            dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
+            return dt_obj
+        except ValueError as e:
+            raise ValueError(f"Invalid datetime format: {string}") from e
+        
+
+def ten_minute_tolerance(a_timeof, today):
+    """ Gives user 10 minutes ofleaniency to lease a car before a lease from the past error. """
+    timeof = convert_to_datetime(string=a_timeof)
+    diff = today - timeof
+    if (diff.total_seconds()/60) >= 10:
+        return True
+
+def get_sk_date():
+    # Ensure the datetime is in UTC before converting
+    dt_obj = datetime.now()
+    utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
+    bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
+    return bratislava_time
+
+
+
 ##################################################################
 #                      User REQUEST models                       #
 # ################################################################
@@ -72,9 +155,8 @@ class car_deletion_req(BaseModel):
 
 class user_deletion_req(BaseModel):
     email: str
+    user_id: Annotated[int | None, Field(description="If ID is available use it")]
 
-class single_car_req(BaseModel):
-    car_name: str
 
 class car_decommision_req(BaseModel):
     car_name: str
@@ -142,6 +224,7 @@ class return_car_req(BaseModel):
     exterior_damage: bool
     collision:       bool
 
+
 class read_notification_req(BaseModel):
     notification_id: int
 
@@ -167,20 +250,20 @@ class login_response(BaseModel):
 
 class user_list_response(BaseModel):
     """ A list of all users and their roles in a dict. """
-    users: Annotated[list[dict] | None, Field(default=None, examples=["{email: user@gamo.sk, role: manager}"])]
+    users: Annotated[list[User] | None, Field(default=None, examples=["{email: user@gamo.sk, role: manager}"])]
 
-class single_car_response(BaseModel):
-    """ Redundant function, does the same as car_info_response. """
-    car_id:       int
-    spz:          Annotated[str, Field(min_length=7)]
-    car_type:     Annotated[str, Field(examples=['personal', 'cargo'])]
-    gearbox_type: Annotated[str, Field(examples=['manual', 'automatic'])]
-    fuel_type:    Annotated[str, Field(examples=['benzine','naft','diesel','electric'])]
-    region:       Annotated[str, Field(examples=['local', 'global'])]
-    car_status:   Annotated[str, Field(examples=['available','away','unavailable','decommissioned'])]
-    seats:        Annotated[int, Field(ge=2)]
-    usage_metric: int
-    image_url:    str
+# class single_car_response(BaseModel):
+#     """ Redundant function, does the same as car_info_response. """
+#     car_id:       int
+#     spz:          Annotated[str, Field(min_length=7)]
+#     car_type:     Annotated[str, Field(examples=['personal', 'cargo'])]
+#     gearbox_type: Annotated[str, Field(examples=['manual', 'automatic'])]
+#     fuel_type:    Annotated[str, Field(examples=['benzine','naft','diesel','electric'])]
+#     region:       Annotated[str, Field(examples=['local', 'global'])]
+#     car_status:   Annotated[str, Field(examples=['available','away','unavailable','decommissioned'])]
+#     seats:        Annotated[int, Field(ge=2)]
+#     usage_metric: int
+#     image_url:    str
 
 class list_car_reponse(BaseModel):
     """ A list of car's with their status, name, spz and image. """
@@ -188,7 +271,15 @@ class list_car_reponse(BaseModel):
     car_name:   str
     car_status: Annotated[str, Field(examples=['available','away','unavailable','decommissioned'])]
     spz:        Annotated[str | None, Field(default=None, min_length=7)]
+    seats: int
+    gearbox_type: GearboxTypes
+    fuel_type: FuelTypes
+    usage_metric: int
+    type: CarTypes
     image_url:  str
+
+class carListResponse(BaseModel):
+    car_list: list[list_car_reponse]
 
 class car_info_response(BaseModel):
     """ Every information about the requested car. """
@@ -200,6 +291,7 @@ class car_info_response(BaseModel):
     region:       Annotated[str, Field(examples=['local', 'global'])]
     car_status:   Annotated[str, Field(examples=['available','away','unavailable','decommissioned'])]
     seats:        Annotated[int, Field(ge=2)]
+    type: CarTypes
     usage_metric: int
     image_url:    str
     decommision_time: Annotated[datetime | None, Field(examples=["CET time"], default=None, description="Unless the car is decommisioned this will be None")]
@@ -308,85 +400,6 @@ class tripInviteEntry(BaseModel):
 class tripInviteListResponse(BaseModel):
     invites: list[tripInviteEntry]
 
-#######################################################
-#                   UTILITY MODELS                    #
-#######################################################
-USER_ROLES = {
-    "user",
-    "manager",
-    "admin",
-    "system"
-}
-
-bratislava_tz = pytz.timezone('Europe/Bratislava')
-
-
-def admin_or_manager(role: str):
-    if role == "manager" or role == "admin": 
-        return True
-    return False
-
-class Token(BaseModel):
-    JWT: str
-    token_type: str
-
-class TokenData(BaseModel):
-    email: str
-    role:  Annotated[str, Field(examples=["manager", "user", "admin", "system"])]
-
-class User(BaseModel):
-    email: str
-    role: Annotated[str, Field(examples=["manager", "user", "admin", "system"])]
-    username: str  # This maps to name in the database
-    disabled: bool # This maps to is_deleted in the database
-
-    class Config:
-        from_attributes = True  # Allows conversion from SQLAlchemy model
-
-class Car(BaseModel):
-    car_id: int
-    plate_number: str
-    name: str
-    category: str
-    gearbox_type: str
-    fuel_type: str
-    region: str
-    status: str
-    seats: int
-    usage_metric: int
-    img_url: str
-    created_at: datetime
-    is_deleted: bool
-
-    class Config:
-        from_attributes = True
-
-def convert_to_datetime(string):
-    try:
-        # Parse string, handling timezone if present
-        dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
-        return dt_obj
-    except: #? Ok now bear with me, it may look stupid, be stupid and make me look stupid, but it works :) Did i mention how much i hate dates
-        try:
-            dt_obj = datetime.strptime(string, "%Y-%m-%d %H:%M")
-            return dt_obj
-        except ValueError as e:
-            raise ValueError(f"Invalid datetime format: {string}") from e
-        
-
-def ten_minute_tolerance(a_timeof, today):
-    """ Gives user 10 minutes ofleaniency to lease a car before a lease from the past error. """
-    timeof = convert_to_datetime(string=a_timeof)
-    diff = today - timeof
-    if (diff.total_seconds()/60) >= 10:
-        return True
-
-def get_sk_date():
-    # Ensure the datetime is in UTC before converting
-    dt_obj = datetime.now()
-    utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
-    bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
-    return bratislava_time
 
 #######################################################
 #                 APP INITIALIZATION                  #
@@ -587,19 +600,76 @@ async def delete_user(request: user_deletion_req, current_user: Annotated[User, 
 @app.get("/v2/get_users", response_model=user_list_response)
 async def get_users(current_user: Annotated[User, Depends(get_current_user)]):
     """Get list of all users (manager/v2/admin only)"""
-    pass
+    
+    session = connect_to_db()
 
-@app.post("/v2/get_single_car", response_model=single_car_response)
-async def get_single_car(request: single_car_req, current_user: Annotated[User, Depends(get_current_user)]):
-    """Get detailed information about a single car"""
-    pass
+    if not session:
+        return HTTPException(
+            status_code=500,
+            detail="Error getting users!",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
 
-@app.get("/v2/get_car_list", response_model=list[list_car_reponse])
+    # Get all users, that are not disabled
+    users = session.query(model.Users).filter(
+        model.Users.is_deleted == False,
+        model.Users.role != UserRoles.admin
+    ).all()
+
+    user_list = []
+    for user in users:
+        user_list.append(
+            User(
+                email= user.email,
+                username= user.name,
+                role= user.role,
+                disabled= user.is_deleted
+            )
+        )
+
+    return user_list_response(
+        users= user_list
+    )
+
+
+    
+
+@app.get("/v2/get_car_list", response_model=carListResponse)
 async def get_car_list(
     current_user: Annotated[User, Depends(get_current_user)],
 ):
     """Get list of all cars with basic information"""
-    pass
+    session = connect_to_db()
+
+    cars = session.query(model.Cars).filter(
+            model.Cars.is_deleted == False,
+            model.Cars.status != CarStatus.unavailable,
+    ).order_by(model.Cars.usage_metric.asc()).all()
+
+
+    list_car = []        
+    for car in cars:
+        list_car.append(
+            list_car_reponse(
+                car_id= car.id,
+                car_name= car.name,
+                car_status=  car.status,
+                gearbox_type = car.gearbox_type,
+                fuel_type = car.fuel_type,
+                type= car.category,
+                spz= car.plate_number,
+                seats= car.seats,
+                usage_metric = car.usage_metric,
+                image_url= car.img_url
+            )
+        )
+    
+    return carListResponse(
+        car_list= list_car
+    )
+
+
+    
 
 @app.post("/v2/decommision_car", response_model=DefaultResponse)
 async def decommision_car(request: car_decommision_req, current_user: Annotated[User, Depends(get_current_user)]):
@@ -746,7 +816,7 @@ async def lease_car(request: lease_car_req, current_user: Annotated[User, Depend
         )
         
         db.add(new_lease)
-        db.flush()  # Get the lease ID
+        db.flush()  # Get the lease ID, without commiting the transaction, the changes are stashed on the db untill we commit(), which means we can still rollback 
         
         # Update car status
         car.status = CarStatus.away
@@ -954,10 +1024,47 @@ async def get_trips(current_user: Annotated[User, Depends(get_current_user)], db
         return tripListResponse(trips=[])
 
 
+
+# !
+# TODO: Here you need to get email and car name from id's, ALSO remake the sql table for Lease requests to add a foreign key to the lease table to get the IMG URL AND SUCH
 @app.post("/v2/get_requests", response_model=requestListResponse)
 async def get_requests(current_user: Annotated[User, Depends(get_current_user)]):
     """Get pending private ride requests (manager/v2/admin only)"""
-    pass
+    # work with LeaseRequests object 
+
+    if not admin_or_manager(current_user.role):
+        return HTTPException(
+            status_code=401,
+            detail="Unauthorized.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    session = connect_to_db()
+
+    requests = session.query(model.LeaseRequests).filter(
+        model.LeaseRequests.status != RequestStatus.canceled,
+        model.LeaseRequests.status != RequestStatus.rejected
+    ).all()
+
+    list_request = []
+
+    # for req in requests:
+    #     list_request.append(
+    #         requestEntry(
+    #             request_id= req.id,
+    #             request_status= req.status,
+    #             car_id= 
+    #             driver_id=
+    #             image_url= req.img_url
+
+    #             spz=
+    #             starting_time=
+    #             ending_time=
+
+    #         )
+    #     )
+
+
 
 @app.post("/v2/approve_req", response_model=DefaultResponse)
 async def approve_request(request: approve_pvr_req, current_user: Annotated[User, Depends(get_current_user)]):
