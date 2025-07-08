@@ -12,7 +12,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
-from db.database import SessionLocal, Session
+from db.database import SessionLocal
 import db.models as model
 from db.enums import *
 
