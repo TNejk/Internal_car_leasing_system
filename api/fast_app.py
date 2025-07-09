@@ -3,6 +3,7 @@ import os
 import jwt
 from pathlib import Path
 from fastapi import FastAPI, Query, HTTPException, Header, status, Depends
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import Annotated, Optional
 from datetime import datetime, timedelta, timezone
@@ -110,6 +111,34 @@ def get_sk_date():
     utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)
     bratislava_time = utc_time.astimezone(bratislava_tz)  # Convert to Bratislava timezone
     return bratislava_time
+
+def find_reports_directory():
+    """Find the reports directory at the volume mount location."""
+    reports_path = "/app/reports"
+        
+    if os.path.exists(reports_path) and os.path.isdir(reports_path):
+        print(f"DEBUG: Found reports directory at: {reports_path}")
+        # List contents of reports directory
+        try:
+            print(f"DEBUG: Contents of reports directory:")
+            for item in os.listdir(reports_path):
+                item_path = os.path.join(reports_path, item)
+                print(f"DEBUG:   {item} ({'dir' if os.path.isdir(item_path) else 'file'})")
+        except Exception as e:
+            print(f"DEBUG: Error listing reports directory: {e}")
+        return reports_path
+    
+    print("ERROR: /app/reports directory not found - check Docker volume mount")
+    print("HINT: Volume should be: -v /home/systemak/icls/api/reports:/app/reports")
+    return None
+
+def get_reports_paths(folder_path):  
+    """Get list of report file paths relative to the reports directory."""
+    try:  
+        with os.scandir(folder_path) as entries:  
+            return [entry.path.removeprefix("/app/reports/") for entry in entries if entry.is_file()]  
+    except OSError:  # Specific exception > bare except!  
+        return None
 
 
 
@@ -697,14 +726,122 @@ async def get_all_user_info(current_user: Annotated[User, Depends(get_current_us
     pass
 
 @app.post("/v2/list_reports", response_model=report_list_response)
-async def list_reports(current_user: Annotated[User, Depends(get_current_user)]):
-    """List available reports (manager/v2/admin only)"""
-    pass
+async def list_reports(current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+    """List available reports (manager/admin only)"""
+    
+    # Check authorization
+    if not admin_or_manager(current_user.role):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized access",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+    # Verify user exists in database
+    db_user = db.query(model.Users).filter(
+        model.Users.email == current_user.email,
+        model.Users.role.in_([UserRoles.manager, UserRoles.admin]),
+        model.Users.is_deleted == False
+    ).first()
+    
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User verification failed"
+        )
+    
+    try:
+        # Find reports directory
+        reports_dir = find_reports_directory()
+        if not reports_dir:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Reports directory not found"
+            )
+        
+        # Get list of report files
+        report_paths = get_reports_paths(reports_dir)
+        if report_paths is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error accessing reports directory"
+            )
+        
+        return report_list_response(reports=report_paths)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error listing reports: {str(e)}"
+        )
 
 @app.get("/v2/get_report/v2/{filename}")
-async def get_report(filename: str, current_user: Annotated[User, Depends(get_current_user)]):
-    """Download a specific report file (manager/v2/admin only)"""
-    pass
+async def get_report(filename: str, current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+    """Download a specific report file (manager/admin only)"""
+    
+    # Check authorization
+    if not admin_or_manager(current_user.role):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized access",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+    # Verify user exists in database with correct role
+    db_user = db.query(model.Users).filter(
+        model.Users.email == current_user.email,
+        model.Users.role.in_([UserRoles.manager, UserRoles.admin]),
+        model.Users.is_deleted == False
+    ).first()
+    
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid authorization"
+        )
+    
+    try:
+        # Find reports directory
+        reports_dir = find_reports_directory()
+        if not reports_dir:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Reports directory not found"
+            )
+        
+        # Build safe file path
+        safe_path = os.path.join(reports_dir, filename)
+        
+        # Security check to prevent path traversal attacks
+        if not os.path.realpath(safe_path).startswith(os.path.realpath(reports_dir)):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid file path"
+            )
+        
+        # Check if file exists
+        if not os.path.isfile(safe_path):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="File not found"
+            )
+        
+        # Return the file for download
+        return FileResponse(
+            path=safe_path,
+            filename=filename,
+            media_type='application/octet-stream'
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error accessing file: {str(e)}"
+        )
 
 @app.post("/v2/get_leases", response_model=leaseListResponse)
 async def get_leases(request: leases_list_req, current_user: Annotated[User, Depends(get_current_user)]):
