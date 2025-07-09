@@ -561,8 +561,12 @@ async def register(request: RegisterRequest, current_user: Annotated[User, Depen
     
     http_exception = HTTPException(status_code=401, detail="Unauthorized.")
     
-    if admin_or_manager() == False:
-        return http_exception
+    if admin_or_manager(current_user.role) == False:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized access. Admin or manager role required.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
 
 
 
@@ -728,7 +732,6 @@ async def get_all_car_info(current_user: Annotated[User, Depends(get_current_use
         )
     
     try:
-        # Get all non-deleted cars
         cars = db.query(model.Cars).filter(
             model.Cars.is_deleted == False
         ).all()
@@ -743,12 +746,12 @@ async def get_all_car_info(current_user: Annotated[User, Depends(get_current_use
         
         for car in cars:
             # Get decommission time - set to None for now since DecommissionedCars model doesn't exist
+            # TODO: IMPLEMENT DECOMMISSION TIME IN THE TABLE!! iTS NEEDED FOR AUTOMATIC CAR ACTIVATION
             decommission_time = None
             
             # Get allowed hours (active leases and requests)
             allowed_hours = []
             
-            # Get active leases for this car
             active_leases = db.query(model.Leases).filter(
                 model.Leases.id_car == car.id,
                 model.Leases.status.in_([LeaseStatus.scheduled, LeaseStatus.active])
@@ -757,7 +760,7 @@ async def get_all_car_info(current_user: Annotated[User, Depends(get_current_use
             for lease in active_leases:
                 allowed_hours.append([lease.start_time, lease.end_time])
             
-            # Get active requests for this car
+            # Get active private ride requests for this car
             active_requests = db.query(model.LeaseRequests).filter(
                 model.LeaseRequests.id_car == car.id,
                 model.LeaseRequests.status == RequestStatus.pending
@@ -796,7 +799,6 @@ async def get_all_car_info(current_user: Annotated[User, Depends(get_current_use
 async def get_all_user_info(current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Get information about all users (admin only)"""
     
-    # Check if user is admin
     if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -808,7 +810,7 @@ async def get_all_user_info(current_user: Annotated[User, Depends(get_current_us
         # Get all non-deleted users except admin users
         users = db.query(model.Users).filter(
             model.Users.is_deleted == False,
-            model.Users.name != 'admin'  # Exclude admin users as per original Flask logic
+            model.Users.name != 'admin' 
         ).all()
         
         if not users:
@@ -841,7 +843,6 @@ async def get_all_user_info(current_user: Annotated[User, Depends(get_current_us
 async def list_reports(current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """List available reports (manager/admin only)"""
     
-    # Check authorization
     if not admin_or_manager(current_user.role):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -849,7 +850,6 @@ async def list_reports(current_user: Annotated[User, Depends(get_current_user)],
             headers={"WWW-Authenticate": "Bearer"}
         )
     
-    # Verify user exists in database
     db_user = db.query(model.Users).filter(
         model.Users.email == current_user.email,
         model.Users.role.in_([UserRoles.manager, UserRoles.admin]),
@@ -863,7 +863,6 @@ async def list_reports(current_user: Annotated[User, Depends(get_current_user)],
         )
     
     try:
-        # Find reports directory
         reports_dir = find_reports_directory()
         if not reports_dir:
             raise HTTPException(
@@ -871,7 +870,6 @@ async def list_reports(current_user: Annotated[User, Depends(get_current_user)],
                 detail="Reports directory not found"
             )
         
-        # Get list of report files
         report_paths = get_reports_paths(reports_dir)
         if report_paths is None:
             raise HTTPException(
@@ -892,8 +890,7 @@ async def list_reports(current_user: Annotated[User, Depends(get_current_user)],
 @app.get("/v2/get_report/v2/{filename}")
 async def get_report(filename: str, current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Download a specific report file (manager/admin only)"""
-    
-    # Check authorization
+
     if not admin_or_manager(current_user.role):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -901,7 +898,6 @@ async def get_report(filename: str, current_user: Annotated[User, Depends(get_cu
             headers={"WWW-Authenticate": "Bearer"}
         )
     
-    # Verify user exists in database with correct role
     db_user = db.query(model.Users).filter(
         model.Users.email == current_user.email,
         model.Users.role.in_([UserRoles.manager, UserRoles.admin]),
@@ -915,7 +911,6 @@ async def get_report(filename: str, current_user: Annotated[User, Depends(get_cu
         )
     
     try:
-        # Find reports directory
         reports_dir = find_reports_directory()
         if not reports_dir:
             raise HTTPException(
@@ -923,7 +918,6 @@ async def get_report(filename: str, current_user: Annotated[User, Depends(get_cu
                 detail="Reports directory not found"
             )
         
-        # Build safe file path
         safe_path = os.path.join(reports_dir, filename)
         
         # Security check to prevent path traversal attacks
@@ -933,14 +927,12 @@ async def get_report(filename: str, current_user: Annotated[User, Depends(get_cu
                 detail="Invalid file path"
             )
         
-        # Check if file exists
         if not os.path.isfile(safe_path):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="File not found"
             )
         
-        # Return the file for download
         return FileResponse(
             path=safe_path,
             filename=filename,
@@ -956,9 +948,100 @@ async def get_report(filename: str, current_user: Annotated[User, Depends(get_cu
         )
 
 @app.post("/v2/get_leases", response_model=leaseListResponse)
-async def get_leases(request: leases_list_req, current_user: Annotated[User, Depends(get_current_user)]):
+async def get_leases(request: leases_list_req, current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Get list of leases with optional filtering"""
-    pass
+    try:
+        # Build base query with joins
+        query = db.query(model.Leases).join(
+            model.Users, model.Leases.id_user == model.Users.id
+        ).join(
+            model.Cars, model.Leases.id_car == model.Cars.id
+        ).filter(
+            model.Users.is_deleted == False,
+            model.Cars.is_deleted == False
+        )
+        
+        # Role-based filtering
+        if current_user.role == model.UserRoles.user:
+            # Users can only see their own leases
+            query = query.filter(model.Users.email == current_user.email)
+        elif current_user.role in [model.UserRoles.manager, model.UserRoles.admin]:
+            # Managers and admins can filter by email if provided
+            if request.filter_email:
+                query = query.filter(model.Users.email == request.filter_email)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions"
+            )
+        
+        # Apply optional filters
+        if request.filter_car_id:
+            query = query.filter(model.Leases.id_car == request.filter_car_id)
+            
+        if request.filter_time_from:
+            query = query.filter(model.Leases.start_time >= request.filter_time_from)
+            
+        if request.filter_time_to:
+            query = query.filter(model.Leases.end_time <= request.filter_time_to)
+            
+        # Status filtering - map boolean filters to enum values
+        status_filters = []
+        if request.filter_active_leases:
+            # Active leases include: scheduled, active, late
+            status_filters.extend([LeaseStatus.scheduled, LeaseStatus.active, LeaseStatus.late])
+        if request.filter_incactive_leases:
+            # Inactive leases include: returned, canceled, missing, aborted
+            status_filters.extend([LeaseStatus.returned, LeaseStatus.canceled, LeaseStatus.missing, LeaseStatus.aborted])
+        
+        # If neither filter is specified, show all lease statuses
+        if not request.filter_active_leases and not request.filter_incactive_leases:
+            # Show all statuses
+            pass
+        elif status_filters:
+            query = query.filter(model.Leases.status.in_(status_filters))
+        
+        # Execute query with ordering
+        leases = query.order_by(model.Leases.start_time.desc()).all()
+        
+        # Build response
+        lease_entries = []
+        for lease in leases:
+            # Get last changed by user info
+            last_changed_by_name = ""
+            if lease.last_changed_by:
+                changed_by_user = db.query(model.Users).filter(
+                    model.Users.id == lease.last_changed_by
+                ).first()
+                if changed_by_user:
+                    last_changed_by_name = changed_by_user.email
+            
+            lease_entries.append(leaseEntry(
+                lease_id=lease.id,
+                lease_status=lease.status.value,
+                creation_time=lease.create_time,
+                starting_time=lease.start_time,
+                ending_time=lease.end_time,
+                approved_return_time=lease.return_time,
+                missing_time=lease.missing_time,
+                cancelled_time=lease.canceled_time,
+                aborted_time=lease.aborted_time,
+                driver_email=lease.user.email,
+                car_name=lease.car.name,
+                status_updated_at=lease.status_updated_at,
+                last_changed_by=last_changed_by_name,
+                region_tag=lease.region_tag.value
+            ))
+        
+        return leaseListResponse(active_leases=lease_entries)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving leases: {str(e)}"
+        )
 
 @app.post("/v2/cancel_lease", response_model=leaseCancelResponse)
 async def cancel_lease(request: cancel_lease_req, current_user: Annotated[User, Depends(get_current_user)]):
