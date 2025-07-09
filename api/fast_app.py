@@ -1044,9 +1044,101 @@ async def get_leases(request: leases_list_req, current_user: Annotated[User, Dep
         )
 
 @app.post("/v2/cancel_lease", response_model=leaseCancelResponse)
-async def cancel_lease(request: cancel_lease_req, current_user: Annotated[User, Depends(get_current_user)]):
+async def cancel_lease(request: cancel_lease_req, current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Cancel an active lease"""
-    pass
+    try:
+        # Determine whose lease to cancel
+        recipient_email = request.recipient or current_user.email
+        
+        # Permission check: only managers and admins can cancel other people's leases
+        if recipient_email != current_user.email:
+            if admin_or_manager(current_user.role) == False:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Insufficient permissions to cancel another user's lease"
+                )
+        
+        # Find the recipient user
+        recipient_user = db.query(model.Users).filter(
+            model.Users.email == recipient_email,
+            model.Users.is_deleted == False
+        ).first()
+        
+        if not recipient_user:
+            return leaseCancelResponse(cancelled=False)
+        
+        # Find the car - use either car_id or car_name
+        car = None
+        if request.car_id:
+            car = db.query(model.Cars).filter(
+                model.Cars.id == request.car_id,
+                model.Cars.is_deleted == False
+            ).first()
+        elif request.car_name:
+            car = db.query(model.Cars).filter(
+                model.Cars.name == request.car_name,
+                model.Cars.is_deleted == False
+            ).first()
+        
+        if not car:
+            return leaseCancelResponse(cancelled=False)
+        
+        # Find the most recent active lease for this user and car
+        active_lease = db.query(model.Leases).filter(
+            model.Leases.id_user == recipient_user.id,
+            model.Leases.id_car == car.id,
+            model.Leases.status.in_([LeaseStatus.scheduled, LeaseStatus.active])
+        ).order_by(model.Leases.id.desc()).first()
+        
+        if not active_lease:
+            return leaseCancelResponse(cancelled=False)
+        
+        # Get current user for tracking changes
+        current_user_db = db.query(model.Users).filter(
+            model.Users.email == current_user.email
+        ).first()
+        
+        # Cancel the lease
+        old_status = active_lease.status
+        active_lease.status = LeaseStatus.canceled
+        active_lease.canceled_time = get_sk_date()
+        active_lease.status_updated_at = get_sk_date()
+        active_lease.last_changed_by = current_user_db.id if current_user_db else None
+        
+        # Update car status to available
+        car.status = CarStatus.available
+        
+        # Create change log entry
+        change_log = model.LeaseChangeLog(
+            id_lease=active_lease.id,
+            changed_by=current_user_db.id if current_user_db else None,
+            previous_status=old_status,
+            new_status=LeaseStatus.canceled,
+            note=f"Lease cancelled by {current_user.email}"
+        )
+        db.add(change_log)
+        
+        # Send notification if manager/admin is cancelling for someone else
+        if (current_user.role in [model.UserRoles.manager, model.UserRoles.admin] and 
+            current_user.email != recipient_email):
+            
+            # TODO: Implement notification system for FastAPI
+            # This would replace the Firebase messaging from the old Flask app
+            # For now, we'll just log that a notification should be sent
+            print(f"NOTIFICATION: Lease cancelled by {current_user.email} for {recipient_email}, car: {car.name}")
+        
+        db.commit()
+        
+        return leaseCancelResponse(cancelled=True)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error cancelling lease: {str(e)}"
+        )
 
 @app.post("/v2/get_monthly_leases", response_model=list[monthlyLeasesResponse])
 async def get_monthly_leases(request: monthly_leases_req, current_user: Annotated[User, Depends(get_current_user)]):
