@@ -225,6 +225,7 @@ class cancel_lease_req(BaseModel):
     recipient: Annotated[str | None, Field(default=None, description="Whose lease to cancel, if not manager users email is utilized instead.")]
     car_name:  str
     car_id:    Annotated[int | None, Field(description="If ID is available use it before selecting with car name")]
+    lease_id:  Annotated[int | None, Field(description="Needed to know for sure which lease to cancel")]
 
 class lease_car_req(BaseModel):
     recipient:    Annotated[str | None, Field(default=None)]
@@ -1082,11 +1083,11 @@ async def cancel_lease(request: cancel_lease_req, current_user: Annotated[User, 
         
         if not car:
             return leaseCancelResponse(cancelled=False)
-        
-        # Find the most recent active lease for this user and car
+
         active_lease = db.query(model.Leases).filter(
             model.Leases.id_user == recipient_user.id,
             model.Leases.id_car == car.id,
+            model.Leases.id == request.lease_id,
             model.Leases.status.in_([LeaseStatus.scheduled, LeaseStatus.active])
         ).order_by(model.Leases.id.desc()).first()
         
@@ -1105,8 +1106,10 @@ async def cancel_lease(request: cancel_lease_req, current_user: Annotated[User, 
         active_lease.status_updated_at = get_sk_date()
         active_lease.last_changed_by = current_user_db.id if current_user_db else None
         
-        # Update car status to available
-        car.status = CarStatus.available
+        # TODO: CHECK IF WE EVEN WANT TO DO THIS
+        # AS THE CAR CAN BE LEASED INTO THE FUTURE AND THEN CANCELLED
+        # WE SHOULD NOT CHANGE THE CAR STATUS TO AVAILABLE, as its kinda redundant
+        #car.status = CarStatus.available
         
         # Create change log entry
         change_log = model.LeaseChangeLog(
