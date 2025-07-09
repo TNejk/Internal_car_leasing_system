@@ -716,14 +716,126 @@ async def get_full_car_info(request: car_information_req, current_user: Annotate
     pass
 
 @app.post("/v2/get_all_car_info", response_model=list[car_info_response])
-async def get_all_car_info(current_user: Annotated[User, Depends(get_current_user)]):
+async def get_all_car_info(current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Get information about all cars (admin only)"""
-    pass
+    
+    # Check if user is admin
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized access. Admin role required.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+    try:
+        # Get all non-deleted cars
+        cars = db.query(model.Cars).filter(
+            model.Cars.is_deleted == False
+        ).all()
+        
+        if not cars:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No cars found"
+            )
+        
+        car_info_list = []
+        
+        for car in cars:
+            # Get decommission time - set to None for now since DecommissionedCars model doesn't exist
+            decommission_time = None
+            
+            # Get allowed hours (active leases and requests)
+            allowed_hours = []
+            
+            # Get active leases for this car
+            active_leases = db.query(model.Leases).filter(
+                model.Leases.id_car == car.id,
+                model.Leases.status.in_([LeaseStatus.scheduled, LeaseStatus.active])
+            ).all()
+            
+            for lease in active_leases:
+                allowed_hours.append([lease.start_time, lease.end_time])
+            
+            # Get active requests for this car
+            active_requests = db.query(model.LeaseRequests).filter(
+                model.LeaseRequests.id_car == car.id,
+                model.LeaseRequests.status == RequestStatus.pending
+            ).all()
+            
+            for request in active_requests:
+                allowed_hours.append([request.start_time, request.end_time])
+            
+            car_info_list.append(car_info_response(
+                car_id=car.id,
+                spz=car.plate_number,
+                car_type=car.category.value,
+                gearbox_type=car.gearbox_type.value,
+                fuel_type=car.fuel_type.value,
+                region=car.region.value,
+                car_status=car.status.value,
+                seats=car.seats,
+                type=car.category,
+                usage_metric=car.usage_metric,
+                image_url=car.img_url,
+                decommision_time=decommission_time,
+                allowed_hours=allowed_hours
+            ))
+        
+        return car_info_list
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving car information: {str(e)}"
+        )
 
 @app.post("/v2/get_all_user_info", response_model=list[user_info_response])
-async def get_all_user_info(current_user: Annotated[User, Depends(get_current_user)]):
+async def get_all_user_info(current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Get information about all users (admin only)"""
-    pass
+    
+    # Check if user is admin
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized access. Admin role required.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+    try:
+        # Get all non-deleted users except admin users
+        users = db.query(model.Users).filter(
+            model.Users.is_deleted == False,
+            model.Users.name != 'admin'  # Exclude admin users as per original Flask logic
+        ).all()
+        
+        if not users:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No users found"
+            )
+        
+        user_info_list = []
+        
+        for user in users:
+            user_info_list.append(user_info_response(
+                user_id=user.id,
+                username=user.name,
+                email=user.email,
+                role=user.role.value
+            ))
+        
+        return user_info_list
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving user information: {str(e)}"
+        )
 
 @app.post("/v2/list_reports", response_model=report_list_response)
 async def list_reports(current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
