@@ -22,7 +22,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import messaging
 import smtplib, ssl
-from dotenv import load_dotenv, dotenv_values
+from dotenv import load_dotenv
 load_dotenv()
 from db.models import *
 
