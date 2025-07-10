@@ -25,7 +25,7 @@ class ErrorResponse(BaseModel):
     status: bool
     msg: str
 
-#? used for every endpoint with a simple true false response
+# used for every endpoint with a simple true false response
 class DefaultResponse(BaseModel):
     status: bool
     msg: Annotated[str | None, Field(default=None)]
@@ -35,12 +35,12 @@ class DefaultResponse(BaseModel):
 #######################################################
 #                   UTILITY MODELS                    #
 #######################################################
-USER_ROLES = {
+USER_ROLES = [
     "user",
     "manager",
     "admin",
     "system"
-}
+]
 
 bratislava_tz = pytz.timezone('Europe/Bratislava')
 
@@ -96,7 +96,6 @@ def convert_to_datetime(string):
             return dt_obj
         except ValueError as e:
             raise ValueError(f"Invalid datetime format: {string}") from e
-        
 
 def ten_minute_tolerance(a_timeof, today):
     """ Gives user 10 minutes ofleaniency to lease a car before a lease from the past error. """
@@ -140,147 +139,14 @@ def get_reports_paths(folder_path):
     except OSError:  # Specific exception > bare except!  
         return None
 
-
-
-##################################################################
-#                      User REQUEST models                       #
-# ################################################################
-
-class RegisterRequest(BaseModel):
-    email: Annotated[str, Field(min_length=9)]
-    password: Annotated[str, Field(min_length=15)]
-    role: Annotated[str, Field(examples=["manager", "user", "admin", "system"])]
-    name: Annotated[str, Field(min_length=4)]
-
-class login_obj(BaseModel):
-    email: str
-    password: str
-
-class user_edit_req(BaseModel):
-    email: Annotated[str | None, Field(min_length=9)] # @gamo.sk = 8 char
-    password: Annotated[str | None, Field(default=None)]
-    role: Annotated[str | None, Field(default=None)]
-    name: Annotated[str | None, Field(default=None)]
-
-class car_creation_req(BaseModel):
-    car_name:   Annotated[str, Field(max_length=30, min_length=4)]
-    car_type:   Annotated[str, Field(examples=["personal", "cargo"])]
-    spz:        Annotated[str, Field(min_length=7)]
-    gas_type:   Annotated[str, Field(examples=['benzine','naft','diesel','electric'])]
-    drive_type: Annotated[str, Field(examples=["manual", "automatic"])]
-    car_image:  Annotated[str, Field(description=".jpg or .png only")]
-
-class car_editing_req(BaseModel):
-    car_name:   Annotated[str | None, Field(default=None)]
-    car_type:   Annotated[str | None, Field(default=None, examples=["personal", "cargo"])]
-    car_status: Annotated[str | None, Field(default=None, examples=['available','away','unavailable','decommissioned'])]
-    spz:        Annotated[str | None, Field(default=None, min_length=7)]
-    gas_type:   Annotated[str | None, Field(default=None, examples=['benzine','naft','diesel','electric'])]
-    drive_type: Annotated[str | None, Field(default=None, examples=['manual','automatic'])]
-    car_image:  Annotated[str | None, Field(default=None)]
-
-class car_deletion_req(BaseModel):
-    car_id: int
-
-class user_deletion_req(BaseModel):
-    email: str
-    user_id: Annotated[int | None, Field(description="If ID is available use it")]
-
-
-class car_decommision_req(BaseModel):
-    car_name: str
-    time_from: Annotated[datetime, Field(examples=[""], description="CET time when the car was decommisoned.")]
-    time_to:   Annotated[datetime, Field(examples=[""], description="CET time when the car will be active again.")]
-
-class car_activation_req(BaseModel):
-    car_name: str
-    car_id: Annotated[int | None, Field(description="If ID is available use it before selecting with car name")]
-
-class car_information_req(BaseModel):
-    car_id: int
-
-# class user_information_req(BaseModel):
-# This will only use headers to get the email and role 
-# class report_list is the same  
-
-class report_req(BaseModel):
-    path: Annotated[Path, Field(description="Path and filename to a locally stored excel report.")]
-
-class car_starting_date_req(BaseModel):
-    car_name: str
-    car_id: Annotated[int | None, Field(description="If ID is available use it before selecting with car name")]
-
-class leases_list_req(BaseModel):
-    filter_email:             Annotated[str | None, Field(default=None)]
-    filter_car_id:            Annotated[int | None, Field(default=None)]
-    filter_time_from:         Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
-    filter_time_to:           Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
-    filter_active_leases:     Annotated[bool | None, Field(examples=["Active leases"],   default=None)]
-    filter_incactive_leases:  Annotated[bool | None, Field(examples=["InActive leases"], default=None)]
-
-class monthly_leases_req(BaseModel):
-    month: Annotated[int, Field(description="Which month to filter leases by.")]
-
-class cancel_lease_req(BaseModel):
-    recipient: Annotated[str | None, Field(default=None, description="Whose lease to cancel, if not manager users email is utilized instead.")]
-    car_name:  str
-    car_id:    Annotated[int | None, Field(description="If ID is available use it before selecting with car name")]
-    lease_id:  Annotated[int | None, Field(description="Needed to know for sure which lease to cancel")]
-
-class lease_car_req(BaseModel):
-    recipient:    Annotated[str | None, Field(default=None)]
-    car_id:       int
-    private_ride: bool
-    private_trip: bool
-    trip_participants: Annotated[list[str] | None, Field(examples=["['user@gamo.sk', 'user2@gamo.sk']"], default=None)] 
-    time_from:    Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
-    time_to:      Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
-
-class approve_pvr_req(BaseModel):
-    approval:   bool
-    request_id: int
-    time_from:  Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
-    time_to:    Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
-    car_id:     int
-    requester:  Annotated[str, Field(description="User who requested the private ride",  default=None)]
-
-class return_car_req(BaseModel):
-    lease_id:        int
-    time_of_return:  Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
-    return_location: str
-    damaged:         bool
-    dirty_car:       bool
-    interior_damage: bool
-    exterior_damage: bool
-    collision:       bool
-
-
-class read_notification_req(BaseModel):
-    notification_id: int
-
-class trip_join_request_req(BaseModel):
-    trip_id: int
-
-class trip_invite_response_req(BaseModel):
-    invite_id: int
-    accepted: bool
-
-class trip_join_response_req(BaseModel):
-    request_id: int
-    approved: bool
-
 #################################################################
 #                    API RESPONSE MODELS                        #
 #################################################################
 
-class login_response(BaseModel):
-    token: str
-    role:  Annotated[str, Field(examples=["manager", "user", "admin"])]
-    email: str
 
 class user_list_response(BaseModel):
-    """ A list of all users and their roles in a dict. """
-    users: Annotated[list[User] | None, Field(default=None, examples=["{email: user@gamo.sk, role: manager}"])]
+  """ A list of all users and their roles in a dict. """
+  users: Annotated[list[User] | None, Field(default=None, examples=["{email: user@gamo.sk, role: manager}"])]
 
 # class single_car_response(BaseModel):
 #     """ Redundant function, does the same as car_info_response. """
@@ -359,10 +225,8 @@ class leaseEntry(BaseModel):
     last_changed_by:      str
     region_tag:           Annotated[str, Field(examples=['local', 'global'])]
 
-
 class leaseListResponse(BaseModel):
     active_leases: list[leaseEntry]
-
 
 class leaseCancelResponse(BaseModel):
     cancelled: bool
@@ -429,7 +293,6 @@ class tripInviteEntry(BaseModel):
 
 class tripInviteListResponse(BaseModel):
     invites: list[tripInviteEntry]
-
 
 #######################################################
 #                 APP INITIALIZATION                  #
@@ -562,7 +425,7 @@ async def register(request: RegisterRequest, current_user: Annotated[User, Depen
     
     http_exception = HTTPException(status_code=401, detail="Unauthorized.")
     
-    if admin_or_manager(current_user.role) == False:
+    if not admin_or_manager(current_user.role):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Unauthorized access. Admin or manager role required.",
@@ -576,9 +439,8 @@ async def register(request: RegisterRequest, current_user: Annotated[User, Depen
 
 
 @app.post("/v2/login", response_model=login_response)
-async def login(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: Session = Depends(connect_to_db)):
+async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(connect_to_db)):
+
     """ Login user to app, returns a login_response obj that includes a token and role email combo. """
     user = authenticate_user(
         email=form_data.username, 
@@ -705,7 +567,7 @@ async def get_car_list(
 
     
 
-@app.post("/v2/decommision_car", response_model=DefaultResponse)
+@app.post("/v2/decommission_car", response_model=DefaultResponse)
 async def decommision_car(request: car_decommision_req, current_user: Annotated[User, Depends(get_current_user)]):
     """Decommission a car for maintenance (manager/v2/admin only)"""
     pass

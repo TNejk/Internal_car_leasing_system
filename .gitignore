@@ -1,4 +1,4 @@
 /.idea
 *.pyc
 .idea/autodoprava_web.iml
-api/env
+api/.env
