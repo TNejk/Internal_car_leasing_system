@@ -19,3 +19,4 @@ web_app/workers/__pycache__/request_all_car_data.cpython-312.pyc
 web_app/workers/__pycache__/request_monthly_leases.cpython-312.pyc
 web_app/workers/__pycache__/request_user_leases.cpython-312.pyc
 web_app/workers/__pycache__/sign_in_api.cpython-312.pyc
+.env

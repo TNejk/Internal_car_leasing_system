@@ -34,10 +34,6 @@ from activation import activation
 from dotenv import load_dotenv
 load_dotenv()
 
-import 
-
-import 
-
 sys.path.append('misc')
 from load_icons import load_icons
 
