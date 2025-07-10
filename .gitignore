@@ -1,5 +1,4 @@
 /.idea
 *.pyc
-/.idea
-/.idea
 .idea/workspace.xml
+/api

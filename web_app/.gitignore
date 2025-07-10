@@ -2,6 +2,7 @@ docker-compose.yml
 Dockerfile
 /.idea
 /.venv
+/.api
 web_app/controllers/__pycache__/require_role.cpython-312.pyc
 *.pyc
 web_app/workers/__pycache__/sign_in_api.cpython-312.pyc
