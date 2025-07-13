@@ -1,4 +1,7 @@
 from pydantic import BaseModel
 
-class read_notification_req(BaseModel):
+class NotificationRead(BaseModel):
   notification_id: int
+
+class NotificationGet(BaseModel):
+  user_id: int

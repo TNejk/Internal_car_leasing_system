@@ -13,11 +13,16 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+from dotenv import load_dotenv
+load_dotenv()
 from db.database import SessionLocal
 import db.models as model
 from db.enums import *
+import models.request as moreq
+import models.response as mores
 
-
+regreq = moreq.RegisterRequest
+print(regreq)
 ##################################################################
 #                   Default multi use models                     #
 ##################################################################
@@ -420,7 +425,7 @@ async def logout(current_user: Annotated[User, Depends(get_current_user)]):
     pass
 
 @app.post("/v2/register", response_model=DefaultResponse)
-async def register(request: RegisterRequest, current_user: Annotated[User, Depends(get_current_user)]):
+async def register(request: moreq.RegisterRequest, current_user: Annotated[User, Depends(get_current_user)]):
     """Register a new user (admin only)"""
     
     http_exception = HTTPException(status_code=401, detail="Unauthorized.")
@@ -438,7 +443,7 @@ async def register(request: RegisterRequest, current_user: Annotated[User, Depen
     pass
 
 
-@app.post("/v2/login", response_model=login_response)
+@app.post("/v2/login", response_model=mores.LoginResponse)
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(connect_to_db)):
 
     """ Login user to app, returns a login_response obj that includes a token and role email combo. """
@@ -468,7 +473,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: 
 
 
 @app.post("/v2/edit_user", response_model=DefaultResponse)
-async def edit_user(request: user_edit_req, current_user: Annotated[User, Depends(get_current_user)]):
+async def edit_user(request: moreq.UserEditReq, current_user: Annotated[User, Depends(get_current_user)]):
     """Edit user information (admin only)"""
     
     pass

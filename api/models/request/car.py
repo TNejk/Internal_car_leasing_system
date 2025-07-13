@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, Annotated
 from datetime import datetime
 
-class CarCreationReq(BaseModel):
+class CarCreate(BaseModel):
   car_name: Annotated[str, Field(max_length=30, min_length=4)]
   car_type: Annotated[str, Field(examples=["personal", "cargo"])]
   spz: Annotated[str, Field(min_length=7)]
@@ -11,7 +11,7 @@ class CarCreationReq(BaseModel):
   car_image: Annotated[str, Field(description=".jpg or .png only")]
 
 
-class CarEditingReq(BaseModel):
+class CarEdit(BaseModel):
   car_id: int
   car_name: Annotated[str | None, Field(default=None)]
   car_type: Annotated[str | None, Field(default=None, examples=["personal", "cargo"])]
@@ -23,20 +23,20 @@ class CarEditingReq(BaseModel):
   car_image: Annotated[str | None, Field(default=None)]
 
 
-class CarDeletionReq(BaseModel):
+class CarDelete(BaseModel):
   car_id: int
 
 
-class CarDecommissionReq(BaseModel):
+class CarDecommission(BaseModel):
   car_id: int
   time_from: Annotated[datetime, Field(examples=["YYYY DD-MM hh:mm:ss"], description="CET time when the car was decommisoned.")]
   time_to: Annotated[datetime, Field(examples=["YYYY DD-MM hh:mm:ss"], description="CET time when the car will be active again.")]
 
 
-class CarActivationReq(BaseModel):
+class CarActivation(BaseModel):
   car_id: int
   car_id: Annotated[int | None, Field(description="If ID is available use it before selecting with car name")]
 
 
-class CarInformationReq(BaseModel):
+class CarInfo(BaseModel):
   car_id: int
