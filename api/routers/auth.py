@@ -47,7 +47,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: 
       headers={"WWW-Authenticate": "Bearer"}
     )
 
-  access_token = dependencies.auth.create_access_token(
+  access_token = create_access_token(
     data={"sub": user.email, "role": user.role},
     expires_delta=timedelta(minutes=TOKEN_EXPIRATION_MINUTES)
   )
