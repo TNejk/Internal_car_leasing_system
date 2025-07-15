@@ -33,7 +33,6 @@ from decommission import decommission
 from activation import activation
 from dotenv import load_dotenv
 load_dotenv()
-
 sys.path.append('misc')
 from load_icons import load_icons
 
