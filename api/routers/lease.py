@@ -3,11 +3,12 @@ from typing import Annotated
 import api_models.response as mores
 import api_models.request as moreq
 import api_models.default as modef
-from internal.dependencies import connect_to_db, get_current_user, admin_or_manager
+from internal.dependencies import connect_to_db, get_current_user, admin_or_manager, calculate_usage_metric
 from internal.dependencies.timedates import get_sk_date, ten_minute_tolerance
 from sqlalchemy.orm import Session
 import db.models as model
 from db.enums import LeaseStatus, RequestStatus, CarStatus, UserRoles, Regions, TripsStatuses, TripsInviteStatus
+from datetime import timedelta
 
 router = APIRouter(prefix="/v2/lease", tags=["lease"])
 
@@ -415,8 +416,118 @@ async def approve_request(request: moreq.LeasePrivateApprove,
   pass
 
 
+
+
 @router.post("/return_car", response_model=modef.DefaultResponse)
-async def return_car(request: moreq.LeaseFinish, current_user: Annotated[modef.User, Depends(get_current_user)]):
+async def return_car(request: moreq.LeaseFinish, 
+                     current_user: Annotated[modef.User, Depends(get_current_user)],
+                     db: Session = Depends(connect_to_db)):
   """Return a leased car"""
-  pass
+  try:
+    lease = db.query(model.Leases).filter(
+      model.Leases.id == request.lease_id
+    ).first()
+    
+    if not lease:
+      raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Lease not found"
+      )
+    
+    user = db.query(model.Users).filter(
+      model.Users.email == current_user.email,
+      model.Users.is_deleted == False
+    ).first()
+    
+    if not user:
+      raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="User not found"
+      )
+    
+    is_manager_or_admin = admin_or_manager(current_user.role)
+    
+    if lease.id_user != user.id and not is_manager_or_admin:
+      raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Unauthorized to return this lease"
+      )
+    
+    if lease.status == LeaseStatus.returned:
+      raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Lease already returned"
+      )
+    
+    car = db.query(model.Cars).filter(
+      model.Cars.id == lease.id_car
+    ).first()
+    
+    if not car:
+      raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Car not found"
+      )
+    
+    current_time = get_sk_date()
+    return_time = request.time_of_return or current_time
+    
+    region_mapping = {
+      "Bratislava": Regions.local,
+      "Banská Bystrica": Regions.local,
+      "Kosice": Regions.local,
+      "Private": Regions._global,
+    }
+    return_region = region_mapping.get(request.return_location, Regions.local)
+    
+    old_status = lease.status
+    lease.status = LeaseStatus.returned
+    lease.return_time = return_time
+    lease.note = None
+    lease.is_damaged = request.damaged
+    lease.dirty = request.dirty_car
+    lease.exterior_damage = request.exterior_damage
+    lease.interior_damage = request.interior_damage
+    lease.collision = request.collision
+    lease.status_updated_at = current_time
+    lease.last_changed_by = user.id
+    
+    car.status = CarStatus.available
+    car.region = return_region
+    
+    usage_metric = calculate_usage_metric(car.id, db)
+    car.usage_metric = usage_metric
+    
+    change_log = model.LeaseChangeLog(
+      id_lease=lease.id,
+      changed_by=user.id,
+      previous_status=old_status,
+      new_status=LeaseStatus.returned,
+      note=f"Car returned by {current_user.email}"
+    )
+    db.add(change_log)
+    
+    trip = db.query(model.Trips).filter(
+      model.Trips.id_lease == lease.id
+    ).first()
+    
+    if trip:
+      trip.status = TripsStatuses.ended
+    
+    db.commit()
+    
+    if request.damaged:
+      print(f"NOTIFICATION: Car {car.name} returned with damage by {current_user.email}")
+    
+    return modef.DefaultResponse(status=True, msg="Car returned successfully")
+    
+  except HTTPException:
+    raise
+  except Exception as e:
+    db.rollback()
+    raise HTTPException(
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+      detail=f"Error returning car: {str(e)}"
+    )
+
 

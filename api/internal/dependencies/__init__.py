@@ -8,6 +8,6 @@ __all__ = ['USER_ROLES', 'admin_or_manager',
            'get_reports_directory', 'find_reports_directory',
            'convert_to_datetime', 'ten_minute_tolerance', 'get_sk_date',
            'verify_password', 'get_password_hash', 'authenticate_user', 'create_access_token', 'get_existing_user', 'get_current_user',
-           'connect_to_db'
+           'connect_to_db', 'calculate_usage_metric'
 
            ]
