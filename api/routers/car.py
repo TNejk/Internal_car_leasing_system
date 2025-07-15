@@ -11,11 +11,11 @@ from db.enums import CarStatus, LeaseStatus, RequestStatus
 router = APIRouter(prefix='/v2/cars', tags=['cars'])
 
 @router.get("/get_car_list", response_model=mores.CarListResponse)
-async def get_car_list(current_user: Annotated[modef.User, Depends(get_current_user)]):
+async def get_car_list(current_user: Annotated[modef.User, Depends(get_current_user)],
+                       db: Session = Depends(connect_to_db)): # Here we used a dependency to get the database session instead of creating a new one
   """Get list of all cars with basic information"""
-  session = connect_to_db()
-
-  cars = session.query(model.Cars).filter(
+  
+  cars = db.query(model.Cars).filter(
     model.Cars.is_deleted == False,
     model.Cars.status != CarStatus.unavailable,
   ).order_by(model.Cars.usage_metric.asc()).all()
@@ -66,14 +66,14 @@ async def activate_car(request: moreq.CarActivation, current_user: Annotated[mod
 
 
 @router.post("/get_full_car_info", response_model=mores.CarInfoResponse)
-async def get_full_car_info(request: moreq.CarInfo, current_user: Annotated[modef.User, Depends(get_current_user)]):
+async def get_full_car_info(request: moreq.CarInfo, 
+                           current_user: Annotated[modef.User, Depends(get_current_user)],
+                           db: Session = Depends(connect_to_db)):
   """Get complete car information including availability"""
-  
-  session = connect_to_db()
   
   try:
     # Get the car by ID
-    car = session.query(model.Cars).filter(
+    car = db.query(model.Cars).filter(
       model.Cars.id == request.car_id,
       model.Cars.is_deleted == False
     ).first()
@@ -92,7 +92,7 @@ async def get_full_car_info(request: moreq.CarInfo, current_user: Annotated[mode
     allowed_hours = []
     
     # Get active leases for this car
-    active_leases = session.query(model.Leases).filter(
+    active_leases = db.query(model.Leases).filter(
       model.Leases.id_car == car.id,
       model.Leases.status.in_([LeaseStatus.scheduled, LeaseStatus.active])
     ).all()
@@ -101,7 +101,7 @@ async def get_full_car_info(request: moreq.CarInfo, current_user: Annotated[mode
       allowed_hours.append([lease.start_time, lease.end_time])
     
     # Get active private ride requests for this car
-    active_requests = session.query(model.LeaseRequests).filter(
+    active_requests = db.query(model.LeaseRequests).filter(
       model.LeaseRequests.id_car == car.id,
       model.LeaseRequests.status == RequestStatus.pending
     ).all()
@@ -132,8 +132,6 @@ async def get_full_car_info(request: moreq.CarInfo, current_user: Annotated[mode
       status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
       detail=f"Error retrieving car information: {str(e)}"
     )
-  finally:
-    session.close()
 
 
 @router.post("/get_all_car_info", response_model=list[mores.CarInfoResponse])
