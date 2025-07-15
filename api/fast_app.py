@@ -110,7 +110,7 @@ ALGORITHM = "HS256"
 TOKEN_EXPIRATION_MINUTES = 30
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated ="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 #! app = FastAPI(docs_url=None, redoc_url=None)
@@ -127,27 +127,8 @@ def connect_to_db():
         db.close()
 
 
-
-
-SECRET_KEY = os.environ.get('SECRET_KEY')
-ALGORITHM = "HS256"
-TOKEN_EXPIRATION_MINUTES = 30
-
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-#! app = FastAPI(docs_url=None, redoc_url=None)
-#! 
-# V produkcií, nenechať otvorenú dokumentáciu svetu!!
-app = FastAPI()
-
-
 def verify_password(plain_password, hashed_password):
-
     salted_pass = LOGIN_SALT + plain_password + LOGIN_SALT
-    salted_pass = get_password_hash(salted_pass)
-
     return pwd_context.verify(salted_pass, hashed_password)
 
 def get_password_hash(password):
