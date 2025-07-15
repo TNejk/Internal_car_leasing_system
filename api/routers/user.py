@@ -23,12 +23,11 @@ async def delete_user(request: moreq.UserDelete, current_user: Annotated[modef.U
   pass
 
 @router.get("/v2/get_users", response_model=mores.UserList)
-async def get_users(current_user: Annotated[modef.User, Depends(get_current_user)]):
+async def get_users(current_user: Annotated[modef.User, Depends(get_current_user)],
+                    db: Session = Depends(connect_to_db)):
   """Get list of all users (manager/v2/admin only)"""
 
-  session = connect_to_db()
-
-  if not session:
+  if not db:
     return HTTPException(
       status_code=500,
       detail="Error getting users!",
@@ -36,7 +35,7 @@ async def get_users(current_user: Annotated[modef.User, Depends(get_current_user
     )
 
   # Get all users, that are not disabled
-  users = session.query(model.Users).filter(
+  users = db.query(model.Users).filter(
     model.Users.is_deleted == False,
     model.Users.role != UserRoles.admin
   ).all()
