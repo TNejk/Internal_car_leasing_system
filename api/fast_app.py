@@ -196,7 +196,7 @@ def get_existing_user(email: str, role: str, db: Session) -> modef.User:
     if not db_user:
         return None
     
-    return mores.User(
+    return modef.User(
         email=db_user.email,
         role=db_user.role.value,
         username=db_user.name,
@@ -216,7 +216,7 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session 
         role = payload.get("role")
         if email is None or role is None:
             raise cred_exception
-        token_data = mores.TokenData(email=email, role=role)
+        token_data = tokemod.TokenData(email=email, role=role)
     
     except InvalidTokenError:
         raise cred_exception
@@ -257,7 +257,7 @@ async def register(request: moreq.UserRegister, current_user: Annotated[modef.Us
     pass
 
 
-@app.post("/v2/login", response_model=moreq.LoginResponse)
+@app.post("/v2/login", response_model=mores.LoginResponse)
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(connect_to_db)):
 
     """ Login user to app, returns a login_response obj that includes a token and role email combo. """
@@ -279,35 +279,36 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: 
         expires_delta=timedelta(minutes=TOKEN_EXPIRATION_MINUTES)
     )
     
-    return moreq.login_response(
+    return mores.LoginResponse(
         token=access_token,
-        token_type="bearer"
+        email=user.email,
+        role=user.role
     )
 
 
 @app.post("/v2/edit_user", response_model=modef.DefaultResponse)
-async def edit_user(request: moreq.UserEditReq, current_user: Annotated[modef.User, Depends(get_current_user)]):
+async def edit_user(request: moreq.UserEdit, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Edit user information (admin only)"""
     
     pass
 
 @app.post("/v2/create_car", response_model=modef.DefaultResponse)
-async def create_car(request: moreq.car_creation_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
+async def create_car(request: moreq.CarCreate, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Create a new car (admin only)"""
     pass
 
 @app.post("/v2/edit_car", response_model=modef.DefaultResponse)
-async def edit_car(request: moreq.car_editing_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
+async def edit_car(request: moreq.CarEdit, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Edit car information (admin only)"""
     pass
 
 @app.post("/v2/delete_car", response_model=modef.DefaultResponse)
-async def delete_car(request: moreq.car_deletion_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
+async def delete_car(request: moreq.CarDelete, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Delete a car (admin only)"""
     pass
 
 @app.post("/v2/delete_user", response_model=modef.DefaultResponse)
-async def delete_user(request: moreq.user_deletion_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
+async def delete_user(request: moreq.UserDelete, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Delete a user (admin only)"""
     pass
 
@@ -341,14 +342,14 @@ async def get_users(current_user: Annotated[modef.User, Depends(get_current_user
             )
         )
 
-    return mores.user_list_response(
+    return mores.UserList(
         users=user_list
     )
 
 
     
 
-@app.get("/v2/get_car_list", response_model=mores.carListResponse)
+@app.get("/v2/get_car_list", response_model=mores.CarListResponse)
 async def get_car_list(
     current_user: Annotated[modef.User, Depends(get_current_user)],
 ):
@@ -364,7 +365,7 @@ async def get_car_list(
     list_car = []        
     for car in cars:
         list_car.append(
-            mores.list_car_reponse(
+            mores.CarListContent(
                 car_id= car.id,
                 car_name= car.name,
                 car_status=  car.status,
@@ -378,29 +379,29 @@ async def get_car_list(
             )
         )
     
-    return mores.carListResponse(
+    return mores.CarListResponse(
         car_list= list_car
     )
 
 
     
 
-@app.post("/v2/decommission_car", response_model=mores.DefaultResponse)
-async def decommision_car(request: moreq.car_decommision_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
+@app.post("/v2/decommission_car", response_model=modef.DefaultResponse)
+async def decommision_car(request: moreq.CarDecommission, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Decommission a car for maintenance (manager/v2/admin only)"""
     pass
 
-@app.post("/v2/activate_car", response_model=mores.DefaultResponse)
-async def activate_car(request: moreq.car_activation_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
+@app.post("/v2/activate_car", response_model=modef.DefaultResponse)
+async def activate_car(request: moreq.CarActivation, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Activate a decommissioned car (manager/v2/admin only)"""
     pass
 
-@app.post("/v2/get_full_car_info", response_model=mores.car_info_response)
-async def get_full_car_info(request: moreq.car_information_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
+@app.post("/v2/get_full_car_info", response_model=mores.CarInfoResponse)
+async def get_full_car_info(request: moreq.CarInfo, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Get complete car information including availability"""
     pass
 
-@app.post("/v2/get_all_car_info", response_model=list[mores.car_info_response])
+@app.post("/v2/get_all_car_info", response_model=list[mores.CarInfoResponse])
 async def get_all_car_info(current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Get information about all cars (admin only)"""
     
@@ -450,7 +451,7 @@ async def get_all_car_info(current_user: Annotated[modef.User, Depends(get_curre
             for request in active_requests:
                 allowed_hours.append([request.start_time, request.end_time])
             
-            car_info_list.append(mores.car_info_response(
+            car_info_list.append(mores.CarInfoResponse(
                 car_id=car.id,
                 spz=car.plate_number,
                 car_type=car.category.value,
@@ -476,7 +477,7 @@ async def get_all_car_info(current_user: Annotated[modef.User, Depends(get_curre
             detail=f"Error retrieving car information: {str(e)}"
         )
 
-@app.post("/v2/get_all_user_info", response_model=list[mores.user_info_response])
+@app.post("/v2/get_all_user_info", response_model=list[mores.UserInfoResponse])
 async def get_all_user_info(current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Get information about all users (admin only)"""
     
@@ -503,7 +504,7 @@ async def get_all_user_info(current_user: Annotated[modef.User, Depends(get_curr
         user_info_list = []
         
         for user in users:
-            user_info_list.append(mores.user_info_response(
+            user_info_list.append(mores.UserInfoResponse(
                 user_id=user.id,
                 username=user.name,
                 email=user.email,
@@ -520,7 +521,7 @@ async def get_all_user_info(current_user: Annotated[modef.User, Depends(get_curr
             detail=f"Error retrieving user information: {str(e)}"
         )
 
-@app.post("/v2/list_reports", response_model=mores.report_list_response)
+@app.post("/v2/list_reports", response_model=mores.ReportList)
 async def list_reports(current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """List available reports (manager/admin only)"""
     
@@ -558,7 +559,7 @@ async def list_reports(current_user: Annotated[modef.User, Depends(get_current_u
                 detail="Error accessing reports directory"
             )
         
-        return mores.report_list_response(reports=report_paths)
+        return mores.ReportList(reports=report_paths)
         
     except HTTPException:
         raise
@@ -628,8 +629,8 @@ async def get_report(filename: str, current_user: Annotated[modef.User, Depends(
             detail=f"Error accessing file: {str(e)}"
         )
 
-@app.post("/v2/get_leases", response_model=mores.leaseListResponse)
-async def get_leases(request: moreq.leases_list_req, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+@app.post("/v2/get_leases", response_model=mores.LeaseList)
+async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Get list of leases with optional filtering"""
     try:
         # Build base query with joins
@@ -697,7 +698,7 @@ async def get_leases(request: moreq.leases_list_req, current_user: Annotated[mod
                 if changed_by_user:
                     last_changed_by_name = changed_by_user.email
             
-            lease_entries.append(mores.leaseEntry(
+            lease_entries.append(modef.Lease(
                 lease_id=lease.id,
                 lease_status=lease.status.value,
                 creation_time=lease.create_time,
@@ -714,7 +715,7 @@ async def get_leases(request: moreq.leases_list_req, current_user: Annotated[mod
                 region_tag=lease.region_tag.value
             ))
         
-        return mores.leaseListResponse(active_leases=lease_entries)
+        return mores.LeaseList(active_leases=lease_entries)
         
     except HTTPException:
         raise
@@ -724,8 +725,8 @@ async def get_leases(request: moreq.leases_list_req, current_user: Annotated[mod
             detail=f"Error retrieving leases: {str(e)}"
         )
 
-@app.post("/v2/cancel_lease", response_model=mores.leaseCancelResponse)
-async def cancel_lease(request: moreq.cancel_lease_req, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+@app.post("/v2/cancel_lease", response_model=mores.LeaseCancel)
+async def cancel_lease(request: moreq.LeaseCancel, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Cancel an active lease"""
     try:
         # Determine whose lease to cancel
@@ -746,7 +747,7 @@ async def cancel_lease(request: moreq.cancel_lease_req, current_user: Annotated[
         ).first()
         
         if not recipient_user:
-            return mores.leaseCancelResponse(cancelled=False)
+            return mores.LeaseCancel(cancelled=False)
         
         # Find the car - use either car_id or car_name
         car = None
@@ -762,7 +763,7 @@ async def cancel_lease(request: moreq.cancel_lease_req, current_user: Annotated[
             ).first()
         
         if not car:
-            return mores.leaseCancelResponse(cancelled=False)
+            return mores.LeaseCancel(cancelled=False)
 
         active_lease = db.query(model.Leases).filter(
             model.Leases.id_user == recipient_user.id,
@@ -772,7 +773,7 @@ async def cancel_lease(request: moreq.cancel_lease_req, current_user: Annotated[
         ).order_by(model.Leases.id.desc()).first()
         
         if not active_lease:
-            return mores.leaseCancelResponse(cancelled=False)
+            return mores.LeaseCancel(cancelled=False)
         
         # Get current user for tracking changes
         current_user_db = db.query(model.Users).filter(
@@ -812,7 +813,7 @@ async def cancel_lease(request: moreq.cancel_lease_req, current_user: Annotated[
         
         db.commit()
         
-        return mores.leaseCancelResponse(cancelled=True)
+        return mores.LeaseCancel(cancelled=True)
         
     except HTTPException:
         raise
@@ -823,13 +824,13 @@ async def cancel_lease(request: moreq.cancel_lease_req, current_user: Annotated[
             detail=f"Error cancelling lease: {str(e)}"
         )
 
-@app.post("/v2/get_monthly_leases", response_model=list[mores.monthlyLeasesResponse])
-async def get_monthly_leases(request: moreq.monthly_leases_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
+@app.post("/v2/get_monthly_leases", response_model=list[mores.LeaseMonthly])
+async def get_monthly_leases(request: moreq.LeaseMonthly, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Get leases for a specific month (manager/v2/admin only)"""
     pass
 
-@app.post("/v2/lease_car", response_model=mores.leaseCarResponse)
-async def lease_car(request: moreq.lease_car_req, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+@app.post("/v2/lease_car", response_model=mores.LeaseStart)
+async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Create a lease for a car and optionally create a trip with participants"""
     try:
         car_id = request.car_id
@@ -909,7 +910,7 @@ async def lease_car(request: moreq.lease_car_req, current_user: Annotated[modef.
             
             # TODO: Send notification to managers
             
-            return mores.leaseCarResponse(status=True, private=True, msg="Request for a private ride was sent!")
+            return mores.LeaseStart(status=True, private=True, msg="Request for a private ride was sent!")
 
         # Create the lease
         new_lease = model.Leases(
@@ -976,7 +977,7 @@ async def lease_car(request: moreq.lease_car_req, current_user: Annotated[modef.
         
         # TODO: Send notifications
         
-        return mores.leaseCarResponse(status=True, private=private_ride, msg="Lease created successfully!")
+        return mores.LeaseStart(status=True, private=private_ride, msg="Lease created successfully!")
         
     except Exception as e:
         db.rollback()
@@ -984,7 +985,7 @@ async def lease_car(request: moreq.lease_car_req, current_user: Annotated[modef.
 
 
 @app.post("/v2/trips/join_request", response_model=modef.DefaultResponse)
-async def request_trip_join(request: moreq.trip_join_request_req, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+async def request_trip_join(request: moreq.TripJoinRequest, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Request to join a public trip"""
     try:
         trip = db.query(model.Trips).filter(
@@ -1037,7 +1038,7 @@ async def request_trip_join(request: moreq.trip_join_request_req, current_user: 
 
 
 @app.post("/v2/trips/respond_invite", response_model= modef.DefaultResponse)
-async def respond_trip_invite(request: moreq.trip_invite_response_req, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+async def respond_trip_invite(request: moreq.TripInviteResponse, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Accept or reject a trip invite"""
     try:
         user = db.query(model.Users).filter(model.Users.email == current_user.email).first()
@@ -1094,7 +1095,7 @@ async def respond_trip_invite(request: moreq.trip_invite_response_req, current_u
         return modef.DefaultResponse(status=False, msg=f"Error responding to invite: {str(e)}")
 
 
-@app.get("/v2/trips", response_model=mores.tripListResponse)
+@app.get("/v2/trips", response_model=mores.TripList)
 async def get_trips(current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Get list of available trips"""
     try:
@@ -1111,7 +1112,7 @@ async def get_trips(current_user: Annotated[modef.User, Depends(get_current_user
             creator = db.query(model.Users).filter(model.Users.id == trip.creator).first()
             car = db.query(model.Cars).filter(model.Cars.id == trip.id_car).first()
             
-            trip_list.append(mores.tripEntry(
+            trip_list.append(modef.Trip(
                 trip_id=trip.id,
                 trip_name=trip.trip_name,
                 creator_email=creator.email,
@@ -1125,16 +1126,16 @@ async def get_trips(current_user: Annotated[modef.User, Depends(get_current_user
                 created_at=trip.created_at
             ))
         
-        return mores.tripListResponse(trips=trip_list)
+        return mores.TripList(trips=trip_list)
         
     except Exception as e:
-        return mores.tripListResponse(trips=[])
+        return mores.TripList(trips=[])
 
 
 
 # !
 # TODO: Here you need to get email and car name from id's, ALSO remake the sql table for Lease requests to add a foreign key to the lease table to get the IMG URL AND SUCH
-@app.post("/v2/get_requests", response_model=mores.requestListResponse)
+@app.post("/v2/get_requests", response_model=mores.LeaseRequestList)
 async def get_requests(current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Get pending private ride requests (manager/v2/admin only)"""
     # work with LeaseRequests object 
@@ -1174,12 +1175,12 @@ async def get_requests(current_user: Annotated[modef.User, Depends(get_current_u
 
 
 @app.post("/v2/approve_req", response_model=modef.DefaultResponse)
-async def approve_request(request: moreq.approve_pvr_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
+async def approve_request(request: moreq.LeasePrivateApprove, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Approve or reject a private ride request (manager/v2/admin only)"""
     pass
 
 @app.post("/v2/return_car", response_model=modef.DefaultResponse)
-async def return_car(request: moreq.return_car_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
+async def return_car(request: moreq.LeaseFinish, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Return a leased car"""
     pass
 
@@ -1189,7 +1190,7 @@ async def get_notifications(current_user: Annotated[modef.User, Depends(get_curr
     pass
 
 @app.post("/v2/notifications/v2/mark-as-read", response_model=modef.DefaultResponse)
-async def mark_notification_as_read(request: moreq.read_notification_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
+async def mark_notification_as_read(request: moreq.NotificationRead, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Mark a notification as read"""
     pass
 

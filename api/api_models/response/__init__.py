@@ -9,7 +9,8 @@ __all__ = [
   'LoginResponse',
   'UserList', 'UserInfoResponse',
   'TripList', 'TripJoinRequest', 'TripJoinRequestListResponse', 'TripInvite', 'TripInviteListResponse',
-  'LeaseList', 'LeaseCancel', 'LeaseMonthly', 'LeaseStart', 'LeaseRequest', 'LeaseRequestList',
+  'Lease', 'LeaseList', 'LeaseCancel', 'LeaseMonthly', 'LeaseStart', 'LeaseRequest', 'LeaseRequestList',
+  'ReportList',
   'CarListContent', 'CarListResponse', 'CarInfoResponse',
 
 ]

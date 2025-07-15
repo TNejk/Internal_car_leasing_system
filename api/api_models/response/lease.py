@@ -4,7 +4,7 @@ from typing import Annotated
 from api_models.default import Lease
 
 class LeaseList(BaseModel):
-  active_leases: Lease
+  active_leases: list[Lease]
 
 class LeaseCancel(BaseModel):
   cancelled: bool
