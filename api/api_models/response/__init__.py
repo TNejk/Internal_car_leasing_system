@@ -3,7 +3,7 @@ from .user import UserList, UserInfoResponse
 from .trip import TripList, TripJoinRequest, TripJoinRequestListResponse, TripInvite, TripInviteListResponse
 from .lease import Lease, LeaseList, LeaseCancel, LeaseMonthly, LeaseStart, LeaseRequest, LeaseRequestList
 from .report import ReportList
-from .car import CarListContent, CarListResponse, CarInfoResponse
+from .car import CarListContent, CarListResponse, CarInfoResponse, CarInfoListResponse
 from .notification import NotificationResponse, NotificationListResponse
 
 __all__ = [
@@ -12,7 +12,7 @@ __all__ = [
   'TripList', 'TripJoinRequest', 'TripJoinRequestListResponse', 'TripInvite', 'TripInviteListResponse',
   'Lease', 'LeaseList', 'LeaseCancel', 'LeaseMonthly', 'LeaseStart', 'LeaseRequest', 'LeaseRequestList',
   'ReportList',
-  'CarListContent', 'CarListResponse', 'CarInfoResponse',
+  'CarListContent', 'CarListResponse', 'CarInfoResponse', 'CarInfoListResponse'
   'NotificationResponse', 'NotificationListResponse',
 
 ]
