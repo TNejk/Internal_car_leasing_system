@@ -4,6 +4,7 @@ from .trip import TripList, TripJoinRequest, TripJoinRequestListResponse, TripIn
 from .lease import Lease, LeaseList, LeaseCancel, LeaseMonthly, LeaseStart, LeaseRequest, LeaseRequestList
 from .report import ReportList
 from .car import CarListContent, CarListResponse, CarInfoResponse
+from .notification import NotificationResponse, NotificationListResponse
 
 __all__ = [
   'LoginResponse',
@@ -12,5 +13,6 @@ __all__ = [
   'Lease', 'LeaseList', 'LeaseCancel', 'LeaseMonthly', 'LeaseStart', 'LeaseRequest', 'LeaseRequestList',
   'ReportList',
   'CarListContent', 'CarListResponse', 'CarInfoResponse',
+  'NotificationResponse', 'NotificationListResponse',
 
 ]

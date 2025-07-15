@@ -11,18 +11,18 @@ from db.enums import UserRoles
 router = APIRouter(prefix="/v2/user", tags=["users"])
 
 
-@router.post("/v2/edit_user", response_model=modef.DefaultResponse)
+@router.post("/edit_user", response_model=modef.DefaultResponse)
 async def edit_user(request: moreq.UserEdit, current_user: Annotated[modef.User, Depends(get_current_user)]):
   """Edit user information (admin only)"""
 
   pass
 
-@router.post("/v2/delete_user", response_model=modef.DefaultResponse)
+@router.post("/delete_user", response_model=modef.DefaultResponse)
 async def delete_user(request: moreq.UserDelete, current_user: Annotated[modef.User, Depends(get_current_user)]):
   """Delete a user (admin only)"""
   pass
 
-@router.get("/v2/get_users", response_model=mores.UserList)
+@router.get("/get_users", response_model=mores.UserList)
 async def get_users(current_user: Annotated[modef.User, Depends(get_current_user)],
                     db: Session = Depends(connect_to_db)):
   """Get list of all users (manager/admin only)"""
@@ -63,7 +63,7 @@ async def get_users(current_user: Annotated[modef.User, Depends(get_current_user
       detail=f"Error retrieving users: {str(e)}"
     )
 
-@router.post("/v2/get_all_user_info", response_model=list[mores.UserInfoResponse])
+@router.post("/get_all_user_info", response_model=list[mores.UserInfoResponse])
 async def get_all_user_info(current_user: Annotated[modef.User, Depends(get_current_user)],
                             db: Session = Depends(connect_to_db)):
   """Get information about all users (admin only)"""
