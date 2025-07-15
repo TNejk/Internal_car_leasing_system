@@ -99,6 +99,25 @@ def get_reports_paths(folder_path):
     except OSError:  # Specific exception > bare except!  
         return None
 
+
+#######################################################
+#                 APP INITIALIZATION                  #
+#######################################################
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
+LOGIN_SALT = os.environ.get('LOGIN_SALT')
+ALGORITHM = "HS256"
+TOKEN_EXPIRATION_MINUTES = 30
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated ="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+#! app = FastAPI(docs_url=None, redoc_url=None)
+#! 
+# V produkcií, nenechať otvorenú dokumentáciu svetu!!
+app = FastAPI()
+
 def connect_to_db():
     # Get the running session from sqlalchemy's engine
     db = SessionLocal()
@@ -125,7 +144,10 @@ app = FastAPI()
 
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+
+    salted_pass = LOGIN_SALT + plain_password + LOGIN_SALT
+
+    return pwd_context.verify(salted_pass, hashed_password)
 
 def get_password_hash(password):
     return pwd_context.hash(password)
@@ -145,7 +167,7 @@ def authenticate_user(email: str, password: str, db: Session) -> modef.User:
         return None
 
     # Convert SQLAlchemy model to Pydantic model
-    return User(
+    return modef.User(
         email=db_user.email,
         role=db_user.role.value,  # Since role is an Enum
         username=db_user.name,    # Using name as username
@@ -174,7 +196,7 @@ def get_existing_user(email: str, role: str, db: Session) -> modef.User:
     if not db_user:
         return None
     
-    return User(
+    return mores.User(
         email=db_user.email,
         role=db_user.role.value,
         username=db_user.name,
@@ -194,7 +216,7 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session 
         role = payload.get("role")
         if email is None or role is None:
             raise cred_exception
-        token_data = TokenData(email=email, role=role)
+        token_data = mores.TokenData(email=email, role=role)
     
     except InvalidTokenError:
         raise cred_exception
@@ -235,7 +257,7 @@ async def register(request: moreq.UserRegister, current_user: Annotated[modef.Us
     pass
 
 
-@app.post("/v2/login", response_model=mores.LoginResponse)
+@app.post("/v2/login", response_model=moreq.LoginResponse)
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(connect_to_db)):
 
     """ Login user to app, returns a login_response obj that includes a token and role email combo. """
@@ -257,40 +279,40 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: 
         expires_delta=timedelta(minutes=TOKEN_EXPIRATION_MINUTES)
     )
     
-    return login_response(
+    return moreq.login_response(
         token=access_token,
         token_type="bearer"
     )
 
 
 @app.post("/v2/edit_user", response_model=modef.DefaultResponse)
-async def edit_user(request: moreq.UserEditReq, current_user: Annotated[User, Depends(get_current_user)]):
+async def edit_user(request: moreq.UserEditReq, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Edit user information (admin only)"""
     
     pass
 
 @app.post("/v2/create_car", response_model=modef.DefaultResponse)
-async def create_car(request: car_creation_req, current_user: Annotated[User, Depends(get_current_user)]):
+async def create_car(request: moreq.car_creation_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Create a new car (admin only)"""
     pass
 
 @app.post("/v2/edit_car", response_model=modef.DefaultResponse)
-async def edit_car(request: car_editing_req, current_user: Annotated[User, Depends(get_current_user)]):
+async def edit_car(request: moreq.car_editing_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Edit car information (admin only)"""
     pass
 
 @app.post("/v2/delete_car", response_model=modef.DefaultResponse)
-async def delete_car(request: car_deletion_req, current_user: Annotated[User, Depends(get_current_user)]):
+async def delete_car(request: moreq.car_deletion_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Delete a car (admin only)"""
     pass
 
 @app.post("/v2/delete_user", response_model=modef.DefaultResponse)
-async def delete_user(request: user_deletion_req, current_user: Annotated[User, Depends(get_current_user)]):
+async def delete_user(request: moreq.user_deletion_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Delete a user (admin only)"""
     pass
 
 @app.get("/v2/get_users", response_model=mores.UserList)
-async def get_users(current_user: Annotated[User, Depends(get_current_user)]):
+async def get_users(current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Get list of all users (manager/v2/admin only)"""
     
     session = connect_to_db()
@@ -311,7 +333,7 @@ async def get_users(current_user: Annotated[User, Depends(get_current_user)]):
     user_list = []
     for user in users:
         user_list.append(
-            User(
+            modef.User(
                 email= user.email,
                 username= user.name,
                 role= user.role,
@@ -319,16 +341,16 @@ async def get_users(current_user: Annotated[User, Depends(get_current_user)]):
             )
         )
 
-    return user_list_response(
+    return mores.user_list_response(
         users=user_list
     )
 
 
     
 
-@app.get("/v2/get_car_list", response_model=carListResponse)
+@app.get("/v2/get_car_list", response_model=mores.carListResponse)
 async def get_car_list(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[modef.User, Depends(get_current_user)],
 ):
     """Get list of all cars with basic information"""
     session = connect_to_db()
@@ -342,7 +364,7 @@ async def get_car_list(
     list_car = []        
     for car in cars:
         list_car.append(
-            list_car_reponse(
+            mores.list_car_reponse(
                 car_id= car.id,
                 car_name= car.name,
                 car_status=  car.status,
@@ -356,30 +378,30 @@ async def get_car_list(
             )
         )
     
-    return carListResponse(
+    return mores.carListResponse(
         car_list= list_car
     )
 
 
     
 
-@app.post("/v2/decommission_car", response_model=DefaultResponse)
-async def decommision_car(request: car_decommision_req, current_user: Annotated[User, Depends(get_current_user)]):
+@app.post("/v2/decommission_car", response_model=mores.DefaultResponse)
+async def decommision_car(request: moreq.car_decommision_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Decommission a car for maintenance (manager/v2/admin only)"""
     pass
 
-@app.post("/v2/activate_car", response_model=DefaultResponse)
-async def activate_car(request: car_activation_req, current_user: Annotated[User, Depends(get_current_user)]):
+@app.post("/v2/activate_car", response_model=mores.DefaultResponse)
+async def activate_car(request: moreq.car_activation_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Activate a decommissioned car (manager/v2/admin only)"""
     pass
 
-@app.post("/v2/get_full_car_info", response_model=car_info_response)
-async def get_full_car_info(request: car_information_req, current_user: Annotated[User, Depends(get_current_user)]):
+@app.post("/v2/get_full_car_info", response_model=mores.car_info_response)
+async def get_full_car_info(request: moreq.car_information_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Get complete car information including availability"""
     pass
 
-@app.post("/v2/get_all_car_info", response_model=list[car_info_response])
-async def get_all_car_info(current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+@app.post("/v2/get_all_car_info", response_model=list[mores.car_info_response])
+async def get_all_car_info(current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Get information about all cars (admin only)"""
     
     # Check if user is admin
@@ -428,7 +450,7 @@ async def get_all_car_info(current_user: Annotated[User, Depends(get_current_use
             for request in active_requests:
                 allowed_hours.append([request.start_time, request.end_time])
             
-            car_info_list.append(car_info_response(
+            car_info_list.append(mores.car_info_response(
                 car_id=car.id,
                 spz=car.plate_number,
                 car_type=car.category.value,
@@ -454,8 +476,8 @@ async def get_all_car_info(current_user: Annotated[User, Depends(get_current_use
             detail=f"Error retrieving car information: {str(e)}"
         )
 
-@app.post("/v2/get_all_user_info", response_model=list[user_info_response])
-async def get_all_user_info(current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+@app.post("/v2/get_all_user_info", response_model=list[mores.user_info_response])
+async def get_all_user_info(current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Get information about all users (admin only)"""
     
     if current_user.role != "admin":
@@ -481,7 +503,7 @@ async def get_all_user_info(current_user: Annotated[User, Depends(get_current_us
         user_info_list = []
         
         for user in users:
-            user_info_list.append(user_info_response(
+            user_info_list.append(mores.user_info_response(
                 user_id=user.id,
                 username=user.name,
                 email=user.email,
@@ -498,8 +520,8 @@ async def get_all_user_info(current_user: Annotated[User, Depends(get_current_us
             detail=f"Error retrieving user information: {str(e)}"
         )
 
-@app.post("/v2/list_reports", response_model=report_list_response)
-async def list_reports(current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+@app.post("/v2/list_reports", response_model=mores.report_list_response)
+async def list_reports(current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """List available reports (manager/admin only)"""
     
     if not admin_or_manager(current_user.role):
@@ -536,7 +558,7 @@ async def list_reports(current_user: Annotated[User, Depends(get_current_user)],
                 detail="Error accessing reports directory"
             )
         
-        return report_list_response(reports=report_paths)
+        return mores.report_list_response(reports=report_paths)
         
     except HTTPException:
         raise
@@ -547,7 +569,7 @@ async def list_reports(current_user: Annotated[User, Depends(get_current_user)],
         )
 
 @app.get("/v2/get_report/v2/{filename}")
-async def get_report(filename: str, current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+async def get_report(filename: str, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Download a specific report file (manager/admin only)"""
 
     if not admin_or_manager(current_user.role):
@@ -606,8 +628,8 @@ async def get_report(filename: str, current_user: Annotated[User, Depends(get_cu
             detail=f"Error accessing file: {str(e)}"
         )
 
-@app.post("/v2/get_leases", response_model=leaseListResponse)
-async def get_leases(request: leases_list_req, current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+@app.post("/v2/get_leases", response_model=mores.leaseListResponse)
+async def get_leases(request: moreq.leases_list_req, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Get list of leases with optional filtering"""
     try:
         # Build base query with joins
@@ -675,7 +697,7 @@ async def get_leases(request: leases_list_req, current_user: Annotated[User, Dep
                 if changed_by_user:
                     last_changed_by_name = changed_by_user.email
             
-            lease_entries.append(leaseEntry(
+            lease_entries.append(mores.leaseEntry(
                 lease_id=lease.id,
                 lease_status=lease.status.value,
                 creation_time=lease.create_time,
@@ -692,7 +714,7 @@ async def get_leases(request: leases_list_req, current_user: Annotated[User, Dep
                 region_tag=lease.region_tag.value
             ))
         
-        return leaseListResponse(active_leases=lease_entries)
+        return mores.leaseListResponse(active_leases=lease_entries)
         
     except HTTPException:
         raise
@@ -702,8 +724,8 @@ async def get_leases(request: leases_list_req, current_user: Annotated[User, Dep
             detail=f"Error retrieving leases: {str(e)}"
         )
 
-@app.post("/v2/cancel_lease", response_model=leaseCancelResponse)
-async def cancel_lease(request: cancel_lease_req, current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+@app.post("/v2/cancel_lease", response_model=mores.leaseCancelResponse)
+async def cancel_lease(request: moreq.cancel_lease_req, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Cancel an active lease"""
     try:
         # Determine whose lease to cancel
@@ -724,7 +746,7 @@ async def cancel_lease(request: cancel_lease_req, current_user: Annotated[User, 
         ).first()
         
         if not recipient_user:
-            return leaseCancelResponse(cancelled=False)
+            return mores.leaseCancelResponse(cancelled=False)
         
         # Find the car - use either car_id or car_name
         car = None
@@ -740,7 +762,7 @@ async def cancel_lease(request: cancel_lease_req, current_user: Annotated[User, 
             ).first()
         
         if not car:
-            return leaseCancelResponse(cancelled=False)
+            return mores.leaseCancelResponse(cancelled=False)
 
         active_lease = db.query(model.Leases).filter(
             model.Leases.id_user == recipient_user.id,
@@ -750,7 +772,7 @@ async def cancel_lease(request: cancel_lease_req, current_user: Annotated[User, 
         ).order_by(model.Leases.id.desc()).first()
         
         if not active_lease:
-            return leaseCancelResponse(cancelled=False)
+            return mores.leaseCancelResponse(cancelled=False)
         
         # Get current user for tracking changes
         current_user_db = db.query(model.Users).filter(
@@ -790,7 +812,7 @@ async def cancel_lease(request: cancel_lease_req, current_user: Annotated[User, 
         
         db.commit()
         
-        return leaseCancelResponse(cancelled=True)
+        return mores.leaseCancelResponse(cancelled=True)
         
     except HTTPException:
         raise
@@ -801,13 +823,13 @@ async def cancel_lease(request: cancel_lease_req, current_user: Annotated[User, 
             detail=f"Error cancelling lease: {str(e)}"
         )
 
-@app.post("/v2/get_monthly_leases", response_model=list[monthlyLeasesResponse])
-async def get_monthly_leases(request: monthly_leases_req, current_user: Annotated[User, Depends(get_current_user)]):
+@app.post("/v2/get_monthly_leases", response_model=list[mores.monthlyLeasesResponse])
+async def get_monthly_leases(request: moreq.monthly_leases_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Get leases for a specific month (manager/v2/admin only)"""
     pass
 
-@app.post("/v2/lease_car", response_model=leaseCarResponse)
-async def lease_car(request: lease_car_req, current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+@app.post("/v2/lease_car", response_model=mores.leaseCarResponse)
+async def lease_car(request: moreq.lease_car_req, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Create a lease for a car and optionally create a trip with participants"""
     try:
         car_id = request.car_id
@@ -832,16 +854,16 @@ async def lease_car(request: lease_car_req, current_user: Annotated[User, Depend
         
         # Date validation
         if not time_from or not time_to:
-            return ErrorResponse(msg="Time from and time to are required.", status=False)
+            return modef.ErrorResponse(msg="Time from and time to are required.", status=False)
             
         today = get_sk_date()
         
         # Convert datetime to timezone-aware if needed
         if time_to.replace(tzinfo=None) < today.replace(tzinfo=None):
-            return ErrorResponse(msg=f"Nemožno rezervovať do minulosti. \nDnes: {today}\nDO: {time_to}", status=False)
+            return modef.ErrorResponse(msg=f"Nemožno rezervovať do minulosti. \nDnes: {today}\nDO: {time_to}", status=False)
         
         if ten_minute_tolerance(str(time_from), today.replace(tzinfo=None)):
-            return ErrorResponse(msg=f"Nemožno rezervovať z minulosti. \nDnes: {today}\nOD: {time_from}", status=False)
+            return modef.ErrorResponse(msg=f"Nemožno rezervovať z minulosti. \nDnes: {today}\nOD: {time_from}", status=False)
 
         # Get car and validate availability
         car = db.query(model.Cars).filter(
@@ -851,7 +873,7 @@ async def lease_car(request: lease_car_req, current_user: Annotated[User, Depend
         ).first()
         
         if not car:
-            return ErrorResponse(msg="Auto nie je dostupné alebo neexistuje.", status=False)
+            return modef.ErrorResponse(msg="Auto nie je dostupné alebo neexistuje.", status=False)
 
         # Check for conflicting leases
         conflicting_lease = db.query(model.Leases).filter(
@@ -861,7 +883,7 @@ async def lease_car(request: lease_car_req, current_user: Annotated[User, Depend
         ).first()
         
         if conflicting_lease:
-            return ErrorResponse(msg="Zabratý dátum (hodina typujem)", status=False)
+            return modef.ErrorResponse(msg="Zabratý dátum (hodina typujem)", status=False)
 
         # Get recipient user
         recipient_user = db.query(model.Users).filter(
@@ -870,7 +892,7 @@ async def lease_car(request: lease_car_req, current_user: Annotated[User, Depend
         ).first()
         
         if not recipient_user:
-            return ErrorResponse(msg="Príjemca neexistuje.", status=False)
+            return modef.ErrorResponse(msg="Príjemca neexistuje.", status=False)
 
         # If private ride and user is not manager/admin, create a request instead
         if private_ride and not has_privilege:
@@ -887,7 +909,7 @@ async def lease_car(request: lease_car_req, current_user: Annotated[User, Depend
             
             # TODO: Send notification to managers
             
-            return leaseCarResponse(status=True, private=True, msg="Request for a private ride was sent!")
+            return mores.leaseCarResponse(status=True, private=True, msg="Request for a private ride was sent!")
 
         # Create the lease
         new_lease = model.Leases(
@@ -954,15 +976,15 @@ async def lease_car(request: lease_car_req, current_user: Annotated[User, Depend
         
         # TODO: Send notifications
         
-        return leaseCarResponse(status=True, private=private_ride, msg="Lease created successfully!")
+        return mores.leaseCarResponse(status=True, private=private_ride, msg="Lease created successfully!")
         
     except Exception as e:
         db.rollback()
-        return ErrorResponse(msg=f"Error creating lease: {str(e)}", status=False)
+        return modef.ErrorResponse(msg=f"Error creating lease: {str(e)}", status=False)
 
 
-@app.post("/v2/trips/join_request", response_model=DefaultResponse)
-async def request_trip_join(request: trip_join_request_req, current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+@app.post("/v2/trips/join_request", response_model=modef.DefaultResponse)
+async def request_trip_join(request: moreq.trip_join_request_req, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Request to join a public trip"""
     try:
         trip = db.query(model.Trips).filter(
@@ -972,10 +994,10 @@ async def request_trip_join(request: trip_join_request_req, current_user: Annota
         ).first()
         
         if not trip:
-            return DefaultResponse(status=False, msg="Trip not found or not available for joining")
+            return modef.DefaultResponse(status=False, msg="Trip not found or not available for joining")
         
         if trip.free_seats <= 0:
-            return DefaultResponse(status=False, msg="No free seats available")
+            return modef.DefaultResponse(status=False, msg="No free seats available")
         
         user = db.query(model.Users).filter(model.Users.email == current_user.email).first()
         
@@ -987,7 +1009,7 @@ async def request_trip_join(request: trip_join_request_req, current_user: Annota
         ).first()
         
         if existing_request:
-            return DefaultResponse(status=False, msg="You already have a pending request for this trip")
+            return modef.DefaultResponse(status=False, msg="You already have a pending request for this trip")
         
         existing_participant = db.query(model.TripsParticipants).filter(
             model.TripsParticipants.id_trip == request.trip_id,
@@ -995,7 +1017,7 @@ async def request_trip_join(request: trip_join_request_req, current_user: Annota
         ).first()
         
         if existing_participant:
-            return DefaultResponse(status=False, msg="You are already a participant in this trip")
+            return modef.DefaultResponse(status=False, msg="You are already a participant in this trip")
         
         # Create join request
         join_request = model.TripsJoinRequests(
@@ -1007,15 +1029,15 @@ async def request_trip_join(request: trip_join_request_req, current_user: Annota
         db.add(join_request)
         db.commit()
         
-        return DefaultResponse(status=True, msg="Join request sent successfully")
+        return modef.DefaultResponse(status=True, msg="Join request sent successfully")
         
     except Exception as e:
         db.rollback()
-        return DefaultResponse(status=False, msg=f"Error sending join request: {str(e)}")
+        return modef.DefaultResponse(status=False, msg=f"Error sending join request: {str(e)}")
 
 
-@app.post("/v2/trips/respond_invite", response_model=DefaultResponse)
-async def respond_trip_invite(request: trip_invite_response_req, current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+@app.post("/v2/trips/respond_invite", response_model= modef.DefaultResponse)
+async def respond_trip_invite(request: moreq.trip_invite_response_req, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Accept or reject a trip invite"""
     try:
         user = db.query(model.Users).filter(model.Users.email == current_user.email).first()
@@ -1027,13 +1049,13 @@ async def respond_trip_invite(request: trip_invite_response_req, current_user: A
         ).first()
         
         if not invite:
-            return DefaultResponse(status=False, msg="Invite not found or already responded")
+            return modef.DefaultResponse(status=False, msg="Invite not found or already responded")
         
         trip = db.query(model.Trips).filter(model.Trips.id == invite.id_trip).first()
         
         if request.accepted:
             if trip.free_seats <= 0:
-                return DefaultResponse(status=False, msg="No free seats available")
+                return modef.DefaultResponse(status=False, msg="No free seats available")
             
             # Accept invite - add as participant
             invite.status = TripsInviteStatus.accepted
@@ -1065,15 +1087,15 @@ async def respond_trip_invite(request: trip_invite_response_req, current_user: A
         db.commit()
         
         status_msg = "Invite accepted" if request.accepted else "Invite rejected"
-        return DefaultResponse(status=True, msg=status_msg)
+        return modef.DefaultResponse(status=True, msg=status_msg)
         
     except Exception as e:
         db.rollback()
-        return DefaultResponse(status=False, msg=f"Error responding to invite: {str(e)}")
+        return modef.DefaultResponse(status=False, msg=f"Error responding to invite: {str(e)}")
 
 
-@app.get("/v2/trips", response_model=tripListResponse)
-async def get_trips(current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+@app.get("/v2/trips", response_model=mores.tripListResponse)
+async def get_trips(current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
     """Get list of available trips"""
     try:
         user = db.query(model.Users).filter(model.Users.email == current_user.email).first()
@@ -1089,7 +1111,7 @@ async def get_trips(current_user: Annotated[User, Depends(get_current_user)], db
             creator = db.query(model.Users).filter(model.Users.id == trip.creator).first()
             car = db.query(model.Cars).filter(model.Cars.id == trip.id_car).first()
             
-            trip_list.append(tripEntry(
+            trip_list.append(mores.tripEntry(
                 trip_id=trip.id,
                 trip_name=trip.trip_name,
                 creator_email=creator.email,
@@ -1103,17 +1125,17 @@ async def get_trips(current_user: Annotated[User, Depends(get_current_user)], db
                 created_at=trip.created_at
             ))
         
-        return tripListResponse(trips=trip_list)
+        return mores.tripListResponse(trips=trip_list)
         
     except Exception as e:
-        return tripListResponse(trips=[])
+        return mores.tripListResponse(trips=[])
 
 
 
 # !
 # TODO: Here you need to get email and car name from id's, ALSO remake the sql table for Lease requests to add a foreign key to the lease table to get the IMG URL AND SUCH
-@app.post("/v2/get_requests", response_model=requestListResponse)
-async def get_requests(current_user: Annotated[User, Depends(get_current_user)]):
+@app.post("/v2/get_requests", response_model=mores.requestListResponse)
+async def get_requests(current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Get pending private ride requests (manager/v2/admin only)"""
     # work with LeaseRequests object 
 
@@ -1151,28 +1173,28 @@ async def get_requests(current_user: Annotated[User, Depends(get_current_user)])
 
 
 
-@app.post("/v2/approve_req", response_model=DefaultResponse)
-async def approve_request(request: approve_pvr_req, current_user: Annotated[User, Depends(get_current_user)]):
+@app.post("/v2/approve_req", response_model=modef.DefaultResponse)
+async def approve_request(request: moreq.approve_pvr_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Approve or reject a private ride request (manager/v2/admin only)"""
     pass
 
-@app.post("/v2/return_car", response_model=DefaultResponse)
-async def return_car(request: return_car_req, current_user: Annotated[User, Depends(get_current_user)]):
+@app.post("/v2/return_car", response_model=modef.DefaultResponse)
+async def return_car(request: moreq.return_car_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Return a leased car"""
     pass
 
 @app.get("/v2/notifications", response_model=list[dict])
-async def get_notifications(current_user: Annotated[User, Depends(get_current_user)]):
+async def get_notifications(current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Get user notifications"""
     pass
 
-@app.post("/v2/notifications/v2/mark-as-read", response_model=DefaultResponse)
-async def mark_notification_as_read(request: read_notification_req, current_user: Annotated[User, Depends(get_current_user)]):
+@app.post("/v2/notifications/v2/mark-as-read", response_model=modef.DefaultResponse)
+async def mark_notification_as_read(request: moreq.read_notification_req, current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Mark a notification as read"""
     pass
 
-@app.post("/v2/check_token", response_model=DefaultResponse)
-async def check_token(current_user: Annotated[User, Depends(get_current_user)]):
+@app.post("/v2/check_token", response_model=modef.DefaultResponse)
+async def check_token(current_user: Annotated[modef.User, Depends(get_current_user)]):
     """Validate JWT token"""
     pass
 
