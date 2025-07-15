@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Annotated
 from datetime import datetime
-
+from db.enums import GearboxTypes, FuelTypes, CarTypes
 
 class CarListContent(BaseModel):
   car_id: int

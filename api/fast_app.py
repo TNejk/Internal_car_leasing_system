@@ -18,9 +18,9 @@ load_dotenv()
 from db.database import SessionLocal
 import db.models as model
 from db.enums import *
-import models.request as moreq
-import models.response as mores
-import models.default as modef
+import api_models.request as moreq
+import api_models.response as mores
+import api_models.default as modef
 import internal.token_models as tokemod
 import internal.dependencies as dependencies
 
