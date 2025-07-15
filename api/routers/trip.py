@@ -11,7 +11,7 @@ from db.enums import TripsStatuses, TripsInviteStatus
 router = APIRouter(prefix="/v2/trip", tags=["trip"])
 
 
-@router.post("/v2/trips/join_request", response_model=modef.DefaultResponse)
+@router.post("/join_request", response_model=modef.DefaultResponse)
 async def request_trip_join(request: moreq.TripJoinRequest,
                             current_user: Annotated[modef.User, Depends(get_current_user)],
                             db: Session = Depends(connect_to_db)):
@@ -66,7 +66,7 @@ async def request_trip_join(request: moreq.TripJoinRequest,
     return modef.DefaultResponse(status=False, msg=f"Error sending join request: {str(e)}")
 
 
-@router.post("/v2/trips/respond_invite", response_model=modef.DefaultResponse)
+@router.post("/respond_invite", response_model=modef.DefaultResponse)
 async def respond_trip_invite(request: moreq.TripInviteResponse,
                               current_user: Annotated[modef.User, Depends(get_current_user)],
                               db: Session = Depends(connect_to_db)):
@@ -126,7 +126,7 @@ async def respond_trip_invite(request: moreq.TripInviteResponse,
     return modef.DefaultResponse(status=False, msg=f"Error responding to invite: {str(e)}")
 
 
-@router.get("/v2/trips", response_model=mores.TripList)
+@router.get("", response_model=mores.TripList)
 async def get_trips(current_user: Annotated[modef.User, Depends(get_current_user)],
                     db: Session = Depends(connect_to_db)):
   """Get list of available trips"""

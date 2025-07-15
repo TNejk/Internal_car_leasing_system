@@ -4,7 +4,7 @@ import api_models.request as moreq
 import api_models.response as mores
 import api_models.default as modef
 from sqlalchemy.orm import Session
-from internal.dependencies import get_current_user, connect_to_db
+from internal.dependencies import get_current_user, connect_to_db, admin_or_manager
 import db.models as model
 from db.enums import UserRoles
 
@@ -25,42 +25,51 @@ async def delete_user(request: moreq.UserDelete, current_user: Annotated[modef.U
 @router.get("/v2/get_users", response_model=mores.UserList)
 async def get_users(current_user: Annotated[modef.User, Depends(get_current_user)],
                     db: Session = Depends(connect_to_db)):
-  """Get list of all users (manager/v2/admin only)"""
+  """Get list of all users (manager/admin only)"""
 
-  if not db:
-    return HTTPException(
-      status_code=500,
-      detail="Error getting users!",
+  # Check if user has manager or admin role
+  if not admin_or_manager(current_user.role):
+    raise HTTPException(
+      status_code=status.HTTP_401_UNAUTHORIZED,
+      detail="Unauthorized access. Manager or admin role required.",
       headers={"WWW-Authenticate": "Bearer"}
     )
 
-  # Get all users, that are not disabled
-  users = db.query(model.Users).filter(
-    model.Users.is_deleted == False,
-    model.Users.role != UserRoles.admin
-  ).all()
+  try:
+    # Get all users, that are not disabled
+    users = db.query(model.Users).filter(
+      model.Users.is_deleted == False,
+      model.Users.role != UserRoles.admin
+    ).all()
 
-  user_list = []
-  for user in users:
-    user_list.append(
-      modef.User(
-        email=user.email,
-        username=user.name,
-        role=user.role,
-        disabled=user.is_deleted
+    user_list = []
+    for user in users:
+      user_list.append(
+        modef.User(
+          email=user.email,
+          username=user.name,
+          role=user.role,
+          disabled=user.is_deleted
+        )
       )
+
+    return mores.UserList(
+      users=user_list
     )
 
-  return mores.UserList(
-    users=user_list
-  )
+  except Exception as e:
+    raise HTTPException(
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+      detail=f"Error retrieving users: {str(e)}"
+    )
 
 @router.post("/v2/get_all_user_info", response_model=list[mores.UserInfoResponse])
 async def get_all_user_info(current_user: Annotated[modef.User, Depends(get_current_user)],
                             db: Session = Depends(connect_to_db)):
   """Get information about all users (admin only)"""
 
-  if current_user.role != "admin":
+  # Check if user has admin role (admin-only endpoint)
+  if current_user.role != UserRoles.admin.value:
     raise HTTPException(
       status_code=status.HTTP_401_UNAUTHORIZED,
       detail="Unauthorized access. Admin role required.",
@@ -71,7 +80,7 @@ async def get_all_user_info(current_user: Annotated[modef.User, Depends(get_curr
     # Get all non-deleted users except admin users
     users = db.query(model.Users).filter(
       model.Users.is_deleted == False,
-      model.Users.name != 'admin'
+      model.Users.role != UserRoles.admin
     ).all()
 
     if not users:

@@ -14,7 +14,7 @@ import os
 router = APIRouter(prefix="/v2/report", tags=["report"])
 
 
-@router.post("/v2/list_reports", response_model=mores.ReportList)
+@router.post("/list_reports", response_model=mores.ReportList)
 async def list_reports(current_user: Annotated[modef.User, Depends(get_current_user)],
                        db: Session = Depends(connect_to_db)):
   """List available reports (manager/admin only)"""
@@ -64,7 +64,7 @@ async def list_reports(current_user: Annotated[modef.User, Depends(get_current_u
     )
 
 
-@router.get("/v2/get_report/v2/{filename}")
+@router.get("/get_report/v2/{filename}")
 async def get_report(filename: str, current_user: Annotated[modef.User, Depends(get_current_user)],
                      db: Session = Depends(connect_to_db)):
   """Download a specific report file (manager/admin only)"""

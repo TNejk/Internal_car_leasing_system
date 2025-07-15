@@ -11,7 +11,7 @@ from db.enums import LeaseStatus, RequestStatus, CarStatus, UserRoles, Regions, 
 
 router = APIRouter(prefix="/v2/lease", tags=["lease"])
 
-@router.post("/v2/get_leases", response_model=mores.LeaseList)
+@router.post("/get_leases", response_model=mores.LeaseList)
 async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.User, Depends(get_current_user)],
                      db: Session = Depends(connect_to_db)):
   """Get list of leases with optional filtering"""
@@ -27,10 +27,10 @@ async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.Use
     )
 
 
-    if current_user.role == model.UserRoles.user:
+    if current_user.role == UserRoles.user:
 
       query = query.filter(model.Users.email == current_user.email)
-    elif current_user.role in [model.UserRoles.manager, model.UserRoles.admin]:
+    elif current_user.role in [UserRoles.manager, UserRoles.admin]:
 
       if request.filter_email:
         query = query.filter(model.Users.email == request.filter_email)
@@ -107,7 +107,7 @@ async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.Use
     )
 
 
-@router.post("/v2/cancel_lease", response_model=mores.LeaseCancel)
+@router.post("/cancel_lease", response_model=mores.LeaseCancel)
 async def cancel_lease(request: moreq.LeaseCancel, current_user: Annotated[modef.User, Depends(get_current_user)],
                        db: Session = Depends(connect_to_db)):
   """Cancel an active lease"""
@@ -186,7 +186,7 @@ async def cancel_lease(request: moreq.LeaseCancel, current_user: Annotated[modef
     db.add(change_log)
 
     # Send notification if manager/admin is cancelling for someone else
-    if (current_user.role in [model.UserRoles.manager, model.UserRoles.admin] and
+    if (current_user.role in [UserRoles.manager, UserRoles.admin] and
       current_user.email != recipient_email):
       # TODO: Implement notification system for FastAPI
       # This would replace the Firebase messaging from the old Flask app
@@ -207,14 +207,14 @@ async def cancel_lease(request: moreq.LeaseCancel, current_user: Annotated[modef
     )
 
 
-@router.post("/v2/get_monthly_leases", response_model=list[mores.LeaseMonthly])
+@router.post("/get_monthly_leases", response_model=list[mores.LeaseMonthly])
 async def get_monthly_leases(request: moreq.LeaseMonthly,
                              current_user: Annotated[modef.User, Depends(get_current_user)]):
   """Get leases for a specific month (manager/v2/admin only)"""
   pass
 
 
-@router.post("/v2/lease_car", response_model=mores.LeaseStart)
+@router.post("/lease_car", response_model=mores.LeaseStart)
 async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User, Depends(get_current_user)],
                     db: Session = Depends(connect_to_db)):
   """Create a lease for a car and optionally create a trip with participants"""
@@ -371,7 +371,7 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
 
 # !
 # TODO: Here you need to get email and car name from id's, ALSO remake the sql table for Lease requests to add a foreign key to the lease table to get the IMG URL AND SUCH
-@router.post("/v2/get_requests", response_model=mores.LeaseRequestList)
+@router.post("/get_requests", response_model=mores.LeaseRequestList)
 async def get_requests(current_user: Annotated[modef.User, Depends(get_current_user)],
                        db: Session = Depends(connect_to_db)):
   """Get pending private ride requests (manager/v2/admin only)"""
@@ -408,14 +408,14 @@ async def get_requests(current_user: Annotated[modef.User, Depends(get_current_u
   #     )
 
 
-@router.post("/v2/approve_req", response_model=modef.DefaultResponse)
+@router.post("/approve_req", response_model=modef.DefaultResponse)
 async def approve_request(request: moreq.LeasePrivateApprove,
                           current_user: Annotated[modef.User, Depends(get_current_user)]):
   """Approve or reject a private ride request (manager/v2/admin only)"""
   pass
 
 
-@router.post("/v2/return_car", response_model=modef.DefaultResponse)
+@router.post("/return_car", response_model=modef.DefaultResponse)
 async def return_car(request: moreq.LeaseFinish, current_user: Annotated[modef.User, Depends(get_current_user)]):
   """Return a leased car"""
   pass
