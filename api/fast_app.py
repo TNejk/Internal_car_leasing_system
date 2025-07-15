@@ -146,6 +146,7 @@ app = FastAPI()
 def verify_password(plain_password, hashed_password):
 
     salted_pass = LOGIN_SALT + plain_password + LOGIN_SALT
+    salted_pass = get_password_hash(salted_pass)
 
     return pwd_context.verify(salted_pass, hashed_password)
 
