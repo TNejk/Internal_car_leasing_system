@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 import api_models.response as mores
 import api_models.request as moreq
 import api_models.default as modef
 from typing import Annotated
-from internal.dependencies import get_current_user, connect_to_db
+from internal.dependencies import get_current_user, connect_to_db, admin_or_manager
 from sqlalchemy.orm import Session
+import db.models as model
+from db.enums import CarStatus, LeaseStatus, RequestStatus
 
 router = APIRouter(prefix='/v2/cars', tags=['cars'])
 
@@ -44,6 +46,16 @@ async def get_car_list(current_user: Annotated[modef.User, Depends(get_current_u
 async def decommission_car(request: moreq.CarDecommission,
                           current_user: Annotated[modef.User, Depends(get_current_user)]):
   """Decommission a car for maintenance (manager/admin only)"""
+
+  if admin_or_manager(current_user.role) == False:
+    raise HTTPException(
+      status_code=status.HTTP_401_UNAUTHORIZED,
+      detail="Unauthorized access. Admin role required.",
+      headers={"WWW-Authenticate": "Bearer"}
+    )
+
+
+
   pass
 
 
@@ -56,7 +68,72 @@ async def activate_car(request: moreq.CarActivation, current_user: Annotated[mod
 @router.post("/get_full_car_info", response_model=mores.CarInfoResponse)
 async def get_full_car_info(request: moreq.CarInfo, current_user: Annotated[modef.User, Depends(get_current_user)]):
   """Get complete car information including availability"""
-  pass
+  
+  session = connect_to_db()
+  
+  try:
+    # Get the car by ID
+    car = session.query(model.Cars).filter(
+      model.Cars.id == request.car_id,
+      model.Cars.is_deleted == False
+    ).first()
+    
+    if not car:
+      raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Car not found"
+      )
+    
+    # Get decommission time - set to None for now since DecommissionedCars model doesn't exist
+    # TODO: IMPLEMENT DECOMMISSION TIME IN THE TABLE!! ITS NEEDED FOR AUTOMATIC CAR ACTIVATION
+    decommission_time = None
+    
+    # Get allowed hours (active leases and requests)
+    allowed_hours = []
+    
+    # Get active leases for this car
+    active_leases = session.query(model.Leases).filter(
+      model.Leases.id_car == car.id,
+      model.Leases.status.in_([LeaseStatus.scheduled, LeaseStatus.active])
+    ).all()
+    
+    for lease in active_leases:
+      allowed_hours.append([lease.start_time, lease.end_time])
+    
+    # Get active private ride requests for this car
+    active_requests = session.query(model.LeaseRequests).filter(
+      model.LeaseRequests.id_car == car.id,
+      model.LeaseRequests.status == RequestStatus.pending
+    ).all()
+    
+    for request_item in active_requests:
+      allowed_hours.append([request_item.start_time, request_item.end_time])
+    
+    return mores.CarInfoResponse(
+      car_id=car.id,
+      spz=car.plate_number,
+      car_type=car.category.value,
+      gearbox_type=car.gearbox_type.value,
+      fuel_type=car.fuel_type.value,
+      region=car.region.value,
+      car_status=car.status.value,
+      seats=car.seats,
+      type=car.category,
+      usage_metric=car.usage_metric,
+      image_url=car.img_url,
+      decommision_time=decommission_time,
+      allowed_hours=allowed_hours
+    )
+    
+  except HTTPException:
+    raise
+  except Exception as e:
+    raise HTTPException(
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+      detail=f"Error retrieving car information: {str(e)}"
+    )
+  finally:
+    session.close()
 
 
 @router.post("/get_all_car_info", response_model=list[mores.CarInfoResponse])
@@ -65,7 +142,7 @@ async def get_all_car_info(current_user: Annotated[modef.User, Depends(get_curre
   """Get information about all cars (admin only)"""
 
   # Check if user is admin
-  if current_user.role != "admin":
+  if admin_or_manager(current_user.role) == False:
     raise HTTPException(
       status_code=status.HTTP_401_UNAUTHORIZED,
       detail="Unauthorized access. Admin role required.",
@@ -135,6 +212,9 @@ async def get_all_car_info(current_user: Annotated[modef.User, Depends(get_curre
       status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
       detail=f"Error retrieving car information: {str(e)}"
     )
+
+
+
 
 @router.post("/create_car", response_model=modef.DefaultResponse)
 async def create_car(request: moreq.CarCreate, current_user: Annotated[modef.User, Depends(get_current_user)]):

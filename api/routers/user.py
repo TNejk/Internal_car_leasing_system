@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Annotated
 import api_models.request as moreq
 import api_models.response as mores
 import api_models.default as modef
 from sqlalchemy.orm import Session
 from internal.dependencies import get_current_user, connect_to_db
+import db.models as model
+from db.enums import UserRoles
 
 router = APIRouter(prefix="/v2/user", tags=["users"])
 

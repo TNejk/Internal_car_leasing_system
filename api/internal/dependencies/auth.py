@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from .database import connect_to_db
 from typing import Annotated
 from fastapi.security import OAuth2PasswordBearer
+from internal.token_models import TokenData
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -92,9 +93,9 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session 
     role = payload.get("role")
     if email is None or role is None:
       raise cred_exception
-    token_data = tokemod.TokenData(email=email, role=role)
+    token_data = TokenData(email=email, role=role)
 
-  except InvalidTokenError:
+  except jwt.InvalidTokenError:
     raise cred_exception
 
   user = get_existing_user(email=email, role=role, db=db)

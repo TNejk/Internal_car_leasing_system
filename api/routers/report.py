@@ -1,10 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import FileResponse
 import api_models.request as moreq
 import api_models.response as mores
 import api_models.default as modef
 from internal.dependencies import get_current_user, connect_to_db, admin_or_manager
+from internal.dependencies.report import find_reports_directory, get_reports_paths
 from typing import Annotated
 from sqlalchemy.orm import Session
+import db.models as model
+from db.enums import UserRoles
+import os
 
 router = APIRouter(prefix="/v2/report", tags=["report"])
 

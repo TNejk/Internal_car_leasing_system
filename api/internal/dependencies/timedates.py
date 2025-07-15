@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import pytz
 
 def convert_to_datetime(string):
   try:
@@ -22,6 +23,7 @@ def ten_minute_tolerance(a_timeof, today):
 
 
 def get_sk_date():
+  bratislava_tz = pytz.timezone('Europe/Bratislava')
   # Ensure the datetime is in UTC before converting
   dt_obj = datetime.now()
   utc_time = dt_obj.replace(tzinfo=pytz.utc) if dt_obj.tzinfo is None else dt_obj.astimezone(pytz.utc)

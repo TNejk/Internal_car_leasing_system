@@ -5,6 +5,8 @@ import api_models.response as mores
 import api_models.default as modef
 from sqlalchemy.orm import Session
 from internal.dependencies import get_current_user, connect_to_db
+import db.models as model
+from db.enums import TripsStatuses, TripsInviteStatus
 
 router = APIRouter(prefix="/v2/trip", tags=["trip"])
 
