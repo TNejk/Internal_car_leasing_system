@@ -15,17 +15,9 @@ async def get_notifications(current_user: Annotated[modef.User, Depends(get_curr
                             db: Session = Depends(connect_to_db)):
   """Get user notifications based on their role and individual assignments"""
   try:
-    # Get current user from database
-    user = db.query(model.Users).filter(
-      model.Users.email == current_user.email,
-      model.Users.is_deleted == False
+    user_db = db.query(model.Users.id, model.Users.role).filter(
+      model.Users.email == current_user.email
     ).first()
-    
-    if not user:
-      raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="User not found"
-      )
     
     # Get notifications for user's role and individual notifications
     # Use a subquery to check if user has a recipient record
@@ -36,18 +28,17 @@ async def get_notifications(current_user: Annotated[modef.User, Depends(get_curr
     ).outerjoin(
       model.NotificationsRecipients,
       (model.Notifications.id == model.NotificationsRecipients.notification) & 
-      (model.NotificationsRecipients.recipient == user.id)
+      (model.NotificationsRecipients.recipient == user_db.id)
     ).filter(
       # Either role-based notification or individual recipient
-      (model.Notifications.recipient_role == user.role) |
-      (model.NotificationsRecipients.recipient == user.id)
+      (model.Notifications.recipient_role == user_db.role) |
+      (model.NotificationsRecipients.recipient == user_db.id)
     ).filter(
-      # Only active notifications (not expired)
       (model.Notifications.expires_at.is_(None)) |
       (model.Notifications.expires_at > datetime.now())
     )
     
-    # Get actor information for notifications
+    # match notification with user id and get actor email
     notifications_with_actors = notifications_query.join(
       model.Users, model.Notifications.actor == model.Users.id
     ).add_columns(model.Users.email.label('actor_email')).all()
@@ -56,7 +47,7 @@ async def get_notifications(current_user: Annotated[modef.User, Depends(get_curr
     unread_count = 0
     
     for notification, is_read, read_at, actor_email in notifications_with_actors:
-      # Default to unread if no recipient record exists
+  
       is_notification_read = is_read if is_read is not None else False
       notification_read_at = read_at if read_at is not None else None
       
@@ -101,27 +92,19 @@ async def mark_notification_as_read(request: moreq.NotificationRead,
                                     db: Session = Depends(connect_to_db)):
   """Mark a notification as read for the current user"""
   try:
-    # Get current user from database
-    user = db.query(model.Users).filter(
-      model.Users.email == current_user.email,
-      model.Users.is_deleted == False
+    user_db = db.query(model.Users.id, model.Users.role).filter(
+      model.Users.email == current_user.email
     ).first()
     
-    if not user:
-      raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="User not found"
-      )
-    
-    # Verify the notification exists and user has access to it
+
     notification = db.query(model.Notifications).filter(
       model.Notifications.id == request.notification_id
     ).filter(
-      # User has access either through role or individual assignment
-      (model.Notifications.recipient_role == user.role) |
+  
+      (model.Notifications.recipient_role == user_db.role) |
       (model.Notifications.id.in_(
         db.query(model.NotificationsRecipients.notification).filter(
-          model.NotificationsRecipients.recipient == user.id
+          model.NotificationsRecipients.recipient == user_db.id
         )
       ))
     ).first()
@@ -135,13 +118,12 @@ async def mark_notification_as_read(request: moreq.NotificationRead,
     # Check if recipient record already exists
     recipient_record = db.query(model.NotificationsRecipients).filter(
       model.NotificationsRecipients.notification == request.notification_id,
-      model.NotificationsRecipients.recipient == user.id
+      model.NotificationsRecipients.recipient == user_db.id
     ).first()
     
     current_time = datetime.now()
     
     if recipient_record:
-      # Update existing record
       if not recipient_record.is_read:
         recipient_record.is_read = True
         recipient_record.read_at = current_time
@@ -151,10 +133,10 @@ async def mark_notification_as_read(request: moreq.NotificationRead,
           msg="Notification already marked as read"
         )
     else:
-      # Create new recipient record
+ 
       new_recipient = model.NotificationsRecipients(
         notification=request.notification_id,
-        recipient=user.id,
+        recipient=user_db.id,
         is_read=True,
         read_at=current_time
       )
