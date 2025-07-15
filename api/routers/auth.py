@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
-from internal.dependencies import get_current_user, connect_to_db, authenticate_user
+from internal.dependencies import get_current_user, connect_to_db, authenticate_user, create_access_token
 import api_models.default as modef
 import api_models.request as moreq
 import api_models.response as mores
