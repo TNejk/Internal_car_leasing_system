@@ -132,7 +132,8 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(salted_pass, hashed_password)
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    salted_pass = LOGIN_SALT + password + LOGIN_SALT
+    return pwd_context.hash(salted_pass)
 
 def authenticate_user(email: str, password: str, db: Session) -> modef.User:
     """Checks if the user exists and verifies password"""
