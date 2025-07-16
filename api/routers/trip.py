@@ -11,8 +11,8 @@ from db.enums import TripsStatuses, TripsInviteStatus
 router = APIRouter(prefix="/v2/trip", tags=["trip"])
 
 
-@router.post("/join_request", response_model=modef.DefaultResponse)
-async def request_trip_join(request: moreq.TripJoinRequest,
+@router.post("/join/request", response_model=modef.DefaultResponse)
+async def request_trip_join(request: Annotated[moreq.TripJoinRequest, Depends()],
                             current_user: Annotated[modef.User, Depends(get_current_user)],
                             db: Session = Depends(connect_to_db)):
   """Request to join a public trip"""
@@ -66,8 +66,8 @@ async def request_trip_join(request: moreq.TripJoinRequest,
     return modef.DefaultResponse(status=False, msg=f"Error sending join request: {str(e)}")
 
 
-@router.post("/respond_invite", response_model=modef.DefaultResponse)
-async def respond_trip_invite(request: moreq.TripInviteResponse,
+@router.post("/invite/response", response_model=modef.DefaultResponse)
+async def respond_trip_invite(request: Annotated[moreq.TripInviteResponse, Depends()],
                               current_user: Annotated[modef.User, Depends(get_current_user)],
                               db: Session = Depends(connect_to_db)):
   """Accept or reject a trip invite"""

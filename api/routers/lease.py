@@ -12,9 +12,8 @@ from datetime import timedelta
 
 router = APIRouter(prefix="/v2/lease", tags=["lease"])
 
-@router.post("/get_leases", response_model=mores.LeaseList)
-async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.User, Depends(get_current_user)],
-                     db: Session = Depends(connect_to_db)):
+@router.get("", response_model=mores.LeaseList)
+async def get_leases(request: Annotated[moreq.LeaseList, Depends()], current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
   """Get list of leases with optional filtering"""
   try:
 
@@ -108,8 +107,8 @@ async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.Use
     )
 
 
-@router.post("/cancel_lease", response_model=mores.LeaseCancel)
-async def cancel_lease(request: moreq.LeaseCancel, current_user: Annotated[modef.User, Depends(get_current_user)],
+@router.post("/cancel", response_model=mores.LeaseCancel)
+async def cancel_lease(request: Annotated[moreq.LeaseCancel, Depends()], current_user: Annotated[modef.User, Depends(get_current_user)],
                        db: Session = Depends(connect_to_db)):
   """Cancel an active lease"""
   try:
@@ -208,14 +207,14 @@ async def cancel_lease(request: moreq.LeaseCancel, current_user: Annotated[modef
     )
 
 
-@router.post("/get_monthly_leases", response_model=list[mores.LeaseMonthly])
-async def get_monthly_leases(request: moreq.LeaseMonthly,
+@router.get("/month/{month}", response_model=mores.LeaseMonthlyList)
+async def get_monthly_leases(month: int,
                              current_user: Annotated[modef.User, Depends(get_current_user)]):
   """Get leases for a specific month (manager/v2/admin only)"""
   pass
 
 
-@router.post("/lease_car", response_model=mores.LeaseStart)
+@router.post("", response_model=mores.LeaseStart)
 async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User, Depends(get_current_user)],
                     db: Session = Depends(connect_to_db)):
   """Create a lease for a car and optionally create a trip with participants"""
@@ -372,7 +371,7 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
 
 # !
 # TODO: Here you need to get email and car name from id's, ALSO remake the sql table for Lease requests to add a foreign key to the lease table to get the IMG URL AND SUCH
-@router.post("/get_requests", response_model=mores.LeaseRequestList)
+@router.get("/private_requests", response_model=mores.LeaseRequestList)
 async def get_requests(current_user: Annotated[modef.User, Depends(get_current_user)],
                        db: Session = Depends(connect_to_db)):
   """Get pending private ride requests (manager/v2/admin only)"""
@@ -409,7 +408,7 @@ async def get_requests(current_user: Annotated[modef.User, Depends(get_current_u
   #     )
 
 
-@router.post("/approve_req", response_model=modef.DefaultResponse)
+@router.post("/approve", response_model=modef.DefaultResponse)
 async def approve_request(request: moreq.LeasePrivateApprove,
                           current_user: Annotated[modef.User, Depends(get_current_user)]):
   """Approve or reject a private ride request (manager/v2/admin only)"""
@@ -418,7 +417,7 @@ async def approve_request(request: moreq.LeasePrivateApprove,
 
 
 
-@router.post("/return_car", response_model=modef.DefaultResponse)
+@router.post("/return", response_model=modef.DefaultResponse)
 async def return_car(request: moreq.LeaseFinish, 
                      current_user: Annotated[modef.User, Depends(get_current_user)],
                      db: Session = Depends(connect_to_db)):

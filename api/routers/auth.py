@@ -18,22 +18,6 @@ async def logout(current_user: Annotated[modef.User, Depends(get_current_user)])
   """Logout endpoint to revoke JWT token"""
   pass
 
-
-@router.post("/register", response_model=modef.DefaultResponse)
-async def register(request: moreq.UserRegister, current_user: Annotated[modef.User, Depends(get_current_user)]):
-  """Register a new user (admin only)"""
-
-  http_exception = HTTPException(status_code=401, detail="Unauthorized.")
-
-  if not admin_or_manager(current_user.role):
-    raise HTTPException(
-      status_code=status.HTTP_401_UNAUTHORIZED,
-      detail="Unauthorized access. Admin or manager role required.",
-      headers={"WWW-Authenticate": "Bearer"}
-    )
-  pass
-
-
 @router.post("/login", response_model=mores.LoginResponse)
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(connect_to_db)):
   """ Login user to app, returns a login_response obj that includes a token and role email combo. """

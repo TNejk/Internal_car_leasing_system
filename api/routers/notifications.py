@@ -10,7 +10,7 @@ from datetime import datetime
 
 router = APIRouter(prefix="/v2/notifications", tags=["notifications"])
 
-@router.get("/get", response_model=mores.NotificationListResponse)
+@router.get("", response_model=mores.NotificationListResponse)
 async def get_notifications(current_user: Annotated[modef.User, Depends(get_current_user)],
                             db: Session = Depends(connect_to_db)):
   """Get user notifications based on their role and individual assignments"""
@@ -86,8 +86,8 @@ async def get_notifications(current_user: Annotated[modef.User, Depends(get_curr
     )
 
 
-@router.post("/mark-as-read", response_model=modef.DefaultResponse)
-async def mark_notification_as_read(request: moreq.NotificationRead,
+@router.patch("/read/{request}", response_model=modef.DefaultResponse)
+async def mark_notification_as_read(request: int,
                                     current_user: Annotated[modef.User, Depends(get_current_user)],
                                     db: Session = Depends(connect_to_db)):
   """Mark a notification as read for the current user"""

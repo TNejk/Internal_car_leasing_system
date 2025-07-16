@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Annotated
 from api_models.default import Lease
+from ..default import Lease
 
 class LeaseList(BaseModel):
   active_leases: list[Lease]
@@ -19,6 +20,9 @@ class LeaseMonthly(BaseModel):
   car_name: str
   driver_email: str
   note: Annotated[str, Field(max_length=250)]
+
+class LeaseMonthlyList(BaseModel):
+  monthly: list[LeaseMonthly]
 
 class LeaseStart(BaseModel):
   status: bool

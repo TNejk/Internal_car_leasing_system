@@ -94,19 +94,94 @@ async def decommission_car(id_car: int, payload: moreq.CarDecommission,current_u
 
   pass
 
-@router.post("/create", response_model=modef.DefaultResponse)
+@router.post("/cars/create", response_model=modef.DefaultResponse)
 async def create_car(request: moreq.CarCreate, current_user: Annotated[modef.User, Depends(get_current_user)]):
   """Create a new car (admin only)"""
   pass
 
 
-@router.patch("/edit/{id_car}", response_model=modef.DefaultResponse)
+@router.patch("/cars/edit/{id_car}", response_model=modef.DefaultResponse)
 async def edit_car(id_car: int, current_user: Annotated[modef.User, Depends(get_current_user)]):
   """Edit car information (admin only)"""
   pass
 
 
-@router.delete("/delete/{id_car}", response_model=modef.DefaultResponse)
+@router.delete("/cars/delete/{id_car}", response_model=modef.DefaultResponse)
 async def delete_car(id_car: int, current_user: Annotated[modef.User, Depends(get_current_user)]):
   """Delete a car (admin only)"""
+  pass
+
+
+@router.get("/users", response_model=mores.UserInfoListResponse)
+async def get_all_user_info(current_user: Annotated[modef.User, Depends(get_current_user)],
+                            db: Session = Depends(connect_to_db)):
+  """Get information about all users (admin only)"""
+
+  # Check if user has admin role (admin-only endpoint)
+  if current_user.role != UserRoles.admin.value:
+    raise HTTPException(
+      status_code=status.HTTP_401_UNAUTHORIZED,
+      detail="Unauthorized access. Admin role required.",
+      headers={"WWW-Authenticate": "Bearer"}
+    )
+
+  try:
+    # Get all non-deleted users except admin users
+    users = db.query(model.Users).filter(
+      model.Users.is_deleted == False,
+      model.Users.role != UserRoles.admin
+    ).all()
+
+    if not users:
+      raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="No users found"
+      )
+
+    user_info_list = []
+
+    for user in users:
+      user_info_list.append(mores.UserInfoResponse(
+        user_id=user.id,
+        username=user.name,
+        email=user.email,
+        role=user.role.value
+      ))
+
+    return user_info_list
+
+  except HTTPException:
+    raise
+  except Exception as e:
+    raise HTTPException(
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+      detail=f"Error retrieving user information: {str(e)}"
+    )
+
+
+@router.post("/users/register", response_model=modef.DefaultResponse)
+async def register(request: moreq.UserRegister, current_user: Annotated[modef.User, Depends(get_current_user)]):
+  """Register a new user (admin only)"""
+
+  http_exception = HTTPException(status_code=401, detail="Unauthorized.")
+
+  if not admin_or_manager(current_user.role):
+    raise HTTPException(
+      status_code=status.HTTP_401_UNAUTHORIZED,
+      detail="Unauthorized access. Admin or manager role required.",
+      headers={"WWW-Authenticate": "Bearer"}
+    )
+  pass
+
+
+@router.patch("/users/edit", response_model=modef.DefaultResponse)
+async def edit_user(request: moreq.UserEdit, current_user: Annotated[modef.User, Depends(get_current_user)]):
+  """Edit user information (admin only)"""
+
+  pass
+
+
+@router.delete("/users/delete/{id_user}", response_model=modef.DefaultResponse)
+async def delete_user(id_user: int, current_user: Annotated[modef.User, Depends(get_current_user)]):
+  """Delete a user (admin only)"""
   pass
