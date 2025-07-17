@@ -546,6 +546,7 @@ async def approve_request(request: moreq.LeasePrivateApprove,
       db.flush()  # Get the lease ID
 
       trip_name = f"Private trip for {car.name} - {user.email}"
+      
       new_trip = model.Trips(
         trip_name=trip_name,
         id_lease=new_lease.id,

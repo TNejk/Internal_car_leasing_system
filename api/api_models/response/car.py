@@ -9,6 +9,7 @@ class CarListContent(BaseModel):
   car_status: Annotated[str, Field(examples=['available', 'away', 'unavailable', 'decommissioned'])]
   spz: Annotated[str | None, Field(default=None, min_length=7)]
   image_url: str
+  seats: int
 
 
 class CarListResponse(BaseModel):
