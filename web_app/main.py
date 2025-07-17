@@ -1,47 +1,16 @@
-import sys, os, logging
-
+import os
+import logging
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, Response
-
-sys.path.append('controllers')
-from check_token import check_token
-from require_role import require_role
-from revoke_token import revoke_token
-
-sys.path.append('workers')
-from request_all_car_data import request_all_car_data
-from sign_in_api import sign_in_api
-from request_user_leases import request_user_leases
-from list_reports import list_reports
-from get_report import get_report
-from request_monthly_leases import request_monthly_leases
-from get_all_users import get_all_users
-from get_all_cars import get_all_cars
-from get_all_car_info import get_all_car_info
-from get_all_user_info import get_all_user_info
-from create_user import create_user
-from create_car import create_car
-from delete_car import delete_car
-from delete_user import delete_user
-from edit_user import edit_user
-from edit_car import edit_car
-from return_car import return_car
-from cancel_lease import cancel_lease
-from notifications import notifications
-from approve_requests import approve_requests
-from get_requests import get_requests
-from decommission import decommission
-from activation import activation
 from dotenv import load_dotenv
 load_dotenv()
-sys.path.append('misc')
 from load_icons import load_icons
+from controllers import check_token, require_role, revoke_token
+from workers import api_call, sign_in_api_call
 
 SECRET_KEY = os.getenv('SECRET_KEY')
-SALT = os.getenv('SALT')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
-
 
 @app.route('/')
 def index():
