@@ -26,7 +26,8 @@ async def get_list_of_cars(current_user: Annotated[modef.User, Depends(get_curre
         car_name=car.name,
         car_status=car.status,
         spz=car.plate_number,
-        image_url=car.img_url
+        image_url=car.img_url,
+        seats=car.seats
       )
     )
 
