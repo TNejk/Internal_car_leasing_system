@@ -20,5 +20,4 @@ def activation(data):
     return jsonify(response)
 
   except requests.RequestException as e:
-    print(f"Request failed: {e}")
-    return jsonify({'error': 'Failed to reach the server'}), 500
+    return jsonify({'error': 'Failed to reach the server', 'msg': e}), 500

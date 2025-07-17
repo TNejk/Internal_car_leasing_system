@@ -1,11 +1,7 @@
-import os, sys, requests, json
-
-sys.path.append('./workers')
+import requests
 from functools import wraps
-from flask import abort, session, redirect, url_for
-from sign_in_api import sign_in_api
-
-SALT = os.getenv('SALT')
+from flask import session, redirect
+from workers import sign_in_api_call
 
 def check_token():
   def decorator(func):
@@ -21,16 +17,14 @@ def check_token():
 
       if response.status_code != 200 or response.json().get('msg') != 'success':
         # Try to refresh token
-        result = sign_in_api(session.get('username'), session.get('password'), SALT)
-        print(result)
+        result = sign_in_api_call(session.get('username'), session.get('password'))
         if result != 'success':  # If login fails, redirect
           return redirect('/sign-in')
         if result == 'Nesprávne meno alebo heslo!':
           return redirect('/sign-in')
 
+
       # If token is valid (or refreshed successfully), proceed to the original function
       return func(*args, **kwargs)
-
     return wrapper
-
   return decorator
