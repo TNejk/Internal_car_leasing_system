@@ -47,6 +47,7 @@ class Lease(BaseModel):
   last_changed_by: str
   region_tag: Annotated[str, Field(examples=['local', 'global'])]
 
+
 class Car(BaseModel):
   car_id: int
   plate_number: str
