@@ -10,12 +10,18 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('resize', setFullHeight);
 
   let thm = localStorage.getItem('theme')
-  if (thm === null){
-    set_dark();
-  }else if (thm === 'dark'){
+
+  if (thm === 'dark'){
     set_dark();
   }else if (thm === 'light'){
     set_light();
+  }else {
+    const darkThemeMq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (darkThemeMq.matches) {
+      set_dark()
+    } else {
+      set_light()
+    }
   }
 });
 
