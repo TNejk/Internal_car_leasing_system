@@ -30,7 +30,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: 
   if not user:
     raise HTTPException(
       status_code=status.HTTP_401_UNAUTHORIZED,
-      detail="Wrong username or password",
+      detail="Zlé meno alebo heslo!",
       headers={"WWW-Authenticate": "Bearer"}
     )
 
