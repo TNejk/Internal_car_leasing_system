@@ -29,7 +29,4 @@ app.include_router(admin.router)
 async def hi():
   return {"msg": "gheloo"}
 
-@app.post("/v2/check_token", response_model=modef.DefaultResponse)
-async def check_token(current_user: Annotated[modef.User, Depends(get_current_user)]):
-  """Validate JWT token"""
-  pass
+
