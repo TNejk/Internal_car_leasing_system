@@ -35,13 +35,11 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: 
     )
 
   access_token = create_access_token(
-    data={"sub": user.email, "role": user.role},
+    data={"sub": {'email': user.email, 'name': user.name}, "role": user.role},
     expires_delta=timedelta(minutes=TOKEN_EXPIRATION_MINUTES)
   )
 
   return mores.LoginResponse(
     token=access_token,
-    email=user.email,
-    role=user.role
   )
 

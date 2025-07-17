@@ -4,8 +4,6 @@ from typing import Annotated
 from fastapi import FastAPI, Depends
 from dotenv import load_dotenv
 load_dotenv()
-import api_models.default as modef
-from internal.dependencies import get_current_user
 from routers import auth, car, lease, notifications, report, trip, user, admin
 
 bratislava_tz = pytz.timezone('Europe/Bratislava')
