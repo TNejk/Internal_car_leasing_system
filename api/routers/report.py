@@ -14,7 +14,7 @@ import os
 router = APIRouter(prefix="/v2/report", tags=["report"])
 
 
-@router.get("", response_model=mores.ReportList)
+@router.get("/get_reports", response_model=mores.ReportList)
 async def list_reports(current_user: Annotated[modef.User, Depends(get_current_user)],
                        db: Session = Depends(connect_to_db)):
   """List available reports (manager/admin only)"""

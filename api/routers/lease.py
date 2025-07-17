@@ -248,7 +248,7 @@ async def get_monthly_leases(month: int,
   pass
 
 
-@router.post("", response_model=mores.LeaseStart)
+@router.post("/lease_car", response_model=mores.LeaseStart)
 async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User, Depends(get_current_user)],
                     db: Session = Depends(connect_to_db)):
   """Create a lease for a car and optionally create a trip with participants"""

@@ -10,7 +10,7 @@ from datetime import datetime
 
 router = APIRouter(prefix="/v2/notifications", tags=["notifications"])
 
-@router.get("", response_model=mores.NotificationListResponse)
+@router.get("/get_notifications", response_model=mores.NotificationListResponse)
 async def get_notifications(current_user: Annotated[modef.User, Depends(get_current_user)],
                             db: Session = Depends(connect_to_db)):
   """Get user notifications based on their role and individual assignments"""

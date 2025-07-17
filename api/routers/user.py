@@ -13,7 +13,7 @@ router = APIRouter(prefix="/v2/user", tags=["users"])
 
 
 
-@router.get("", response_model=mores.UserList)
+@router.get("/get_users", response_model=mores.UserList)
 async def get_users(current_user: Annotated[modef.User, Depends(get_current_user)],
                     db: Session = Depends(connect_to_db)):
   """Get list of all users (manager/admin only)"""
