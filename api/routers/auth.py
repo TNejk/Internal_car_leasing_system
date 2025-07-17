@@ -45,7 +45,3 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: 
     role=user.role
   )
 
-@app.post("/check_token", response_model=modef.DefaultResponse)
-async def check_token(current_user: Annotated[modef.User, Depends(get_current_user)]):
-  """Validate JWT token"""
-  pass
