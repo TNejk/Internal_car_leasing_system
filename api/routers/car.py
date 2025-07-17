@@ -12,8 +12,6 @@ router = APIRouter(prefix='/v2/cars', tags=['cars'])
 
 @router.get("/get_cars", response_model=mores.CarListResponse)
 async def get_list_of_cars(current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
-  # checks if the role is correct
-  check_roles(['user','manager'])
 
   cars = db.query(model.Cars).filter(
     model.Cars.is_deleted == False,
@@ -39,8 +37,6 @@ async def get_list_of_cars(current_user: Annotated[modef.User, Depends(get_curre
 @router.get("/car_info/{id_car}", response_model=mores.CarInfoResponse)
 async def get_full_car_info(id_car: int, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
   """Get complete car information including availability"""
-
-  check_roles(user=current_user,roles=['user','manager'])
 
   try:
     # Get the car by ID
