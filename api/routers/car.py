@@ -78,20 +78,16 @@ async def get_full_car_info(request: moreq.CarInfo,
       model.Cars.is_deleted == False
     ).first()
     
+    
     if not car:
       raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="Car not found"
       )
     
-    # Get decommission time - set to None for now since DecommissionedCars model doesn't exist
-    # TODO: IMPLEMENT DECOMMISSION TIME IN THE TABLE!! ITS NEEDED FOR AUTOMATIC CAR ACTIVATION
-    decommission_time = None
-    
     # Get allowed hours (active leases and requests)
     allowed_hours = []
     
-    # Get active leases for this car
     active_leases = db.query(model.Leases).filter(
       model.Leases.id_car == car.id,
       model.Leases.status.in_([LeaseStatus.scheduled, LeaseStatus.active])
@@ -121,7 +117,7 @@ async def get_full_car_info(request: moreq.CarInfo,
       type=car.category,
       usage_metric=car.usage_metric,
       image_url=car.img_url,
-      decommision_time=decommission_time,
+      decommision_time=car.decommission_time,
       allowed_hours=allowed_hours
     )
     

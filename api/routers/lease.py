@@ -15,10 +15,11 @@ router = APIRouter(prefix="/v2/lease", tags=["lease"])
 @router.post("/get_leases", response_model=mores.LeaseList)
 async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.User, Depends(get_current_user)],
                      db: Session = Depends(connect_to_db)):
-  """Get list of leases with optional filtering"""
+  """Get list of leases with optional filtering, including pending private ride requests at the top"""
   try:
 
-    query = db.query(model.Leases).join(
+    # Query actual leases
+    lease_query = db.query(model.Leases).join(
       model.Users, model.Leases.id_user == model.Users.id
     ).join(
       model.Cars, model.Leases.id_car == model.Cars.id
@@ -27,51 +28,84 @@ async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.Use
       model.Cars.is_deleted == False
     )
 
+    # Query pending lease requests
+    request_query = db.query(model.LeaseRequests).join(
+      model.Users, model.LeaseRequests.id_user == model.Users.id
+    ).join(
+      model.Cars, model.LeaseRequests.id_car == model.Cars.id
+    ).filter(
+      model.LeaseRequests.status == RequestStatus.pending,
+      model.Users.is_deleted == False,
+      model.Cars.is_deleted == False
+    )
+
 
     if current_user.role == UserRoles.user:
+      lease_query = lease_query.filter(model.Users.email == current_user.email)
+      request_query = request_query.filter(model.Users.email == current_user.email)
 
-      query = query.filter(model.Users.email == current_user.email)
     elif current_user.role in [UserRoles.manager, UserRoles.admin]:
-
       if request.filter_email:
-        query = query.filter(model.Users.email == request.filter_email)
+        lease_query = lease_query.filter(model.Users.email == request.filter_email)
+        request_query = request_query.filter(model.Users.email == request.filter_email)
     else:
       raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail="Insufficient permissions"
       )
 
-
     if request.filter_car_id:
-      query = query.filter(model.Leases.id_car == request.filter_car_id)
+      lease_query = lease_query.filter(model.Leases.id_car == request.filter_car_id)
+      request_query = request_query.filter(model.LeaseRequests.id_car == request.filter_car_id)
 
     if request.filter_time_from:
-      query = query.filter(model.Leases.start_time >= request.filter_time_from)
+      lease_query = lease_query.filter(model.Leases.start_time >= request.filter_time_from)
+      request_query = request_query.filter(model.LeaseRequests.start_time >= request.filter_time_from)
 
     if request.filter_time_to:
-      query = query.filter(model.Leases.end_time <= request.filter_time_to)
+      lease_query = lease_query.filter(model.Leases.end_time <= request.filter_time_to)
+      request_query = request_query.filter(model.LeaseRequests.end_time <= request.filter_time_to)
 
 
     status_filters = []
     if request.filter_active_leases:
       status_filters.extend([LeaseStatus.scheduled, LeaseStatus.active, LeaseStatus.late])
     if request.filter_incactive_leases:
-
       status_filters.extend([LeaseStatus.returned, LeaseStatus.canceled, LeaseStatus.missing, LeaseStatus.aborted])
 
-    # If neither filter is specified, show all lease statuses
+
     if not request.filter_active_leases and not request.filter_incactive_leases:
       pass
     elif status_filters:
-      query = query.filter(model.Leases.status.in_(status_filters))
+      lease_query = lease_query.filter(model.Leases.status.in_(status_filters))
 
-
-    leases = query.order_by(model.Leases.start_time.desc()).all()
-
+    leases = lease_query.order_by(model.Leases.start_time.desc()).all()
+    pending_requests = request_query.order_by(model.LeaseRequests.start_time.desc()).all()
 
     lease_entries = []
+
+    # Add pending lease requests at the top (only for managers/admins)
+    if current_user.role in [UserRoles.manager, UserRoles.admin]:
+      for lease_request in pending_requests:
+        lease_entries.append(modef.Lease(
+          lease_id=lease_request.id,
+          lease_status="pending_request",  # Special status to identify requests, doesnt actually exist in the db
+          creation_time=None,  
+          starting_time=lease_request.start_time,
+          ending_time=lease_request.end_time,
+          approved_return_time=None,
+          missing_time=None,
+          cancelled_time=None,
+          aborted_time=None,
+          driver_email=lease_request.user.email,
+          car_name=lease_request.car.name,
+          status_updated_at=None,
+          last_changed_by="",
+          region_tag="local"  
+        ))
+
+
     for lease in leases:
-      # Get last changed by user info
       last_changed_by_name = ""
       if lease.last_changed_by:
         changed_by_user = db.query(model.Users).filter(
@@ -153,7 +187,7 @@ async def cancel_lease(request: moreq.LeaseCancel, current_user: Annotated[modef
       model.Leases.id_user == recipient_user.id,
       model.Leases.id_car == car.id,
       model.Leases.id == request.lease_id,
-      model.Leases.status.in_([LeaseStatus.scheduled, LeaseStatus.active])
+      model.Leases.status.in_([LeaseStatus.scheduled]) # No idea what the lease statuses mean, i guess leasestatus.active means the lease began allready?
     ).order_by(model.Leases.id.desc()).first()
 
     if not active_lease:
@@ -176,7 +210,6 @@ async def cancel_lease(request: moreq.LeaseCancel, current_user: Annotated[modef
     # WE SHOULD NOT CHANGE THE CAR STATUS TO AVAILABLE, as its kinda redundant
     #car.status = CarStatus.available
 
-    # Create change log entry
     change_log = model.LeaseChangeLog(
       id_lease=active_lease.id,
       changed_by=current_user_db.id if current_user_db else None,
@@ -227,6 +260,13 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
     private_ride = request.private_ride
     private_trip = request.private_trip
     trip_participants = request.trip_participants or []
+    trip_name = request.trip_name or None
+
+    # Is the lease, or Trip is private this won' be displayed to the user as an option to fill out. 
+    # If the lease is public therefore Trip is public it MAY not be mandatory for now, but later maybe (It's an experimental feature for now)
+    destination_name = request.destination_name or None
+    longitude = request.longitude or None
+    langitude = request.langitude or None
 
 
     has_privilege = admin_or_manager(current_user.role)
@@ -263,7 +303,7 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
     if not car:
       return modef.ErrorResponse(msg="Auto nie je dostupné alebo neexistuje.", status=False)
 
-
+    # ~ character means NOT, so here it makes sure the (query) doesnt return true, which would overlapp a lease
     conflicting_lease = db.query(model.Leases).filter(
       model.Leases.id_car == car_id,
       model.Leases.status.in_([LeaseStatus.scheduled, LeaseStatus.active]),
@@ -313,11 +353,17 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
     db.add(new_lease)
     db.flush()  # Get the lease ID, without commiting the transaction, the changes are stashed on the db untill we commit(), which means we can still rollback
 
+    # Once again i have no fucking idea how car statuses work, shouldnt the car be away only when such a lease begins??? Like wtff
+    # I thingk its better to have a check in the notificator to change a cars status if it detects a lease for that car has started.
+    #car.status = CarStatus.away
 
-    car.status = CarStatus.away
+    # Also set destination name, and somehow longitude and langitude?
+    # That would be annoying for the user, but would look cool in the app as the manager could see the google maps trail to where he is going.
+    # If its a private trip a destination name is not needed neither is the longitude and langitude, if its a public trip everyone can see where you are going and can join
 
-
-    trip_name = f"Trip for {car.name} - {recipient}"
+    if trip_name is None:
+      trip_name = f"Trip for {car.name} - {recipient}"
+    
     new_trip = model.Trips(
       trip_name=trip_name,
       id_lease=new_lease.id,
@@ -326,9 +372,9 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
       is_public=not private_trip,
       status=TripsStatuses.scheduled,
       free_seats=car.seats - 1,  # -1 for the driver
-      destination_name="Not specified",
-      destination_lat=0.0,
-      destination_lon=0.0
+      destination_name= destination_name,
+      destination_lat= langitude,
+      destination_lon= longitude
     )
 
     db.add(new_trip)
@@ -370,50 +416,186 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
     db.rollback()
     return modef.ErrorResponse(msg=f"Error creating lease: {str(e)}", status=False)
 
-# !
-# TODO: Here you need to get email and car name from id's, ALSO remake the sql table for Lease requests to add a foreign key to the lease table to get the IMG URL AND SUCH
+
 @router.post("/get_requests", response_model=mores.LeaseRequestList)
 async def get_requests(current_user: Annotated[modef.User, Depends(get_current_user)],
                        db: Session = Depends(connect_to_db)):
-  """Get pending private ride requests (manager/v2/admin only)"""
-  # work with LeaseRequests object
+  """Get pending private ride requests (manager/admin only)"""
+  try:
+    if not admin_or_manager(current_user.role):
+      raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Unauthorized.",
+        headers={"WWW-Authenticate": "Bearer"}
+      )
 
-  if not admin_or_manager(current_user.role):
-    return HTTPException(
-      status_code=401,
-      detail="Unauthorized.",
-      headers={"WWW-Authenticate": "Bearer"}
+    # Query lease requests with car and user information
+    requests = db.query(model.LeaseRequests).join(
+      model.Cars, model.LeaseRequests.id_car == model.Cars.id
+    ).join(
+      model.Users, model.LeaseRequests.id_user == model.Users.id
+    ).filter(
+      model.LeaseRequests.status.in_([RequestStatus.pending]),
+      model.Cars.is_deleted == False,
+      model.Users.is_deleted == False
+    ).order_by(model.LeaseRequests.start_time.asc()).all()
+
+    request_entries = []
+    for req in requests:
+      request_entries.append(mores.LeaseRequest(
+        request_id=req.id,
+        starting_time=req.start_time,
+        ending_time=req.end_time,
+        request_status=req.status.value,
+        car_name=req.car.name,
+        spz=req.car.plate_number,
+        driver_email=req.user.email,
+        image_url=req.car.img_url
+      ))
+
+    return mores.LeaseRequestList(active_requests=request_entries)
+
+  except HTTPException:
+    raise
+  except Exception as e:
+    raise HTTPException(
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+      detail=f"Error retrieving lease requests: {str(e)}"
     )
-
-  requests = db.query(model.LeaseRequests).filter(
-    model.LeaseRequests.status != RequestStatus.canceled,
-    model.LeaseRequests.status != RequestStatus.rejected
-  ).all()
-
-  list_request = []
-
-  # for req in requests:
-  #     list_request.append(
-  #         requestEntry(
-  #             request_id= req.id,
-  #             request_status= req.status,
-  #             car_id=
-  #             driver_id=
-  #             image_url= req.img_url
-
-  #             spz=
-  #             starting_time=
-  #             ending_time=
-
-  #         )
-  #     )
 
 
 @router.post("/approve_req", response_model=modef.DefaultResponse)
 async def approve_request(request: moreq.LeasePrivateApprove,
-                          current_user: Annotated[modef.User, Depends(get_current_user)]):
-  """Approve or reject a private ride request (manager/v2/admin only)"""
-  pass
+                          current_user: Annotated[modef.User, Depends(get_current_user)],
+                          db: Session = Depends(connect_to_db)):
+  """Approve or reject a private ride request (manager/admin only)"""
+  try:
+    # Check if user has manager/admin privileges
+    if not admin_or_manager(current_user.role):
+      raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Unauthorized.",
+        headers={"WWW-Authenticate": "Bearer"}
+      )
+
+    lease_request = db.query(model.LeaseRequests).filter(
+      model.LeaseRequests.id == request.request_id,
+      model.LeaseRequests.status == RequestStatus.pending
+    ).first()
+
+    if not lease_request:
+      raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Lease request not found or already processed"
+      )
+
+    car = db.query(model.Cars).filter(
+      model.Cars.id == request.car_id,
+      model.Cars.is_deleted == False
+    ).first()
+
+    if not car:
+      raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Car not found"
+      )
+
+    user = db.query(model.Users).filter(
+      model.Users.email == request.requester,
+      model.Users.is_deleted == False
+    ).first()
+
+    if not user:
+      raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Requester not found"
+      )
+
+    current_user_db = db.query(model.Users).filter(
+      model.Users.email == current_user.email
+    ).first()
+
+    if request.approval:
+      time_from = request.time_from or lease_request.start_time
+      time_to = request.time_to or lease_request.end_time
+
+      conflicting_lease = db.query(model.Leases).filter(
+        model.Leases.id_car == car.id,
+        model.Leases.status.in_([LeaseStatus.scheduled, LeaseStatus.active]),
+        ~((model.Leases.end_time <= time_from) | (model.Leases.start_time >= time_to))
+      ).first()
+
+      if conflicting_lease:
+        raise HTTPException(
+          status_code=status.HTTP_400_BAD_REQUEST,
+          detail="Time slot conflicts with existing lease"
+        )
+
+      new_lease = model.Leases(
+        id_car=car.id,
+        id_user=user.id,
+        start_time=time_from,
+        end_time=time_to,
+        status=LeaseStatus.scheduled,
+        private=True,  # Private lease request
+        region_tag=Regions.local,  # Default to local
+        last_changed_by=current_user_db.id if current_user_db else None
+      )
+
+      db.add(new_lease)
+      db.flush()  # Get the lease ID
+
+      trip_name = f"Private trip for {car.name} - {user.email}"
+      new_trip = model.Trips(
+        trip_name=trip_name,
+        id_lease=new_lease.id,
+        id_car=car.id,
+        creator=user.id,
+        is_public=False,  # Private trip
+        status=TripsStatuses.scheduled,
+        free_seats=car.seats - 1,  # -1 for the driver
+        destination_name="Private destination",  # Default for private trips
+        destination_lat=0.0,  # Default coordinates
+        destination_lon=0.0
+      )
+
+      db.add(new_trip)
+      db.flush()
+
+      trip_participant = model.TripsParticipants(
+        id_trip=new_trip.id,
+        id_user=user.id,
+        seat_number=1,  # Driver seat
+        trip_finished=False
+      )
+      db.add(trip_participant)
+
+      lease_request.status = RequestStatus.approved
+
+      db.commit()
+
+      # TODO: Send notification to user about approval
+      print(f"NOTIFICATION: Private lease request approved by {current_user.email} for {user.email}, car: {car.name}")
+
+      return modef.DefaultResponse(status=True, msg="Private lease request approved successfully!")
+
+    else:
+      lease_request.status = RequestStatus.rejected
+      db.commit()
+
+      # TODO: Send notification to user about rejection
+      print(f"NOTIFICATION: Private lease request rejected by {current_user.email} for {user.email}, car: {car.name}")
+
+      return modef.DefaultResponse(status=True, msg="Private lease request rejected.")
+
+  except HTTPException:
+    raise
+  except Exception as e:
+    db.rollback()
+    raise HTTPException(
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+      detail=f"Error processing lease request: {str(e)}"
+    )
 
 
 

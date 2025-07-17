@@ -24,7 +24,11 @@ class LeaseCar(BaseModel):
   car_id:       int
   private_ride: bool
   private_trip: bool
+  trip_name:    Annotated[str | None, Field(examples=["Oprava server racku v BA."],    default=None)]
   trip_participants: Annotated[list[str] | None, Field(examples=["['user@gamo.sk', 'user2@gamo.sk']"], default=None)]
+  destination_name: Annotated[str | None, Field(examples=["ESET - Bratislava"],    default=None)]
+  longitude:  Annotated[float | None, Field(examples=["1.3"],    default=None)]
+  langitude: Annotated[float | None, Field(examples=["5.7"],    default=None)]
   time_from:    Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
   time_to:      Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
 

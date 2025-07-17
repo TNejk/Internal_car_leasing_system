@@ -126,13 +126,13 @@ async def respond_trip_invite(request: moreq.TripInviteResponse,
     return modef.DefaultResponse(status=False, msg=f"Error responding to invite: {str(e)}")
 
 
-@router.get("", response_model=mores.TripList)
+@router.get("/get_trips", response_model=mores.TripList)
 async def get_trips(current_user: Annotated[modef.User, Depends(get_current_user)],
                     db: Session = Depends(connect_to_db)):
   """Get list of available trips"""
   try:
-    user = db.query(model.Users).filter(model.Users.email == current_user.email).first()
-
+    user = current_user
+    
     # Get public trips and trips created by the user
     trips = db.query(model.Trips).filter(
       (model.Trips.is_public == True) | (model.Trips.creator == user.id),
