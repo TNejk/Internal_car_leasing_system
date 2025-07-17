@@ -14,7 +14,13 @@ def admin_or_manager(role: str):
     return True
   return False
 
-
+def check_roles(user, roles: list):
+  if user.role not in roles:
+    raise HTTPException(
+      status_code=status.HTTP_401_UNAUTHORIZED,
+      detail="Unauthorized access. Admin role required.",
+      headers={"WWW-Authenticate": "Bearer"}
+    )
 
 
 def calculate_usage_metric(car_id: int, db: Session) -> int:

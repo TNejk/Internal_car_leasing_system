@@ -5,8 +5,8 @@ from typing import Annotated
 class LeaseList(BaseModel):
   filter_email:             Annotated[str | None, Field(default=None)]
   filter_car_id:            Annotated[int | None, Field(default=None)]
-  filter_time_from:         Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
-  filter_time_to:           Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
+  filter_time_from:         Annotated[datetime | None, Field(examples=["YYYY.MM.DD hh:mm:dd"],    default=None)]
+  filter_time_to:           Annotated[datetime | None, Field(examples=["YYYY.MM.DD hh:mm:dd"],    default=None)]
   filter_active_leases:     Annotated[bool | None, Field(examples=["Active leases"],   default=None)]
   filter_inactive_leases:  Annotated[bool | None, Field(examples=["InActive leases"], default=None)]
 
@@ -14,10 +14,9 @@ class LeaseMonthly(BaseModel):
   month: Annotated[int, Field(description="Which month to filter leases by.")]
 
 class LeaseCancel(BaseModel):
+  car_id: int
+  lease_id:  int
   recipient: Annotated[str | None, Field(default=None, description="Whose lease to cancel, if not manager users email is utilized instead.")]
-  car_name:  str
-  car_id:    Annotated[int | None, Field(description="If ID is available use it before selecting with car name")]
-  lease_id:  Annotated[int | None, Field(description="Needed to know for sure which lease to cancel")]
 
 class LeaseCar(BaseModel):
   recipient:    Annotated[str | None, Field(default=None)]
@@ -29,20 +28,18 @@ class LeaseCar(BaseModel):
   destination_name: Annotated[str | None, Field(examples=["ESET - Bratislava"],    default=None)]
   longitude:  Annotated[float | None, Field(examples=["1.3"],    default=None)]
   langitude: Annotated[float | None, Field(examples=["5.7"],    default=None)]
-  time_from:    Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
-  time_to:      Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
+  time_from:    Annotated[datetime | None, Field(examples=["YYYY.MM.DD hh:mm:dd"],    default=None)]
+  time_to:      Annotated[datetime | None, Field(examples=["YYYY.MM.DD hh:mm:dd"],    default=None)]
 
 class LeasePrivateApprove(BaseModel):
   approval:   bool
   request_id: int
-  time_from:  Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
-  time_to:    Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
   car_id:     int
   requester:  Annotated[str, Field(description="User who requested the private ride",  default=None)]
 
 class LeaseFinish(BaseModel):
   lease_id:        int
-  time_of_return:  Annotated[datetime | None, Field(examples=["CET time"],    default=None)]
+  time_of_return:  Annotated[datetime | None, Field(examples=["YYYY.MM.DD hh:mm:dd"],    default=None)]
   return_location: str
   damaged:         bool
   dirty_car:       bool

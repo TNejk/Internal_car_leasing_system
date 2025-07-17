@@ -3,3 +3,4 @@
 .idea/autodoprava_web.iml
 api/.env
 api/maker.py
+web_app

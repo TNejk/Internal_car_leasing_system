@@ -6,6 +6,3 @@ class UserEdit(BaseModel):
   password: Annotated[str | None, Field(default=None)]
   role: Annotated[str | None, Field(default=None)]
   name: Annotated[str | None, Field(default=None)]
-
-class UserDelete(BaseModel):
-  user_id: int

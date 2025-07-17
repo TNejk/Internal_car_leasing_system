@@ -15,28 +15,17 @@ class CarEdit(BaseModel):
   car_id: int
   car_name: Annotated[str | None, Field(default=None)]
   car_type: Annotated[str | None, Field(default=None, examples=["personal", "cargo"])]
-  car_status: Annotated[
-    str | None, Field(default=None, examples=['available', 'away', 'unavailable', 'decommissioned'])]
+  car_status: Annotated[str | None, Field(default=None, examples=['available', 'away', 'unavailable', 'decommissioned'])]
   spz: Annotated[str | None, Field(default=None, min_length=7)]
   gas_type: Annotated[str | None, Field(default=None, examples=['benzine', 'naft', 'diesel', 'electric'])]
   drive_type: Annotated[str | None, Field(default=None, examples=['manual', 'automatic'])]
   car_image: Annotated[str | None, Field(default=None)]
 
 
-class CarDelete(BaseModel):
+class CarId(BaseModel):
   car_id: int
-
 
 class CarDecommission(BaseModel):
-  car_id: int
   time_from: Annotated[datetime, Field(examples=["YYYY DD-MM hh:mm:ss"], description="CET time when the car was decommisoned.")]
   time_to: Annotated[datetime, Field(examples=["YYYY DD-MM hh:mm:ss"], description="CET time when the car will be active again.")]
 
-
-class CarActivation(BaseModel):
-  car_id: int
-  car_id: Annotated[int | None, Field(description="If ID is available use it before selecting with car name")]
-
-
-class CarInfo(BaseModel):
-  car_id: int

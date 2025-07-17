@@ -8,11 +8,6 @@ class CarListContent(BaseModel):
   car_name: str
   car_status: Annotated[str, Field(examples=['available', 'away', 'unavailable', 'decommissioned'])]
   spz: Annotated[str | None, Field(default=None, min_length=7)]
-  seats: int
-  gearbox_type: GearboxTypes
-  fuel_type: FuelTypes
-  usage_metric: int
-  type: CarTypes
   image_url: str
 
 
@@ -37,3 +32,6 @@ class CarInfoResponse(BaseModel):
                                                       description="Unless the car is decommissioned this will be None")]
   allowed_hours: Annotated[list[list], Field(examples=["[[YYYY.MM.DD HH:MM:SS, YYYY.MM.DD HH:MM:SS]]"],
                                              description="A list containing starting and ending times of leases bound to this car.")]
+
+class CarInfoListResponse(BaseModel):
+  car_list: list[CarInfoResponse]
