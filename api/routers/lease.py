@@ -598,7 +598,8 @@ async def approve_request(request: moreq.LeasePrivateApprove,
     )
 
 
-
+# TODO: Implement a request to the manager to see if the car was actually properly returned to the company!!!
+# Maybe use the leaseRequest or maybe a notífication? idk for now
 
 @router.post("/return", response_model=modef.DefaultResponse)
 async def return_car(request: moreq.LeaseFinish, 
