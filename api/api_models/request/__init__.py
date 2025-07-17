@@ -1,8 +1,7 @@
 from .auth import UserRegister, UserLogin
-from .user import UserEdit, UserDelete
+from .user import UserEdit   
 from .car import CarCreate, CarEdit, CarId, CarDecommission
 from .lease import LeaseList, LeaseMonthly, LeaseCancel, LeaseCar, LeasePrivateApprove, LeaseFinish
-from .notification import NotificationGet, NotificationRead
 from .report import ReportGet
 from .trip import TripJoinResponse, TripInviteResponse, TripJoinRequest
 
