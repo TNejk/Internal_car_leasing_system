@@ -89,7 +89,7 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session 
 
   try:
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    email = payload.get("sub")
+    email = payload.get("email")
     role = payload.get("role")
     if email is None or role is None:
       raise cred_exception
