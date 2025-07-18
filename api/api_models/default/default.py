@@ -13,7 +13,7 @@ class DefaultResponse(BaseModel):
 class User(BaseModel):
   email: str
   role: Annotated[str, Field(examples=["manager", "user", "admin", "system"])]
-  username: str  # This maps to name in the database
+  name: str  # This maps to name in the database
   disabled: bool  # This maps to is_deleted in the database
 
 class Trip(BaseModel):
