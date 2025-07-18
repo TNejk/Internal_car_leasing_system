@@ -9,12 +9,12 @@
   --primary: hsl(358, 71%, 43%);
   --secondary: hsl(335, 24%, 36%);
   --success: hsl(163, 100%, 33%);
-  --warning: hsl(46, 51%, 56%);
+  --warning: hsl(46, 51%, 36%);
   --danger: hsl(0, 94%, 13%);
   --info: hsl(212, 62%, 40%);
   --text: hsl(0, 0%, 95%);
   --text-unmuted: hsl(0, 0%, 88%);
-  --text-muted: hsl(0, 0%, 70%);
+  --text-muted: hsl(0, 0%, 75%);
   --border: hsl(0, 0%, 30%);
   --border-muted: hsl(0, 0%, 50%);
   --bg-dark: hsl(0,0%,5%);

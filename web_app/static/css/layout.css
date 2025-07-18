@@ -10,6 +10,7 @@
 .flex-inline {
   display: inline-flex;
   gap: var(--space-s);
+  width: 100%;
 }
 
 .no-gap {

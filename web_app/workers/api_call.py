@@ -38,6 +38,7 @@ def api_call(
         response = request_func()
 
         try:
+            print(response.text)
             return response.json()
         except ValueError:
             return {'error': 'Invalid JSON response', 'status_code': response.status_code, 'raw': response.text}, 500

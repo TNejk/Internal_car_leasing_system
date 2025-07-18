@@ -2,8 +2,9 @@ import os
 import logging
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, Response
 from dotenv import load_dotenv
+
 load_dotenv()
-from load_icons import load_icons
+from misc import load_icons
 from controllers import check_token, require_role, revoke_token
 from workers import api_call, sign_in_api_call
 
@@ -11,6 +12,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
+
 
 @app.route('/')
 def index():
@@ -29,8 +31,8 @@ def sign_in():
   else:
     email = request.form['email']
     password = request.form['password']
-    result = sign_in_api(email, password, SALT)
-    if result == 'success':
+    result = sign_in_api_call(email, password)
+    if result['status_code'] == 200:
       role = session.get('role')
       if role == 'user':
         return redirect('/user/dashboard')
@@ -38,6 +40,9 @@ def sign_in():
         return redirect('/manager/dashboard')
       elif role == 'admin':
         return redirect('/admin/dashboard')
+      else:
+        chyba = {'error': 'danger', 'msg': 'danger', 'status_code': 550}
+        return render_template('sign_in.html', data=chyba)
     else:
       return render_template('sign_in.html', data=result, show_header=False)
 
@@ -47,23 +52,25 @@ def sign_in():
 def logout():
   return redirect(url_for('sign_in'))
 
+
 @app.route('/user/dashboard', methods=['GET'])
 @require_role('user')
 def user_dashboard():
-  return render_template('dashboards/dashboard.html', icons=load_icons(), email=session.get('email'), role=session.get('role'), show_header=True)
+  return render_template('dashboards/dashboard.html', icons=load_icons(), email=session.get('email'),
+                         role=session.get('role'), show_header=True)
+
 
 @app.route('/lease', methods=['GET'])
 @require_role('user', 'manager')
 def lease():
   location = request.args.get('location', None)
-  cars = request_all_car_data(location)
+  cars = api_call(method='GET', postfix='cars/get_cars', payload={'location': location})
   email = session['email']
   role = session['role']
   if session.get('role') == 'manager':
-    users = get_all_users(session['email'], session['role'])
+    users = api_call(method='GET', postfix='user/get_users')
     return render_template('dashboards/lease.html', users=users, cars=cars, token=session.get('token'),
-                         icons=load_icons(), email=email, role=role, show_header=True)
-
+                           icons=load_icons(), email=email, role=role, show_header=True)
   else:
     return render_template('dashboards/lease.html', cars=cars, token=session.get('token'),
                            icons=load_icons(), email=email, role=role, show_header=True)
@@ -89,7 +96,7 @@ def get_user_leases():
 
 
 @app.route('/get_session_data', methods=['POST'])
-@require_role('user', 'manager','admin')
+@require_role('user', 'manager', 'admin')
 @check_token()
 def get_session_data():
   data = {
@@ -100,27 +107,28 @@ def get_session_data():
   }
   return jsonify(data)
 
+
 @app.route('/return_car', methods=['POST'])
-@require_role('user','manager')
+@require_role('user', 'manager')
 def return_car_p():
   data = request.get_json()
   response = return_car(data)
   return response
 
+
 @app.route('/cancel_lease', methods=['POST'])
-@require_role('user','manager')
+@require_role('user', 'manager')
 def cancelLease():
   data = request.get_json()
   response = cancel_lease(data)
   return response
+
 
 @app.route('/notifications', methods=['POST'])
 @require_role('user', 'manager')
 def get_notification():
   response = notifications()
   return response
-
-
 
 
 #################################
@@ -130,7 +138,8 @@ def get_notification():
 @app.route('/manager/dashboard', methods=['GET', 'POST'])
 @require_role('manager')
 def manager_dashboard():
-  return render_template('dashboards/manager/dashboard.html', icons=load_icons(), show_header=True, role=session.get('role'), theme=session.get('theme'))
+  return render_template('dashboards/manager/dashboard.html', icons=load_icons(), show_header=True,
+                         role=session.get('role'), theme=session.get('theme'))
 
 
 @app.route('/manager/get_monthly_leases', methods=['POST'])
@@ -147,7 +156,8 @@ def get_monthly_leases():
 @require_role('manager')
 @check_token()
 def reports():
-  return render_template('dashboards/manager/reports.html', icons=load_icons(), show_header=True, role=session['role'], theme=session.get('theme'))
+  return render_template('dashboards/manager/reports.html', icons=load_icons(), show_header=True, role=session['role'],
+                         theme=session.get('theme'))
 
 
 @app.route('/manager/get_all_reports', methods=['GET'])
@@ -187,18 +197,22 @@ def get_users():
   data = get_all_users(session['email'], session['role'])
   return data
 
+
 @app.route('/get_cars', methods=['POST'])
-@require_role('manager','user')
+@require_role('manager', 'user')
 @check_token()
 def get_cars():
-  data = get_all_cars(session['email'],session['role'])
+  data = get_all_cars(session['email'], session['role'])
   return data
+
 
 @app.route('/manager/private_requests', methods=['GET'])
 @require_role('manager')
 @check_token()
 def private_requests():
-  return render_template('dashboards/manager/private_requests.html', icons=load_icons(), show_header=True, role=session.get('role'), theme=session.get('theme'))
+  return render_template('dashboards/manager/private_requests.html', icons=load_icons(), show_header=True,
+                         role=session.get('role'), theme=session.get('theme'))
+
 
 @app.route('/manager/get_requests', methods=['GET'])
 @require_role('manager')
@@ -215,6 +229,7 @@ def approve_requests_d():
   response = approve_requests(data)
   return response
 
+
 #################################
 #             Admin             #
 #################################
@@ -223,7 +238,8 @@ def approve_requests_d():
 @require_role('admin')
 @check_token()
 def admin_dashboard():
-  return render_template('dashboards/admin/dashboard.html', icons=load_icons(), show_header=True, role=session.get('role'), theme=session.get('theme'))
+  return render_template('dashboards/admin/dashboard.html', icons=load_icons(), show_header=True,
+                         role=session.get('role'), theme=session.get('theme'))
 
 
 @app.route('/admin/get_car_list', methods=['POST'])
@@ -240,6 +256,7 @@ def admin_get_car_list():
 def admin_get_user_list():
   data = get_all_user_info(session['email'], session['role'])
   return data
+
 
 @app.route('/admin/create_car', methods=['POST'])
 @require_role('admin')
@@ -294,6 +311,7 @@ def admin_add_user():
   data = request.get_json()
   response = create_user(data)
   return response
+
 
 @app.route('/admin/update_user', methods=['POST'])
 @require_role('admin')
