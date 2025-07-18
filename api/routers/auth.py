@@ -35,7 +35,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: 
     )
 
   access_token = create_access_token(
-    data={"sub": {'email': user.email, 'name': user.name}, "role": user.role},
+    data={'email': user.email, 'name': user.name, "role": user.role},
     expires_delta=timedelta(minutes=TOKEN_EXPIRATION_MINUTES)
   )
 

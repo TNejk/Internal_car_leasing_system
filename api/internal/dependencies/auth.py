@@ -75,7 +75,7 @@ def get_existing_user(email: str, role: str, db: Session) -> modef.User:
   return modef.User(
     email=db_user.email,
     role=db_user.role.value,
-    username=db_user.name,
+    name=db_user.name,
     disabled=db_user.is_deleted
   )
 
