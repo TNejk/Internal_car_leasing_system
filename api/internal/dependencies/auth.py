@@ -44,7 +44,7 @@ def authenticate_user(email: str, password: str, db: Session) -> modef.User:
   return modef.User(
     email=db_user.email,
     role=db_user.role.value,  # Since role is an Enum
-    username=db_user.name,  # Using name as username
+    name=db_user.name,  # Using name as username
     disabled=db_user.is_deleted
   )
 
