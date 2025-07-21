@@ -12,7 +12,7 @@ router = APIRouter(prefix="/v2/trip", tags=["trip"])
 
 
 @router.post("/join/request", response_model=modef.DefaultResponse)
-async def request_trip_join(request: Annotated[moreq.TripJoinRequest, Depends()],
+async def request_trip_join(request: moreq.TripJoinRequest,
                             current_user: Annotated[modef.User, Depends(get_current_user)],
                             db: Session = Depends(connect_to_db)):
   """Request to join a public trip"""
@@ -29,7 +29,13 @@ async def request_trip_join(request: Annotated[moreq.TripJoinRequest, Depends()]
     if trip.free_seats <= 0:
       return modef.DefaultResponse(status=False, msg="No free seats available")
 
-    user = db.query(model.Users).filter(model.Users.email == current_user.email).first()
+    user = db.query(model.Users).filter(
+      model.Users.email == current_user.email,
+      model.Users.is_deleted == False
+    ).first()
+
+    if not user:
+      return modef.DefaultResponse(status=False, msg="User not found")
 
     # Check if user already has a request or is already a participant
     existing_request = db.query(model.TripsJoinRequests).filter(
@@ -67,12 +73,18 @@ async def request_trip_join(request: Annotated[moreq.TripJoinRequest, Depends()]
 
 
 @router.post("/invite/response", response_model=modef.DefaultResponse)
-async def respond_trip_invite(request: Annotated[moreq.TripInviteResponse, Depends()],
+async def respond_trip_invite(request: moreq.TripInviteResponse,
                               current_user: Annotated[modef.User, Depends(get_current_user)],
                               db: Session = Depends(connect_to_db)):
   """Accept or reject a trip invite"""
   try:
-    user = db.query(model.Users).filter(model.Users.email == current_user.email).first()
+    user = db.query(model.Users).filter(
+      model.Users.email == current_user.email,
+      model.Users.is_deleted == False
+    ).first()
+
+    if not user:
+      return modef.DefaultResponse(status=False, msg="User not found")
 
     invite = db.query(model.TripsInvites).filter(
       model.TripsInvites.id == request.invite_id,
@@ -132,7 +144,14 @@ async def get_trips(current_user: Annotated[modef.User, Depends(get_current_user
                     db: Session = Depends(connect_to_db)):
   """Get list of available trips"""
   try:
-    user = current_user
+    # Get the full user from database (current_user from JWT doesn't have id)
+    user = db.query(model.Users).filter(
+      model.Users.email == current_user.email,
+      model.Users.is_deleted == False
+    ).first()
+    
+    if not user:
+      return mores.TripList(trips=[])
     
     # Get public trips and trips created by the user
     trips = db.query(model.Trips).filter(
