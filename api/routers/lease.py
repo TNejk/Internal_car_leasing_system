@@ -40,11 +40,11 @@ async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.Use
     )
 
 
-    if current_user.role == UserRoles.user:
+    if current_user.role == "user":
       lease_query = lease_query.filter(model.Users.email == current_user.email)
       request_query = request_query.filter(model.Users.email == current_user.email)
 
-    elif current_user.role in [UserRoles.manager, UserRoles.admin]:
+    elif current_user.role in ["manager", "admin"]:
       if request.filter_email:
         lease_query = lease_query.filter(model.Users.email == request.filter_email)
         request_query = request_query.filter(model.Users.email == request.filter_email)
@@ -85,7 +85,7 @@ async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.Use
     lease_entries = []
 
     # Add pending lease requests at the top (only for managers/admins)
-    if current_user.role in [UserRoles.manager, UserRoles.admin]:
+    if current_user.role in ["manager", "admin"]:
       for lease_request in pending_requests:
         lease_entries.append(modef.Lease(
           lease_id=lease_request.id,
@@ -220,7 +220,7 @@ async def cancel_lease(request: Annotated[moreq.LeaseCancel, Depends()], current
     db.add(change_log)
 
     # Send notification if manager/admin is cancelling for someone else
-    if (current_user.role in [UserRoles.manager, UserRoles.admin] and
+    if (current_user.role in ["manager", "admin"] and
       current_user.email != recipient_email):
       # TODO: Implement notification system for FastAPI
       # This would replace the Firebase messaging from the old Flask app
