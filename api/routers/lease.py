@@ -74,7 +74,7 @@ async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.Use
       status_filters.extend([LeaseStatus.returned, LeaseStatus.canceled, LeaseStatus.missing, LeaseStatus.aborted])
 
 
-    if not request.filter_active_leases and not request.filter_incactive_leases:
+    if not request.filter_active_leases and not request.filter_inactive_leases:
       pass
     elif status_filters:
       lease_query = lease_query.filter(model.Leases.status.in_(status_filters))
