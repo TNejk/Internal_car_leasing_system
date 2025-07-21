@@ -149,7 +149,7 @@ async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.Use
 
 
 @router.post("/cancel", response_model=mores.LeaseCancel)
-async def cancel_lease(request: Annotated[moreq.LeaseCancel, Depends()], current_user: Annotated[modef.User, Depends(get_current_user)],
+async def cancel_lease(request: moreq.LeaseCancel, current_user: Annotated[modef.User, Depends(get_current_user)],
                        db: Session = Depends(connect_to_db)):
   """Cancel an active lease"""
   try:
@@ -171,50 +171,55 @@ async def cancel_lease(request: Annotated[moreq.LeaseCancel, Depends()], current
     ).first()
 
     if not recipient_user:
-      return mores.LeaseCancel(cancelled=False)
+      raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Recipient user not found"
+      )
 
 
-    car = None
-    if request.car_id:
-      car = db.query(model.Cars).filter(
-        model.Cars.id == request.car_id,
-        model.Cars.is_deleted == False
-      ).first()
-    elif request.car_name:
-      car = db.query(model.Cars).filter(
-        model.Cars.name == request.car_name,
-        model.Cars.is_deleted == False
-      ).first()
+    # Find the car by ID (car_name is not in the request model)
+    car = db.query(model.Cars).filter(
+      model.Cars.id == request.car_id,
+      model.Cars.is_deleted == False
+    ).first()
 
     if not car:
-      return mores.LeaseCancel(cancelled=False)
+      raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Car not found"
+      )
 
+    # Find the lease - allow canceling scheduled and active leases
     active_lease = db.query(model.Leases).filter(
       model.Leases.id_user == recipient_user.id,
       model.Leases.id_car == car.id,
       model.Leases.id == request.lease_id,
-      model.Leases.status.in_([LeaseStatus.scheduled]) # No idea what the lease statuses mean, i guess leasestatus.active means the lease began allready?
+      model.Leases.status.in_([LeaseStatus.scheduled, LeaseStatus.active])
     ).order_by(model.Leases.id.desc()).first()
 
     if not active_lease:
-      return mores.LeaseCancel(cancelled=False)
+      raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Lease not found or cannot be cancelled (already returned/cancelled)"
+      )
 
 
     current_user_db = db.query(model.Users).filter(
-      model.Users.email == current_user.email
+      model.Users.email == current_user.email,
+      model.Users.is_deleted == False
     ).first()
 
+    if not current_user_db:
+      raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Current user not found in database"
+      )
 
     old_status = active_lease.status
     active_lease.status = LeaseStatus.canceled
     active_lease.canceled_time = get_sk_date()
     active_lease.status_updated_at = get_sk_date()
     active_lease.last_changed_by = current_user_db.id if current_user_db else None
-
-    # TODO: CHECK IF WE EVEN WANT TO DO THIS
-    # AS THE CAR CAN BE LEASED INTO THE FUTURE AND THEN CANCELLED
-    # WE SHOULD NOT CHANGE THE CAR STATUS TO AVAILABLE, as its kinda redundant
-    #car.status = CarStatus.available
 
     change_log = model.LeaseChangeLog(
       id_lease=active_lease.id,
