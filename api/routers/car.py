@@ -103,4 +103,3 @@ async def activate_car(id_car: int, current_user: Annotated[modef.User, Depends(
   pass
 
 
-

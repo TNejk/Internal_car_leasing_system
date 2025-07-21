@@ -115,6 +115,7 @@ async def respond_trip_invite(request: Annotated[moreq.TripInviteResponse, Depen
     else:
       # Reject invite
       invite.status = TripsInviteStatus.rejected
+      trip.free_seats += 1
 
     db.commit()
 
