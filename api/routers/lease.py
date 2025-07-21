@@ -70,11 +70,11 @@ async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.Use
     status_filters = []
     if request.filter_active_leases:
       status_filters.extend([LeaseStatus.scheduled, LeaseStatus.active, LeaseStatus.late])
-    if request.filter_incactive_leases:
+    if request.filter_inactive_leases:
       status_filters.extend([LeaseStatus.returned, LeaseStatus.canceled, LeaseStatus.missing, LeaseStatus.aborted])
 
 
-    if not request.filter_active_leases and request.filter_inactive_leases == False:
+    if not request.filter_active_leases and not request.filter_inactive_leases:
       #print("")
       pass
     elif status_filters:
