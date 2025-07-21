@@ -24,6 +24,7 @@ class Trip(BaseModel):
   is_public: bool
   status: Annotated[str, Field(examples=['scheduled', 'active', 'completed', 'cancelled'])]
   free_seats: int
+  total_seats: int
   destination_name: str
   destination_lat: float
   destination_lon: float

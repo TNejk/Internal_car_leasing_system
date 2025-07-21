@@ -172,6 +172,7 @@ async def get_trips(current_user: Annotated[modef.User, Depends(get_current_user
         is_public=trip.is_public,
         status=trip.status.value,
         free_seats=trip.free_seats,
+        total_seats=car.seats,
         destination_name=trip.destination_name,
         destination_lat=float(trip.destination_lat),
         destination_lon=float(trip.destination_lon),
