@@ -264,9 +264,9 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
 
     # Is the lease, or Trip is private this won' be displayed to the user as an option to fill out. 
     # If the lease is public therefore Trip is public it MAY not be mandatory for now, but later maybe (It's an experimental feature for now)
-    destination_name = request.destination_name or None
-    longitude = request.longitude or None
-    langitude = request.langitude or None
+    destination_name = request.destination_name
+    longitude = request.longitude
+    langitude = request.langitude
 
 
     has_privilege = admin_or_manager(current_user.role)

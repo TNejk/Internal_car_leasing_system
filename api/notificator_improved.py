@@ -18,7 +18,7 @@ from sqlalchemy import and_, or_
 
 from db.database import SessionLocal
 import db.models as model
-from db.enums import LeaseStatus, CarStatus, UserRoles, NotificationTypes, TargetFunctions
+from db.enums import LeaseStatus, CarStatus, UserRoles, NotificationTypes, TargetFunctions, TripsStatuses
 
 
 db_host = os.getenv('DB_HOST')
@@ -276,6 +276,145 @@ class CarLeaseNotificator:
             print(f"ERROR: Error handling late returns: {e}")
             raise
     
+    def handle_status_changes(self, db_session, current_time: datetime) -> None:
+        """ Handle status changes for leases, cars and trips based on current time. """
+        try:
+            # Handle scheduled leases that should start (scheduled -> active)
+            starting_leases = db_session.query(model.Leases).filter(
+                model.Leases.start_time <= current_time,
+                model.Leases.status == LeaseStatus.scheduled
+            ).all()
+            
+            for lease in starting_leases:
+                try:
+                    car = db_session.query(model.Cars).filter(
+                        model.Cars.id == lease.id_car
+                    ).first()
+                    
+                    user = db_session.query(model.Users).filter(
+                        model.Users.id == lease.id_user
+                    ).first()
+                    
+                    if not car or not user:
+                        print(f"WARNING: Missing car or user for lease {lease.id}")
+                        continue
+                    
+                    # Update lease status to active
+                    lease.status = LeaseStatus.active
+                    lease.status_updated_at = current_time
+                    
+                    # Update car status to away (being used)
+                    if car.status != CarStatus.away:
+                        car.status = CarStatus.away
+                        print(f"INFO: Car {car.name} status changed to 'away' for active lease {lease.id}")
+                    
+                    # Update associated trip status if exists
+                    trip = db_session.query(model.Trips).filter(
+                        model.Trips.id_lease == lease.id
+                    ).first()
+                    
+                    if trip and trip.status == TripsStatuses.scheduled:
+                        trip.status = TripsStatuses.ongoing
+                        print(f"INFO: Trip {trip.trip_name} status changed to 'ongoing'")
+                    
+                    print(f"INFO: Lease {lease.id} activated for user {user.email} with car {car.name}")
+                    
+                except Exception as e:
+                    print(f"ERROR: Error activating lease {lease.id}: {e}")
+                    continue
+            
+            # Handle leases that should end (active -> returned) and haven't been manually returned
+            ending_leases = db_session.query(model.Leases).filter(
+                model.Leases.end_time <= current_time,
+                model.Leases.status == LeaseStatus.active,
+                model.Leases.return_time.is_(None)  # Not manually returned yet
+            ).all()
+            
+            for lease in ending_leases:
+                try:
+                    car = db_session.query(model.Cars).filter(
+                        model.Cars.id == lease.id_car
+                    ).first()
+                    
+                    if not car:
+                        print(f"WARNING: Missing car for ending lease {lease.id}")
+                        continue
+                    
+                    # Check if there's another lease starting immediately after
+                    next_lease = db_session.query(model.Leases).filter(
+                        model.Leases.id_car == car.id,
+                        model.Leases.start_time <= current_time + timedelta(minutes=30),  # Within 30 minutes
+                        model.Leases.status == LeaseStatus.scheduled,
+                        model.Leases.id != lease.id
+                    ).order_by(model.Leases.start_time.asc()).first()
+                    
+                    # If no immediate next lease, mark car as available
+                    if not next_lease:
+                        car.status = CarStatus.available
+                        print(f"INFO: Car {car.name} status changed to 'available' after lease {lease.id} ended")
+                    
+                    # Update associated trip status if exists
+                    trip = db_session.query(model.Trips).filter(
+                        model.Trips.id_lease == lease.id
+                    ).first()
+                    
+                    if trip and trip.status == TripsStatuses.ongoing:
+                        trip.status = TripsStatuses.ended
+                        print(f"INFO: Trip {trip.trip_name} status changed to 'ended'")
+                        
+                except Exception as e:
+                    print(f"ERROR: Error processing ending lease {lease.id}: {e}")
+                    continue
+            
+            # Handle cars that should be available but aren't (cleanup)
+            self._cleanup_car_statuses(db_session, current_time)
+            
+            if starting_leases or ending_leases:
+                print(f"INFO: Status changes - Started: {len(starting_leases)}, Ended: {len(ending_leases)}")
+                
+        except Exception as e:
+            print(f"ERROR: Error handling status changes: {e}")
+            raise
+    
+    def _cleanup_car_statuses(self, db_session, current_time: datetime) -> None:
+        """Clean up car statuses that may be inconsistent."""
+        try:
+            # Find cars that are 'away' but have no active leases
+            cars_away = db_session.query(model.Cars).filter(
+                model.Cars.status == CarStatus.away,
+                model.Cars.is_deleted == False
+            ).all()
+            
+            for car in cars_away:
+                # Check if there's currently an active lease for this car
+                active_lease = db_session.query(model.Leases).filter(
+                    model.Leases.id_car == car.id,
+                    model.Leases.status.in_([LeaseStatus.active, LeaseStatus.late]),
+                    model.Leases.start_time <= current_time,
+                    or_(
+                        model.Leases.end_time > current_time,
+                        model.Leases.return_time.is_(None)
+                    )
+                ).first()
+                
+                if not active_lease:
+                    # No active lease found, but car is marked as away
+                    # Check if there's a scheduled lease starting soon (within 1 hour)
+                    upcoming_lease = db_session.query(model.Leases).filter(
+                        model.Leases.id_car == car.id,
+                        model.Leases.status == LeaseStatus.scheduled,
+                        model.Leases.start_time <= current_time + timedelta(hours=1),
+                        model.Leases.start_time > current_time
+                    ).first()
+                    
+                    if not upcoming_lease:
+                        car.status = CarStatus.available
+                        print(f"INFO: Cleaned up car {car.name} status - changed from 'away' to 'available'")
+                        
+        except Exception as e:
+            print(f"ERROR: Error during car status cleanup: {e}")
+            raise
+
     def handle_upcoming_lease_cancellation(self, db_session, current_time: datetime, 
                                          car: model.Cars, system_user: model.Users) -> None:
         """Handle warning for upcoming leases if current lease is late."""
@@ -350,6 +489,7 @@ class CarLeaseNotificator:
             
             print(f"DEBUG: Starting monitoring cycle at {current_time}")
 
+            self.handle_status_changes(db_session, current_time)
             self.handle_decommissioned_cars(db_session, current_time)
             self.handle_late_returns(db_session, current_time)
             db_session.commit()
