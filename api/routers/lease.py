@@ -128,6 +128,7 @@ async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.Use
         driver_email=lease.user.email,
         car_name=lease.car.name,
         status_updated_at=lease.status_updated_at,
+        private= lease.private,
         last_changed_by=last_changed_by_name,
         region_tag=lease.region_tag.value
       ))
