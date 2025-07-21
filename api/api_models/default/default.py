@@ -43,6 +43,8 @@ class Lease(BaseModel):
   aborted_time: Annotated[datetime | None, Field(examples=["CET time"], default=None)]
   driver_email: str
   car_name: str
+  spz: str
+  img_url: str
   private: bool
   status_updated_at: Annotated[datetime | None, Field(examples=["CET time"], default=None)]
   last_changed_by: str

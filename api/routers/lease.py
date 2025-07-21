@@ -100,6 +100,8 @@ async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.Use
           aborted_time=None,
           driver_email=lease_request.user.email,
           car_name=lease_request.car.name,
+          spz=lease_request.car.plate_number,
+          img_url=lease_request.car.img_url,
           status_updated_at=None,
           last_changed_by="",
           region_tag="local"  
@@ -127,6 +129,8 @@ async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.Use
         aborted_time=lease.aborted_time,
         driver_email=lease.user.email,
         car_name=lease.car.name,
+        spz=lease.car.plate_number,
+        img_url=lease.car.img_url,
         status_updated_at=lease.status_updated_at,
         private= lease.private,
         last_changed_by=last_changed_by_name,
