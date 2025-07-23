@@ -289,20 +289,20 @@ async def cancel_lease(request: moreq.LeaseCancel, current_user: Annotated[modef
       print(f"INFO: No trip associated with lease {active_lease.id}")
 
     
-    if (current_user.role in ["manager", "admin"] and
-      current_user.email != recipient_email):
-      # Send notification to the user whose lease was cancelled
-      current_user_db = db.query(model.Users).filter(
-        model.Users.email == current_user.email
-      ).first()
+    # if (current_user.role in ["manager", "admin"] and
+    #   current_user.email != recipient_email):
+    #   # Send notification to the user whose lease was cancelled
+    #   current_user_db = db.query(model.Users).filter(
+    #     model.Users.email == current_user.email
+    #   ).first()
       
-      if current_user_db:
-        notify_lease_cancelled(
-          db=db,
-          current_user_id=current_user_db.id,
-          recipient_email=recipient_email,
-          car_name=car.name
-        )
+    #   if current_user_db:
+    #     notify_lease_cancelled(
+    #       db=db,
+    #       current_user_id=current_user_db.id,
+    #       recipient_email=recipient_email,
+    #       car_name=car.name
+    #     )
 
     db.commit()
 
@@ -379,6 +379,9 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
 
     if not car:
       return modef.ErrorResponse(msg="Auto nie je dostupné alebo neexistuje.", status=False)
+    
+    if (len(trip_participants) + 1) > (car.seats):
+      return modef.ErrorResponse(msg="Nedostatok miest v aute, odstránte spolujazdcou.", status=False)
 
     # ~ character means NOT, so here it makes sure the (query) doesnt return true, which would overlapp a lease
     conflicting_lease = db.query(model.Leases).filter(
@@ -412,20 +415,20 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
       db.add(lease_request)
       db.commit()
 
-      # Send notification to managers about private ride request
-      current_user_db = db.query(model.Users).filter(
-        model.Users.email == current_user.email
-      ).first()
+      # # Send notification to managers about private ride request
+      # current_user_db = db.query(model.Users).filter(
+      #   model.Users.email == current_user.email
+      # ).first()
       
-      if current_user_db:
-                 notify_private_ride_request(
-           db=db,
-           current_user_id=current_user_db.id,
-           user_email=current_user.email,
-           car_name=car.name,
-           time_from=str(time_from),
-           time_to=str(time_to)
-         )
+      # if current_user_db:
+      #            notify_private_ride_request(
+      #      db=db,
+      #      current_user_id=current_user_db.id,
+      #      user_email=current_user.email,
+      #      car_name=car.name,
+      #      time_from=str(time_from),
+      #      time_to=str(time_to)
+      #    )
 
       return mores.LeaseStart(status=True, private=True, msg="Request for a private ride was sent!")
 
@@ -470,6 +473,8 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
     db.add(new_trip)
     db.flush()  # Get the trip ID
 
+    
+
     # Add creator as participant
     trip_participant = model.TripsParticipants(
       id_trip=new_trip.id,
@@ -498,21 +503,21 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
 
     db.commit()
 
-    # Send notifications
-    current_user_db = db.query(model.Users).filter(
-      model.Users.email == current_user.email
-    ).first()
+    # # Send notifications
+    # current_user_db = db.query(model.Users).filter(
+    #   model.Users.email == current_user.email
+    # ).first()
     
-    if current_user_db:
-      # Notify managers about new lease
-      notify_new_reservation(
-        db=db,
-        current_user_id=current_user_db.id,
-        recipient_email=recipient,
-        car_name=car.name,
-        time_from=str(time_from),
-        time_to=str(time_to)
-      )
+    # if current_user_db:
+    #   # Notify managers about new lease
+    #   notify_new_reservation(
+    #     db=db,
+    #     current_user_id=current_user_db.id,
+    #     recipient_email=recipient,
+    #     car_name=car.name,
+    #     time_from=str(time_from),
+    #     time_to=str(time_to)
+    #   )
 
     return mores.LeaseStart(status=True, private=private_ride, msg="Lease created successfully!")
 
