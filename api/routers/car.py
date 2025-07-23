@@ -31,6 +31,7 @@ async def get_list_of_cars(current_user: Annotated[modef.User, Depends(get_curre
       )
     )
 
+  
   return mores.CarListResponse(
     car_list=list_car
   )
@@ -98,8 +99,41 @@ async def get_full_car_info(id_car: int, current_user: Annotated[modef.User, Dep
     )
 
 @router.patch("/activation/{id_car}", response_model=modef.DefaultResponse)
-async def activate_car(id_car: int, current_user: Annotated[modef.User, Depends(get_current_user)]):
-  """Activate a decommissioned car (manager/admin only)"""
-  pass
+async def activate_car(id_car: int, current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
+  # VCheck if car exists, check if the user is a manage admin, activate and send a notification
 
+  if not admin_or_manager(current_user.role):
+      return HTTPException(
+        status_code=401,
+        detail="Insufficient permissions.",       
+      )
+
+  car = db.query().filter(
+    model.Cars.id == id_car,
+    model.Cars.is_deleted == False,
+    model.Cars.status == CarStatus.decommissioned.value
+  ).first()
+
+  if not car:
+    return HTTPException(
+        status_code=500,
+        detail="Auto neexistuje alebo už je aktivované.",       
+      )
+
+  car.status = CarStatus.available.value
+
+  db.commit()
+
+  # TODO: POSLAT NOTIFIKACIU
+
+  return modef.DefaultResponse(
+    status=200,
+    msg="Auto bolo aktivované."
+  )
+
+
+@router.patch("/decommision/{id_car}", response_model=modef.DefaultResponse)
+async def decommision_car(request: moreq.CarDecommission , current_user: Annotated[modef.User, Depends(get_current_user)]):
+  # check if car exists user is admin and then check and cancell every lease, trip, private lease request, join trip request and so forth untill the date given to you
+  pass
 

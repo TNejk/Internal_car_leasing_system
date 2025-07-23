@@ -26,6 +26,6 @@ class CarId(BaseModel):
   car_id: int
 
 class CarDecommission(BaseModel):
-  time_from: Annotated[datetime, Field(examples=["YYYY DD-MM hh:mm:ss"], description="CET time when the car was decommisoned.")]
+  car_id: int
   time_to: Annotated[datetime, Field(examples=["YYYY DD-MM hh:mm:ss"], description="CET time when the car will be active again.")]
 
