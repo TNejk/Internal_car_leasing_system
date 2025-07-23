@@ -5,9 +5,14 @@ import api_models.request as moreq
 import api_models.default as modef
 from internal.dependencies import connect_to_db, get_current_user, admin_or_manager, calculate_usage_metric
 from internal.dependencies.timedates import get_sk_date, ten_minute_tolerance
+from internal.dependencies.notifications import (
+    send_notification_to_user, 
+    send_notification_to_role, 
+    send_system_notification
+)
 from sqlalchemy.orm import Session
 import db.models as model
-from db.enums import LeaseStatus, RequestStatus, CarStatus, UserRoles, Regions, TripsStatuses, TripsInviteStatus
+from db.enums import LeaseStatus, RequestStatus, CarStatus, UserRoles, Regions, TripsStatuses, TripsInviteStatus, NotificationTypes, TargetFunctions
 from datetime import timedelta
 
 router = APIRouter(prefix="/v2/lease", tags=["lease"])
@@ -280,10 +285,21 @@ async def cancel_lease(request: moreq.LeaseCancel, current_user: Annotated[modef
     
     if (current_user.role in ["manager", "admin"] and
       current_user.email != recipient_email):
-      # TODO: Implement notification system for FastAPI
-      # This would replace the Firebase messaging from the old Flask app
-      # For now, we'll just log that a notification should be sent
-      print(f"NOTIFICATION: Lease cancelled by {current_user.email} for {recipient_email}, car: {car.name}")
+      # Send notification to the user whose lease was cancelled
+      current_user_db = db.query(model.Users).filter(
+        model.Users.email == current_user.email
+      ).first()
+      
+      if current_user_db:
+        send_notification_to_user(
+          db=db,
+          title="Vaša rezervácia bola zrušená!",
+          message=f"Rezervácia pre auto: {car.name} bola zrušená.",
+          target_user_email=recipient_email,
+          actor_user_id=current_user_db.id,
+          notification_type=NotificationTypes.warning,
+          target_func=TargetFunctions.lease
+        )
 
     db.commit()
 
@@ -393,7 +409,21 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
       db.add(lease_request)
       db.commit()
 
-      # TODO: Send notification to managers
+      # Send notification to managers about private ride request
+      current_user_db = db.query(model.Users).filter(
+        model.Users.email == current_user.email
+      ).first()
+      
+      if current_user_db:
+        send_notification_to_role(
+          db=db,
+          title="Žiadosť o súkromnu jazdu!",
+          message=f"Email: {current_user.email}\nAuto: {car.name}\nOd: {time_from}\nDo: {time_to}",
+          target_role=UserRoles.manager,
+          actor_user_id=current_user_db.id,
+          notification_type=NotificationTypes.info,
+          target_func=TargetFunctions.lease
+        )
 
       return mores.LeaseStart(status=True, private=True, msg="Request for a private ride was sent!")
 
@@ -466,7 +496,22 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
 
     db.commit()
 
-    # TODO: Send notifications
+    # Send notifications
+    current_user_db = db.query(model.Users).filter(
+      model.Users.email == current_user.email
+    ).first()
+    
+    if current_user_db:
+      # Notify managers about new lease
+      send_notification_to_role(
+        db=db,
+        title=f"Nová rezervácia auta: {car.name}!",
+        message=f"Email: {recipient}\nOd: {time_from}\nDo: {time_to}",
+        target_role=UserRoles.manager,
+        actor_user_id=current_user_db.id,
+        notification_type=NotificationTypes.info,
+        target_func=TargetFunctions.lease
+      )
 
     return mores.LeaseStart(status=True, private=private_ride, msg="Lease created successfully!")
 
@@ -633,8 +678,16 @@ async def approve_request(request: moreq.LeasePrivateApprove,
 
       db.commit()
 
-      # TODO: Send notification to user about approval
-      print(f"NOTIFICATION: Private lease request approved by {current_user.email} for {user.email}, car: {car.name}")
+      # Send notification to user about approval
+      send_notification_to_user(
+        db=db,
+        title="Vaša rezervácia bola prijatá!",
+        message=f"Súkromná rezervácia auta: {car.name} bola schválená.",
+        target_user_email=user.email,
+        actor_user_id=current_user_db.id,
+        notification_type=NotificationTypes.success,
+        target_func=TargetFunctions.lease
+      )
 
       return modef.DefaultResponse(status=True, msg="Private lease request approved successfully!")
 
@@ -642,8 +695,16 @@ async def approve_request(request: moreq.LeasePrivateApprove,
       lease_request.status = RequestStatus.rejected
       db.commit()
 
-      # TODO: Send notification to user about rejection
-      print(f"NOTIFICATION: Private lease request rejected by {current_user.email} for {user.email}, car: {car.name}")
+      # Send notification to user about rejection
+      send_notification_to_user(
+        db=db,
+        title="Súkromná rezervácia nebola prijatá!",
+        message=f"Súkromná rezervácia auta: {car.name} bola odmietnutá.",
+        target_user_email=user.email,
+        actor_user_id=current_user_db.id,
+        notification_type=NotificationTypes.warning,
+        target_func=TargetFunctions.lease
+      )
 
       return modef.DefaultResponse(status=True, msg="Private lease request rejected.")
 
@@ -759,7 +820,16 @@ async def return_car(request: moreq.LeaseFinish,
     db.commit()
     
     if request.damaged:
-      print(f"NOTIFICATION: Car {car.name} returned with damage by {current_user.email}")
+      # Send notification to managers about car damage
+      send_notification_to_role(
+        db=db,
+        title="Poškodenie auta!",
+        message=f"Email: {current_user.email}\nAuto: {car.name}\nVrátil auto s poškodením!",
+        target_role=UserRoles.manager,
+        actor_user_id=user.id,
+        notification_type=NotificationTypes.danger,
+        target_func=TargetFunctions.lease
+      )
     
     return modef.DefaultResponse(status=True, msg="Car returned successfully")
     

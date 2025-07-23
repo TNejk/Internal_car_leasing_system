@@ -123,7 +123,7 @@ class CarLeaseNotificator:
     def handle_decommissioned_cars(self, db_session, current_time: datetime) -> None:
         """Handle reactivation of decommissioned cars."""
         try:
-            # Find cars that should be reactivated (assuming we track decommission time somehow)
+            # Find cars that should be reactivated 
             # NOTE: The original code used a 'decommissioned_cars' table that doesn't exist in the new schema
             # For now, we'll look for cars with status 'decommissioned' that have been decommissioned for a certain period
             # This logic may need adjustment based on how decommission time is actually tracked
