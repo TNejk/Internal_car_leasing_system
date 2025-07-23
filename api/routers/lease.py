@@ -230,7 +230,54 @@ async def cancel_lease(request: moreq.LeaseCancel, current_user: Annotated[modef
     )
     db.add(change_log)
 
-    # Send notification if manager/admin is cancelling for someone else
+
+
+    # Cancel the associated trip if it exists and the lease canceller is the creator or a manager
+    # And Update all trip participants to mark their trip as finished
+    trip = db.query(model.Trips).filter(
+      model.Trips.id_lease == active_lease.id
+    ).first()
+
+    if trip and (admin_or_manager(current_user.role) or trip.creator == current_user_db.id):
+
+      trip.status = TripsStatuses.canceled
+      
+    
+      participants = db.query(model.TripsParticipants).filter(
+        model.TripsParticipants.id_trip == trip.id
+      ).all()
+      
+      for participant in participants:
+        participant.trip_finished = True
+      
+  
+      pending_invites = db.query(model.TripsInvites).filter(
+        model.TripsInvites.id_trip == trip.id,
+        model.TripsInvites.status == TripsInviteStatus.pending
+      ).all()
+      
+      for invite in pending_invites:
+        invite.status = TripsInviteStatus.expired
+      
+      
+      pending_requests = db.query(model.TripsJoinRequests).filter(
+        model.TripsJoinRequests.id_trip == trip.id,
+        model.TripsJoinRequests.status == TripsInviteStatus.pending
+      ).all()
+      
+      for join_request in pending_requests:
+        join_request.status = TripsInviteStatus.expired
+      
+      if pending_requests:
+        print(f"INFO: Cancelled {len(pending_requests)} pending join requests for trip {trip.trip_name}")
+    
+    elif trip:
+      print(f"WARNING: Trip {trip.trip_name} exists but current user {current_user.email} is not authorized to cancel it (not creator or manager)")
+    
+    else:
+      print(f"INFO: No trip associated with lease {active_lease.id}")
+
+    
     if (current_user.role in ["manager", "admin"] and
       current_user.email != recipient_email):
       # TODO: Implement notification system for FastAPI
