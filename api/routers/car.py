@@ -10,6 +10,7 @@ from db.enums import CarStatus, LeaseStatus, RequestStatus
 
 router = APIRouter(prefix='/v2/cars', tags=['cars'])
 
+
 @router.get("/get_cars", response_model=mores.CarListResponse)
 async def get_list_of_cars(current_user: Annotated[modef.User, Depends(get_current_user)], db: Session = Depends(connect_to_db)):
 
