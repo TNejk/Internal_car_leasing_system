@@ -299,16 +299,16 @@ class CarLeaseNotificator:
                         print(f"WARNING: Missing car or user for lease {lease.id}")
                         continue
                     
-                    # Update lease status to active
+                
                     lease.status = LeaseStatus.active
                     lease.status_updated_at = current_time
                     
-                    # Update car status to away (being used)
+               
                     if car.status != CarStatus.away:
                         car.status = CarStatus.away
                         print(f"INFO: Car {car.name} status changed to 'away' for active lease {lease.id}")
                     
-                    # Update associated trip status if exists
+             
                     trip = db_session.query(model.Trips).filter(
                         model.Trips.id_lease == lease.id
                     ).first()

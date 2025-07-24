@@ -18,10 +18,11 @@ async def get_users(current_user: Annotated[modef.User, Depends(get_current_user
                     db: Session = Depends(connect_to_db)):
 
   try:
-    # Get all users, that are not disabled or admins
+    # Get all users, that are not disabled or admins, DO NOT RETURN YOURSELF USER
     users = db.query(model.Users).filter(
       model.Users.is_deleted == False,
-      model.Users.role != UserRoles.admin
+      model.Users.role != UserRoles.admin,
+      model.Users.email != current_user.email
     ).all()
 
     user_list = []
