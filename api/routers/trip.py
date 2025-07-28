@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Annotated
 import api_models.request as moreq
 import api_models.response as mores
@@ -183,3 +183,103 @@ async def get_trips(current_user: Annotated[modef.User, Depends(get_current_user
 
   except Exception as e:
     return mores.TripList(trips=[])
+
+
+@router.get("/participants/lease/{lease_id}", response_model=mores.TripParticipantsResponse)
+async def get_trip_participants_by_lease(
+    lease_id: int,
+    current_user: Annotated[modef.User, Depends(get_current_user)],
+    db: Session = Depends(connect_to_db)
+):
+    """
+    Get trip participants for a lease.
+    Access is allowed if:
+    - Trip is public, OR
+    - User is the trip creator, OR 
+    - User is already a participant in the trip
+    """
+    try:
+        # Get the current user from database
+        user = db.query(model.Users).filter(
+            model.Users.email == current_user.email,
+            model.Users.is_deleted == False
+        ).first()
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Find the trip associated with this lease
+        trip = db.query(model.Trips).filter(
+            model.Trips.id_lease == lease_id
+        ).first()
+        
+        if not trip:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No trip found for this lease"
+            )
+        
+        has_access = False
+        
+        if trip.is_public:
+            has_access = True
+        
+        if trip.creator == user.id:
+            has_access = True
+        
+        if not has_access:
+            participant = db.query(model.TripsParticipants).filter(
+                model.TripsParticipants.id_trip == trip.id,
+                model.TripsParticipants.id_user == user.id
+            ).first()
+            
+            if participant:
+                has_access = True
+        
+        if user.role in ["manager", "admin"]:
+           has_access = True
+
+        if not has_access:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. You can only view participants of public trips or trips you created/participate in."
+            )
+        
+        participants_query = db.query(model.TripsParticipants).filter(
+            model.TripsParticipants.id_trip == trip.id
+        ).all()
+        
+
+        participants_list = []
+        for participant in participants_query:
+            participant_user = db.query(model.Users).filter(
+                model.Users.id == participant.id_user,
+                model.Users.is_deleted == False
+            ).first()
+            
+            if participant_user:
+                participants_list.append(mores.TripParticipant(
+                    user_id=participant_user.id,
+                    user_email=participant_user.email,
+                    user_name=participant_user.name,
+                    seat_number=participant.seat_number,
+                    trip_finished=participant.trip_finished
+                ))
+        
+        return mores.TripParticipantsResponse(
+            trip_id=trip.id,
+            trip_name=trip.trip_name,
+            is_public=trip.is_public,
+            participants=participants_list
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving trip participants: {str(e)}"
+        )

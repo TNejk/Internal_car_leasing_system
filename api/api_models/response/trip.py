@@ -29,3 +29,18 @@ class TripInvite(BaseModel):
 
 class TripInviteListResponse(BaseModel):
   invites: list[TripInvite]
+
+
+class TripParticipant(BaseModel):
+  user_id: int
+  user_email: str
+  user_name: str
+  seat_number: int
+  trip_finished: bool
+
+
+class TripParticipantsResponse(BaseModel):
+  trip_id: int
+  trip_name: str
+  is_public: bool
+  participants: list[TripParticipant]
