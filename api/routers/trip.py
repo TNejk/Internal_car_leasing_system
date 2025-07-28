@@ -191,13 +191,7 @@ async def get_trip_participants_by_lease(
     current_user: Annotated[modef.User, Depends(get_current_user)],
     db: Session = Depends(connect_to_db)
 ):
-    """
-    Get trip participants for a lease.
-    Access is allowed if:
-    - Trip is public, OR
-    - User is the trip creator, OR 
-    - User is already a participant in the trip
-    """
+
     try:
         # Get the current user from database
         user = db.query(model.Users).filter(
