@@ -7,7 +7,7 @@ class TripList(BaseModel):
   trips: list[Trip]
 
 
-class TripJoinRequest(BaseModel):
+class TripJoinRequestInfo(BaseModel):
   request_id: int
   trip_id: int
   user_email: str
@@ -16,7 +16,7 @@ class TripJoinRequest(BaseModel):
 
 
 class TripJoinRequestListResponse(BaseModel):
-  join_requests: list[TripJoinRequest]
+  join_requests: list[TripJoinRequestInfo]
 
 
 class TripInvite(BaseModel):

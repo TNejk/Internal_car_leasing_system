@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 
 class TripJoinRequest(BaseModel):
-  seat_number: int
   trip_id: int
 
 class TripJoinResponse(BaseModel):

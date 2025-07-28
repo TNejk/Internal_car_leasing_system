@@ -283,3 +283,179 @@ async def get_trip_participants_by_lease(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error retrieving trip participants: {str(e)}"
         )
+
+
+@router.get("/join/requests", response_model=mores.TripJoinRequestListResponse)
+async def get_trip_join_requests(current_user: Annotated[modef.User, Depends(get_current_user)],
+                                 db: Session = Depends(connect_to_db)):
+    """Get trip join requests for trips created by the current user (or all if admin)"""
+    try:
+        user = db.query(model.Users).filter(
+            model.Users.email == current_user.email,
+            model.Users.is_deleted == False
+        ).first()
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        # If admin, get all join requests; otherwise only for trips created by the user
+        if user.role in ["admin", "manager"]:
+            join_requests = db.query(model.TripsJoinRequests).all()
+        else:
+            # Get join requests only for trips created by this user
+            join_requests = db.query(model.TripsJoinRequests).join(
+                model.Trips, model.TripsJoinRequests.id_trip == model.Trips.id
+            ).filter(
+                model.Trips.creator == user.id
+            ).all()
+
+        requests_list = []
+        for request in join_requests:
+            # Get user details
+            request_user = db.query(model.Users).filter(
+                model.Users.id == request.id_user,
+                model.Users.is_deleted == False
+            ).first()
+            
+            # Get trip details for context
+            trip = db.query(model.Trips).filter(model.Trips.id == request.id_trip).first()
+            
+            if request_user and trip:
+                requests_list.append(mores.TripJoinRequestInfo(
+                    request_id=request.id,
+                    trip_id=request.id_trip,
+                    user_email=request_user.email,
+                    status=request.status.value,
+                    requested_at=trip.created_at  # Using trip creation as approximation since no timestamp in join requests
+                ))
+
+        return mores.TripJoinRequestListResponse(join_requests=requests_list)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving join requests: {str(e)}"
+        )
+
+
+@router.post("/join/approve", response_model=modef.DefaultResponse)
+async def approve_trip_join_request(request: moreq.TripJoinResponse,
+                                    current_user: Annotated[modef.User, Depends(get_current_user)],
+                                    db: Session = Depends(connect_to_db)):
+    """Approve or reject a trip join request"""
+    try:
+        user = db.query(model.Users).filter(
+            model.Users.email == current_user.email,
+            model.Users.is_deleted == False
+        ).first()
+
+        if not user:
+            return modef.DefaultResponse(status=False, msg="User not found")
+
+        join_request = db.query(model.TripsJoinRequests).filter(
+            model.TripsJoinRequests.id == request.request_id,
+            model.TripsJoinRequests.status == TripsInviteStatus.pending
+        ).first()
+
+        if not join_request:
+            return modef.DefaultResponse(status=False, msg="Join request not found or already processed")
+
+        trip = db.query(model.Trips).filter(model.Trips.id == join_request.id_trip).first()
+
+        if not trip:
+            return modef.DefaultResponse(status=False, msg="Trip not found")
+
+        # Check if user has permission to approve (trip creator or admin)
+        if trip.creator != user.id and user.role not in ["admin", "manager"]:
+            return modef.DefaultResponse(status=False, msg="You don't have permission to approve this request")
+
+        if request.approved:
+            if trip.free_seats <= 0:
+                return modef.DefaultResponse(status=False, msg="No free seats available")
+
+            # Approve request - add as participant
+            join_request.status = TripsInviteStatus.accepted
+
+            # Find next available seat number
+            existing_participants = db.query(model.TripsParticipants).filter(
+                model.TripsParticipants.id_trip == join_request.id_trip
+            ).all()
+
+            used_seats = [p.seat_number for p in existing_participants]
+            seat_number = 2  # Start from 2 (driver is seat 1)
+            while seat_number in used_seats:
+                seat_number += 1
+
+            participant = model.TripsParticipants(
+                id_trip=join_request.id_trip,
+                id_user=join_request.id_user,
+                seat_number=seat_number,
+                trip_finished=False
+            )
+
+            db.add(participant)
+            trip.free_seats -= 1
+
+        else:
+            # Reject request
+            join_request.status = TripsInviteStatus.rejected
+
+        db.commit()
+
+        status_msg = "Join request approved" if request.approved else "Join request rejected"
+        return modef.DefaultResponse(status=True, msg=status_msg)
+
+    except Exception as e:
+        db.rollback()
+        return modef.DefaultResponse(status=False, msg=f"Error processing join request: {str(e)}")
+
+
+@router.get("/invites", response_model=mores.TripInviteListResponse)
+async def get_trip_invites(current_user: Annotated[modef.User, Depends(get_current_user)],
+                           db: Session = Depends(connect_to_db)):
+    """Get trip invites for the current user"""
+    try:
+        user = db.query(model.Users).filter(
+            model.Users.email == current_user.email,
+            model.Users.is_deleted == False
+        ).first()
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        # Get all invites for this user
+        invites = db.query(model.TripsInvites).filter(
+            model.TripsInvites.id_user == user.id
+        ).all()
+
+        invites_list = []
+        for invite in invites:
+            # Get trip details for context
+            trip = db.query(model.Trips).filter(model.Trips.id == invite.id_trip).first()
+            
+            if trip:
+                invites_list.append(mores.TripInvite(
+                    invite_id=invite.id,
+                    trip_id=invite.id_trip,
+                    user_email=user.email,
+                    status=invite.status.value,
+                    invited_at=trip.created_at  # Using trip creation as approximation since no timestamp in invites
+                ))
+
+        return mores.TripInviteListResponse(invites=invites_list)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving invites: {str(e)}"
+        )
