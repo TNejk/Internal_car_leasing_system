@@ -1,3 +1,5 @@
+import Calendar from '@toast-ui/calendar'
+
 let selectedRange = null;
 let username = null
 let role = null;
@@ -22,10 +24,10 @@ function fetchCarData(carId, token, user, useRole) {
     .then((response) => response.json())
     .then((data) => {
       renderDetails(data['car_details']);
-      const calendar = renderCalendar(data['notallowed_dates']);
+      renderCalendar(data['notallowed_dates']);
       document.getElementById('default-message').style.display = 'none';
       document.getElementById('car-details').style.display = 'flex';
-      calendar.render();
+      //calendar.render();
     })
     .catch((error) => console.error('Error fetching car details:', error));
   username = user;
@@ -38,104 +40,94 @@ function renderCalendar(dates) {
   const calendarEl = document.getElementById('calendar');
   const today = new Date(); // Get today's date
 
-  const calendar = new FullCalendar.Calendar(calendarEl, {
-    height: 650,
-    initialView: 'timeGrid7Day',
-    locale: 'sk',
-    allDayText: 'Celý deň',
-    selectable: true,
-    selectOverlap: false,
-    unselectAuto: true,
-    eventOverlap: false,
-    nowIndicator: true,
-    selectMirror: true,
+  const calendar = new Calendar(calendarEl, {
+    defaultView: 'week',
+    template: {
+      time(event) {
+        const { start, end, title } = event;
 
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'timeGrid7Day,timeGridDay',
-    },
-
-    footerToolbar: {
-      center: 'lease',
-    },
-
-    views: {
-      timeGrid7Day: {
-        type: 'timeGrid',
-        duration: { days: 7 },
-        buttonText: 'Týždeň'
+        return `<span style="color: white;">${start}~${end} ${title}</span>`;
       },
-      timeGridDay: {
-        buttonText: 'Deň'
-      },
-      timeGridToday: {
-        buttonText: 'Dnes'
-      }
-    },
 
-    customButtons: {
-      this: {
-        buttonText: 'Dnes',
-        click: function() {
-          calendar.today();
-        }
-      },
-      lease: {
-        text: 'Rezervuj!',
-        click: function () {
-          if (selectedRange) {
-            leaseCar(selectedRange);
-          } else {
-            console.log('No range selected.');
-          };
-        },
+      allday(event) {
+        return `<span style="color: gray;">${event.title}</span>`;
       },
     },
 
-    validRange: {
-      start: today.toISOString().split('T')[0] // Disable dates before today
-    },
+    calendars: [
+      {
+        id: 'cal1',
+        name: 'Personal',
+        backgroundColor: '#03bd9e',
+      },
+      {
+        id: 'cal2',
+        name: 'Work',
+        backgroundColor: '#00a9ff',
+      },
+    ],
 
-    // selectAllow: function(selectInfo) {
-    //   // Disallow times before the current time on the current day
-    //   const today = new Date().toISOString().split('T')[0];
-    //   const selectedStart = selectInfo.start;
-    //   const selectedDate = selectedStart.toISOString().split('T')[0];
+    // views: {
+    //   timeGrid7Day: {
+    //     type: 'timeGrid',
+    //     duration: { days: 7 },
+    //     buttonText: 'Týždeň'
+    //   },
+    //   timeGridDay: {
+    //     buttonText: 'Deň'
+    //   },
+    //   timeGridToday: {
+    //     buttonText: 'Dnes'
+    //   }
+    // },
     //
-    //   // If the selected date is today, ensure the time is in the future
-    //   if (selectedDate === today) {
-    //     const nowTime = now.getTime(); // Current time in milliseconds
-    //     return selectedStart.getTime() >= nowTime; // Allow only if the start time is in the future
+    // customButtons: {
+    //   this: {
+    //     buttonText: 'Dnes',
+    //     click: function() {
+    //       calendar.today();
+    //     }
+    //   },
+    //   lease: {
+    //     text: 'Rezervuj!',
+    //     click: function () {
+    //       if (selectedRange) {
+    //         leaseCar(selectedRange);
+    //       } else {
+    //         console.log('No range selected.');
+    //       };
+    //     },
+    //   },
+    // },
+    //
+    // validRange: {
+    //   start: today.toISOString().split('T')[0] // Disable dates before today
+    // },
+    //
+    // events: dates.map((event) => ({
+    //   title: 'Obsadené',
+    //   start: event[0],
+    //   end: event[1]
+    // })),
+    //
+    // select: function (info) {
+    //   function formatDate(date) {
+    //     const year = date.substr(0,4);
+    //     const month = date.substr(5,2);
+    //     const day = date.substr(8,2);
+    //     const hours = date.substr(11,2);
+    //     const minutes = date.substr(14,2);
+    //     const seconds = date.substr(17,2);
+    //     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     //   }
     //
-    //   return true; // Allow selection for future dates
+    //   selectedRange = {
+    //     start: formatDate(info.startStr),
+    //     end: formatDate(info.endStr),
+    //   };
     // },
-
-    events: dates.map((event) => ({
-      title: 'Obsadené',
-      start: event[0],
-      end: event[1]
-    })),
-
-    select: function (info) {
-      function formatDate(date) {
-        const year = date.substr(0,4);
-        const month = date.substr(5,2);
-        const day = date.substr(8,2);
-        const hours = date.substr(11,2);
-        const minutes = date.substr(14,2);
-        const seconds = date.substr(17,2);
-        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-      }
-
-      selectedRange = {
-        start: formatDate(info.startStr),
-        end: formatDate(info.endStr),
-      };
-    },
   });
-  document.getElementsByClassName('fc-timegrid-axis-cushion fc-scrollgrid-shrink-cushion fc-scrollgrid-sync-inner').innerText = `Celý deň`;
+  //document.getElementsByClassName('fc-timegrid-axis-cushion fc-scrollgrid-shrink-cushion fc-scrollgrid-sync-inner').innerText = `Celý deň`;
 
   return calendar;
 }
@@ -194,13 +186,13 @@ function reload(data){
   }
   modal.classList.add('open');
 
-};
+}
 
 function leaseCar(selectedRange) {
   let recipient = role === "manager" ? document.getElementById('car-renter').value : username;
   is_private = document.getElementById('isPrivate').checked;
 
-  data = {
+  let data = {
     'username': username,
     'recipient': recipient,
     'role': role,

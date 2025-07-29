@@ -1,9 +1,6 @@
 {% extends 'base/base.html' %}
 
 {% block head %}
-<!--<link rel="stylesheet" href="{{ url_for('static', filename='old_css/new_styles/auth.css') }}">-->
-<!--<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">-->
-<script src="{{ url_for('static', filename='js/signs/sign_in.js' )}}"></script>
 <title>ICLS - Prihlásenie</title>
 {% endblock %}
 
@@ -11,7 +8,7 @@
   <div class="flex-center full-height">
     <div class="card">
       <div class="flex-center">
-        <img src="../static/src/images/logo.svg" alt="GAMO" class="gamo-logo">
+        <img src="../static/images/logo.svg" alt="GAMO" class="gamo-logo">
       </div>
       <form action="/sign-in" method="POST">
         <div class="form-container">
@@ -23,7 +20,7 @@
             <label for="sign-in-password">Heslo</label>
             <div class="flex-inline no-gap">
               <input type="password" id="sign-in-password" name="password" class="pass">
-              <img src="{{ url_for('static', filename='src/images/show-pass.svg' )}}" id='show-pass' class="show-pass-btn" alt="On/Off" onclick="show_pass()">
+              <img src="{{ url_for('static', filename='images/show-pass.svg' )}}" id='show-pass' class="show-pass-btn" alt="On/Off" onclick="show_pass()">
             </div>
           </div>
         </div>

@@ -3,11 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-  <title></title>
-  <!--  <link rel="stylesheet" href="{{ url_for('static', filename='old_css/new_styles/style.css') }}">-->
-<!--  <link rel="stylesheet" href="{{ url_for('static', filename='old_css/new_styles/header.css') }}">-->
-  {% block head %}{% endblock %}
+  {% for asset in assets %}
+    {%  if asset.style %}
+      <link rel="stylesheet" href="{{ asset.style }}">
+    {% endif %}
+    {% if asset.script %}
+      <script src="{{ asset.script }}"></script>
+    {% endif %}
+  {% endfor %}
+
+  {% block head %}
+  {% endblock %}
 </head>
 <body>
 
@@ -19,7 +25,6 @@
   {% endblock %}
 
   {% block script %}
-    <script src="{{ url_for('static', filename='js/script.js' )}}"></script>
   {% endblock %}
 </body>
 </html>

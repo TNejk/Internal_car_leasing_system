@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 from dotenv import load_dotenv
 
 load_dotenv()
-from misc import load_icons
+from misc import load_icons, gvap
 from controllers import check_token, require_role, revoke_token
 from workers import api_call, sign_in_api_call
 
@@ -26,8 +26,10 @@ def index():
 @app.route('/sign-in', methods=['GET', 'POST'])
 @revoke_token()
 def sign_in():
+  assets = gvap(['main','js/script'])
+
   if request.method == 'GET':
-    return render_template('sign_in.html')
+    return render_template('sign_in.html', assets=assets)
   else:
     email = request.form['email']
     password = request.form['password']
@@ -42,9 +44,9 @@ def sign_in():
         return redirect('/admin/dashboard')
       else:
         chyba = {'error': 'danger', 'msg': 'danger', 'status_code': 550}
-        return render_template('sign_in.html', data=chyba)
+        return render_template('sign_in.html', data=chyba, assets=assets)
     else:
-      return render_template('sign_in.html', data=result, show_header=False)
+      return render_template('sign_in.html', data=result, show_header=False, assets=assets)
 
 
 @app.route('/logout')
@@ -56,13 +58,16 @@ def logout():
 @app.route('/user/dashboard', methods=['GET'])
 @require_role('user')
 def user_dashboard():
-  return render_template('dashboards/dashboard.html', icons=load_icons(), email=session.get('email'),
-                         role=session.get('role'), show_header=True)
+  assets = gvap(['main', 'js/script', 'js/dashboard'])
+  print(assets)
+  return render_template('dashboards/dashboard.html', icons=load_icons(), email=session.get('name'),
+                         role=session.get('role'), show_header=True, assets=assets)
 
 
 @app.route('/lease', methods=['GET'])
 @require_role('user', 'manager')
 def lease():
+  assets = gvap(['main', 'js/script', 'js/lease'])
   location = request.args.get('location', None)
   cars = api_call(method='GET', postfix='cars/get_cars', payload={'location': location})
   email = session['email']
@@ -70,10 +75,10 @@ def lease():
   if session.get('role') == 'manager':
     users = api_call(method='GET', postfix='user/get_users')
     return render_template('dashboards/lease.html', users=users, cars=cars, token=session.get('token'),
-                           icons=load_icons(), email=email, role=role, show_header=True)
+                           icons=load_icons(), email=email, role=role, show_header=True, assets=assets)
   else:
     return render_template('dashboards/lease.html', cars=cars, token=session.get('token'),
-                           icons=load_icons(), email=email, role=role, show_header=True)
+                           icons=load_icons(), email=email, role=role, show_header=True, assets=assets)
 
 
 @app.route(f'/reservations', methods=['GET', 'POST'])

@@ -1,3 +1,4 @@
+
 const welcomeMessage = document.getElementById('welcome-message');
 const modalMonthly = document.getElementById('modal-monthly');
 const modalBackdrop = document.getElementById('modal-backdrop');

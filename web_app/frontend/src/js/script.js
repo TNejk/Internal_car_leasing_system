@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', () => {
   function setFullHeight() {
     const el = document.querySelector('.full-height');
@@ -27,14 +26,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function set_dark(){
   localStorage.setItem('theme', 'dark')
-  localStorage.setItem('dlb', '/static/src/images/on-off-white.svg')
+  localStorage.setItem('dlb', '/static/images/on-off-white.svg')
   document.documentElement.setAttribute('data-theme', localStorage.getItem('theme'));
   document.getElementById('toggle-btn').src = localStorage.getItem('dlb');
 }
 
 function set_light(){
   localStorage.setItem('theme', 'light');
-  localStorage.setItem('dlb', '/static/src/images/on-off.svg')
+  localStorage.setItem('dlb', '/static/images/on-off.svg')
   document.documentElement.setAttribute('data-theme', localStorage.getItem('theme'));
   document.getElementById('toggle-btn').src = localStorage.getItem('dlb');
 }

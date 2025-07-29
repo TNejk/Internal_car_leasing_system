@@ -1,7 +1,7 @@
 <header class="flex-center header">
   <div class="flex-center">
-    <img src="../../static/src/images/logo.svg" alt="GAMO" class="gamo-logo" style="height: 4rem">
-    <img src="{{ url_for('static', filename='src/images/on-off-white.svg' )}}" id='toggle-btn' class="action-button" alt="On/Off" onclick="toggle()">
+    <img src="../../static/images/logo.svg" alt="GAMO" class="gamo-logo" style="height: 4rem">
+    <img src="{{ url_for('static', filename='images/on-off-white.svg' )}}" id='toggle-btn' class="action-button" alt="On/Off" onclick="toggle()">
   </div>
   {% if role == 'admin' %}
   <a href="/logout">Odhlásiť sa</a>
