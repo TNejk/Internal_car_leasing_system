@@ -19,9 +19,6 @@ def api_call(
     if additional_headers:
         headers.update(additional_headers)
 
-    print(payload)
-    print(headers)
-
     try:
         method = method.upper()
         request_func = {
@@ -38,7 +35,6 @@ def api_call(
         response = request_func()
 
         try:
-            print(response.text)
             return response.json()
         except ValueError:
             return {'error': 'Invalid JSON response', 'status_code': response.status_code, 'raw': response.text}, 500
