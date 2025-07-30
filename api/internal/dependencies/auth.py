@@ -1,5 +1,6 @@
 import os
 import jwt
+import uuid
 from passlib.context import CryptContext
 import db.models as model
 from fastapi import HTTPException, Header, status, Depends
@@ -56,7 +57,13 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     expire = datetime.now(timezone.utc) + expires_delta
   else:
     expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-  to_encode.update({"exp": expire})
+  
+  # Add unique JWT ID for token revocation tracking
+  to_encode.update({
+    "exp": expire,
+    "jti": str(uuid.uuid4())
+  })
+  
   encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
   return encoded_jwt
 
@@ -97,6 +104,19 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session 
 
   except jwt.InvalidTokenError:
     raise cred_exception
+
+  # Check if token is revoked
+  token_to_check = payload.get("jti", token)  # Use jti if available, otherwise use the token itself
+  revoked_token = db.query(model.RevokedJWT).filter(
+    model.RevokedJWT.token == token_to_check
+  ).first()
+  
+  if revoked_token:
+    raise HTTPException(
+      status_code=status.HTTP_401_UNAUTHORIZED,
+      detail="Token has been revoked",
+      headers={"WWW-Authenticate": "Bearer"}
+    )
 
   user = get_existing_user(email=email, role=role, db=db)
   if not user:
