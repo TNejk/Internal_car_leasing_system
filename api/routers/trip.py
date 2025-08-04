@@ -5,8 +5,13 @@ import api_models.response as mores
 import api_models.default as modef
 from sqlalchemy.orm import Session
 from internal.dependencies import get_current_user, connect_to_db
+from internal.dependencies.notifications import (
+    send_notification_to_user, 
+    send_notification_to_role, 
+    send_system_notification
+)
 import db.models as model
-from db.enums import TripsStatuses, TripsInviteStatus
+from db.enums import TripsStatuses, TripsInviteStatus, NotificationTypes, TargetFunctions
 
 router = APIRouter(prefix="/v2/trip", tags=["trip"])
 
@@ -64,6 +69,19 @@ async def request_trip_join(request: moreq.TripJoinRequest,
 
     db.add(join_request)
     db.commit()
+
+    # Notify trip creator about join request
+    trip_creator = db.query(model.Users).filter(model.Users.id == trip.creator).first()
+    if trip_creator:
+      send_notification_to_user(
+        db=db,
+        title="Nová žiadosť o pridanie sa na cestu!",
+        message=f"Používateľ {current_user.email} žiada pridanie na cestu '{trip.trip_name}'.",
+        target_user_email=trip_creator.email,
+        actor_user_id=user.id,
+        notification_type=NotificationTypes.info,
+        target_func=TargetFunctions.trips
+      )
 
     return modef.DefaultResponse(status=True, msg="Join request sent successfully")
 
@@ -130,6 +148,30 @@ async def respond_trip_invite(request: moreq.TripInviteResponse,
       trip.free_seats += 1
 
     db.commit()
+
+    # Notify trip creator about invite response
+    trip_creator = db.query(model.Users).filter(model.Users.id == trip.creator).first()
+    if trip_creator:
+      if request.accepted:
+        send_notification_to_user(
+          db=db,
+          title="Pozvánka na cestu bola prijatá!",
+          message=f"Používateľ {current_user.email} prijal pozvánku na cestu '{trip.trip_name}'.",
+          target_user_email=trip_creator.email,
+          actor_user_id=user.id,
+          notification_type=NotificationTypes.success,
+          target_func=TargetFunctions.trips
+        )
+      else:
+        send_notification_to_user(
+          db=db,
+          title="Pozvánka na cestu bola odmietnutá",
+          message=f"Používateľ {current_user.email} odmietol pozvánku na cestu '{trip.trip_name}'.",
+          target_user_email=trip_creator.email,
+          actor_user_id=user.id,
+          notification_type=NotificationTypes.warning,
+          target_func=TargetFunctions.trips
+        )
 
     status_msg = "Invite accepted" if request.accepted else "Invite rejected"
     return modef.DefaultResponse(status=True, msg=status_msg)
@@ -400,6 +442,30 @@ async def approve_trip_join_request(request: moreq.TripJoinResponse,
             join_request.status = TripsInviteStatus.rejected
 
         db.commit()
+
+        # Notify the requester about approval/rejection
+        requester = db.query(model.Users).filter(model.Users.id == join_request.id_user).first()
+        if requester:
+          if request.approved:
+            send_notification_to_user(
+              db=db,
+              title="Žiadosť o cestu bola schválená!",
+              message=f"Vaša žiadosť o pridanie sa na cestu '{trip.trip_name}' bola schválená.",
+              target_user_email=requester.email,
+              actor_user_id=user.id,
+              notification_type=NotificationTypes.success,
+              target_func=TargetFunctions.trips
+            )
+          else:
+            send_notification_to_user(
+              db=db,
+              title="Žiadosť o cestu bola odmietnutá",
+              message=f"Vaša žiadosť o pridanie sa na cestu '{trip.trip_name}' bola odmietnutá.",
+              target_user_email=requester.email,
+              actor_user_id=user.id,
+              notification_type=NotificationTypes.warning,
+              target_func=TargetFunctions.trips
+            )
 
         status_msg = "Join request approved" if request.approved else "Join request rejected"
         return modef.DefaultResponse(status=True, msg=status_msg)

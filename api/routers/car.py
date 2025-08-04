@@ -4,10 +4,15 @@ import api_models.request as moreq
 import api_models.default as modef
 from typing import Annotated
 from internal.dependencies import get_current_user, connect_to_db, admin_or_manager, check_roles
-from internal.dependencies.notifications import send_notification_to_user, notify_car_decommissioned
+from internal.dependencies.notifications import (
+    send_notification_to_user, 
+    notify_car_decommissioned, 
+    notify_car_activated,
+    send_notification_to_role
+)
 from sqlalchemy.orm import Session
 import db.models as model
-from db.enums import CarStatus, LeaseStatus, RequestStatus, TripsStatuses, TripsInviteStatus
+from db.enums import CarStatus, LeaseStatus, RequestStatus, TripsStatuses, TripsInviteStatus, NotificationTypes, TargetFunctions
 from datetime import datetime
 
 router = APIRouter(prefix='/v2/cars', tags=['cars'])
@@ -128,12 +133,18 @@ async def activate_car(id_car: int, current_user: Annotated[modef.User, Depends(
 
   db.commit()
 
+  # Get current user from database for notification
+  current_user_db = db.query(model.Users).filter(
+    model.Users.email == current_user.email,
+    model.Users.is_deleted == False
+  ).first()
+  
   # Send system notification about car activation
-  try:
-    from internal.dependencies.notifications import notify_car_activated
-    notify_car_activated(db, current_user.id, car.name)
-  except Exception as e:
-    print(f"WARNING: Failed to send activation notification: {e}")
+  if current_user_db:
+    try:
+      notify_car_activated(db, current_user_db.id, car.name)
+    except Exception as e:
+      print(f"WARNING: Failed to send activation notification: {e}")
 
   return modef.DefaultResponse(
     status=200,
@@ -272,22 +283,33 @@ async def decommision_car(
         
         db.commit()
         
-        for user_email in affected_user_emails:
-            try:
-                send_notification_to_user(
-                    db=db,
-                    title=f"Vaša rezervácia pre: {car.name} je zrušená",
-                    message="Objednané auto bolo de-aktivované správcom.",
-                    target_user_email=user_email,
-                    actor_user_id=current_user.id
-                )
-            except Exception as e:
-                print(f"WARNING: Failed to send notification to {user_email}: {e}")
+        # Get current user from database for notifications
+        current_user_db = db.query(model.Users).filter(
+            model.Users.email == current_user.email,
+            model.Users.is_deleted == False
+        ).first()
         
-        try:
-            notify_car_decommissioned(db, current_user.id, car.name)
-        except Exception as e:
-            print(f"WARNING: Failed to send system notification: {e}")
+        if current_user_db:
+            # Send individual notifications to affected users
+            for user_email in affected_user_emails:
+                try:
+                    send_notification_to_user(
+                        db=db,
+                        title=f"Vaša rezervácia pre: {car.name} je zrušená",
+                        message="Objednané auto bolo deaktivované správcom.",
+                        target_user_email=user_email,
+                        actor_user_id=current_user_db.id,
+                        notification_type=NotificationTypes.warning,
+                        target_func=TargetFunctions.reservations
+                    )
+                except Exception as e:
+                    print(f"WARNING: Failed to send notification to {user_email}: {e}")
+            
+            # Send system notification about car decommissioning
+            try:
+                notify_car_decommissioned(db, current_user_db.id, car.name)
+            except Exception as e:
+                print(f"WARNING: Failed to send system notification: {e}")
         
         return modef.DefaultResponse(
             status=200,

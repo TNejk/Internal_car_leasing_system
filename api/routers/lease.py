@@ -290,20 +290,20 @@ async def cancel_lease(request: moreq.LeaseCancel, current_user: Annotated[modef
       print(f"INFO: No trip associated with lease {active_lease.id}")
 
     
-    # if (current_user.role in ["manager", "admin"] and
-    #   current_user.email != recipient_email):
-    #   # Send notification to the user whose lease was cancelled
-    #   current_user_db = db.query(model.Users).filter(
-    #     model.Users.email == current_user.email
-    #   ).first()
+    if (current_user.role in ["manager", "admin"] and
+      current_user.email != recipient_email):
+      # Send notification to the user whose lease was cancelled
+      current_user_db = db.query(model.Users).filter(
+        model.Users.email == current_user.email
+      ).first()
       
-    #   if current_user_db:
-    #     notify_lease_cancelled(
-    #       db=db,
-    #       current_user_id=current_user_db.id,
-    #       recipient_email=recipient_email,
-    #       car_name=car.name
-    #     )
+      if current_user_db:
+        notify_lease_cancelled(
+          db=db,
+          current_user_id=current_user_db.id,
+          recipient_email=recipient_email,
+          car_name=car.name
+        )
 
     db.commit()
 
@@ -416,20 +416,20 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
       db.add(lease_request)
       db.commit()
 
-      # # Send notification to managers about private ride request
-      # current_user_db = db.query(model.Users).filter(
-      #   model.Users.email == current_user.email
-      # ).first()
+      # Send notification to managers about private ride request
+      current_user_db = db.query(model.Users).filter(
+        model.Users.email == current_user.email
+      ).first()
       
-      # if current_user_db:
-      #            notify_private_ride_request(
-      #      db=db,
-      #      current_user_id=current_user_db.id,
-      #      user_email=current_user.email,
-      #      car_name=car.name,
-      #      time_from=str(time_from),
-      #      time_to=str(time_to)
-      #    )
+      if current_user_db:
+        notify_private_ride_request(
+          db=db,
+          current_user_id=current_user_db.id,
+          user_email=current_user.email,
+          car_name=car.name,
+          time_from=str(time_from),
+          time_to=str(time_to)
+        )
 
       return mores.LeaseStart(status=True, private=True, msg="Request for a private ride was sent!")
 
@@ -504,21 +504,35 @@ async def lease_car(request: moreq.LeaseCar, current_user: Annotated[modef.User,
 
     db.commit()
 
-    # # Send notifications
-    # current_user_db = db.query(model.Users).filter(
-    #   model.Users.email == current_user.email
-    # ).first()
+    # Send notifications
+    current_user_db = db.query(model.Users).filter(
+      model.Users.email == current_user.email
+    ).first()
     
-    # if current_user_db:
-    #   # Notify managers about new lease
-    #   notify_new_reservation(
-    #     db=db,
-    #     current_user_id=current_user_db.id,
-    #     recipient_email=recipient,
-    #     car_name=car.name,
-    #     time_from=str(time_from),
-    #     time_to=str(time_to)
-    #   )
+    if current_user_db:
+      # Notify managers about new lease
+      notify_new_reservation(
+        db=db,
+        current_user_id=current_user_db.id,
+        recipient_email=recipient,
+        car_name=car.name,
+        time_from=str(time_from),
+        time_to=str(time_to)
+      )
+      
+      # Send trip invitations to participants
+      if trip_participants:
+        for participant_email in trip_participants:
+          if participant_email != recipient:  # Don't send invitation to trip creator
+            send_notification_to_user(
+              db=db,
+              title="Pozvánka na cestu!",
+              message=f"Boli ste pozvaní na cestu '{trip_name}' s autom {car.name}.",
+              target_user_email=participant_email,
+              actor_user_id=current_user_db.id,
+              notification_type=NotificationTypes.info,
+              target_func=TargetFunctions.trips
+            )
 
     return mores.LeaseStart(status=True, private=private_ride, msg="Lease created successfully!")
 

@@ -19,6 +19,12 @@ async def get_notifications(current_user: Annotated[modef.User, Depends(get_curr
       model.Users.email == current_user.email
     ).first()
     
+    if not user_db:
+      raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="User not found"
+      )
+    
     # Get notifications for user's role and individual notifications
     # Use a subquery to check if user has a recipient record
     notifications_query = db.query(
@@ -86,8 +92,8 @@ async def get_notifications(current_user: Annotated[modef.User, Depends(get_curr
     )
 
 
-@router.patch("/read/{request}", response_model=modef.DefaultResponse)
-async def mark_notification_as_read(request: int,
+@router.patch("/read/{notification_id}", response_model=modef.DefaultResponse)
+async def mark_notification_as_read(notification_id: int,
                                     current_user: Annotated[modef.User, Depends(get_current_user)],
                                     db: Session = Depends(connect_to_db)):
   """Mark a notification as read for the current user"""
@@ -96,9 +102,14 @@ async def mark_notification_as_read(request: int,
       model.Users.email == current_user.email
     ).first()
     
+    if not user_db:
+      raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="User not found"
+      )
 
     notification = db.query(model.Notifications).filter(
-      model.Notifications.id == request.notification_id
+      model.Notifications.id == notification_id
     ).filter(
   
       (model.Notifications.recipient_role == user_db.role) |
@@ -117,7 +128,7 @@ async def mark_notification_as_read(request: int,
     
     # Check if recipient record already exists
     recipient_record = db.query(model.NotificationsRecipients).filter(
-      model.NotificationsRecipients.notification == request.notification_id,
+      model.NotificationsRecipients.notification == notification_id,
       model.NotificationsRecipients.recipient == user_db.id
     ).first()
     
@@ -135,7 +146,7 @@ async def mark_notification_as_read(request: int,
     else:
  
       new_recipient = model.NotificationsRecipients(
-        notification=request.notification_id,
+        notification=notification_id,
         recipient=user_db.id,
         is_read=True,
         read_at=current_time

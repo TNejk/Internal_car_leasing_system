@@ -5,8 +5,12 @@ import api_models.response as mores
 import api_models.default as modef
 from sqlalchemy.orm import Session
 from internal.dependencies import get_current_user, connect_to_db, admin_or_manager
+from internal.dependencies.notifications import (
+    send_notification_to_role,
+    send_system_notification
+)
 import db.models as model
-from db.enums import UserRoles
+from db.enums import UserRoles, NotificationTypes, TargetFunctions
 
 router = APIRouter(prefix="/v2/user", tags=["users"])
 
@@ -18,6 +22,12 @@ async def get_users(current_user: Annotated[modef.User, Depends(get_current_user
                     db: Session = Depends(connect_to_db)):
 
   try:
+    # Get current user from database for notifications
+    current_user_db = db.query(model.Users).filter(
+      model.Users.email == current_user.email,
+      model.Users.is_deleted == False
+    ).first()
+    
     # Get all users, that are not disabled or admins, DO NOT RETURN YOURSELF USER
     users = db.query(model.Users).filter(
       model.Users.is_deleted == False,

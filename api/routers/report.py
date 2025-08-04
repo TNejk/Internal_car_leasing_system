@@ -4,11 +4,15 @@ import api_models.request as moreq
 import api_models.response as mores
 import api_models.default as modef
 from internal.dependencies import get_current_user, connect_to_db, admin_or_manager
+from internal.dependencies.notifications import (
+    send_notification_to_role,
+    send_system_notification
+)
 from internal.dependencies.report import find_reports_directory, get_reports_paths
 from typing import Annotated
 from sqlalchemy.orm import Session
 import db.models as model
-from db.enums import UserRoles
+from db.enums import UserRoles, NotificationTypes, TargetFunctions
 import os
 
 router = APIRouter(prefix="/v2/report", tags=["report"])
@@ -110,6 +114,20 @@ async def get_report(filename: str, current_user: Annotated[modef.User, Depends(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="File not found"
       )
+
+    # Send notification about report download
+    try:
+      send_notification_to_role(
+        db=db,
+        title="Stiahnutie reportu",
+        message=f"Administrátor {current_user.email} stiahol report: {filename}",
+        target_role=UserRoles.admin,
+        actor_user_id=db_user.id,
+        notification_type=NotificationTypes.warning,
+        target_func=TargetFunctions.reports
+      )
+    except Exception as e:
+      print(f"WARNING: Failed to send report download notification: {e}")
 
     return FileResponse(
       path=safe_path,
