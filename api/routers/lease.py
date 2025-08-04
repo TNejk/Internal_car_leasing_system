@@ -113,6 +113,7 @@ async def get_leases(request: moreq.LeaseList, current_user: Annotated[modef.Use
           car_name=lease_request.car.name,
           spz=lease_request.car.plate_number,
           img_url=lease_request.car.img_url,
+          private=True,  # Private ride requests are always private
           status_updated_at=None,
           last_changed_by="",
           region_tag="local"  

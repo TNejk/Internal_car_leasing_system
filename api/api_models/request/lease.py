@@ -35,7 +35,9 @@ class LeasePrivateApprove(BaseModel):
   approval:   bool
   request_id: int
   car_id:     int
-  requester:  Annotated[str, Field(description="User who requested the private ride",  default=None)]
+  requester:  str
+  time_from:  Annotated[datetime | None, Field(examples=["YYYY.MM.DD hh:mm:dd"], default=None)]
+  time_to:    Annotated[datetime | None, Field(examples=["YYYY.MM.DD hh:mm:dd"], default=None)]
 
 class LeaseFinish(BaseModel):
   lease_id:        int

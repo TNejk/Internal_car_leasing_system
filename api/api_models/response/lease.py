@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Annotated
-from api_models.default import Lease
 from ..default import Lease
 
 class LeaseList(BaseModel):
