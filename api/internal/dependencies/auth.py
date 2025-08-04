@@ -106,17 +106,18 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session 
     raise cred_exception
 
   # Check if token is revoked
-  token_to_check = payload.get("jti", token)  # Use jti if available, otherwise use the token itself
-  revoked_token = db.query(model.RevokedJWT).filter(
-    model.RevokedJWT.token == token_to_check
-  ).first()
+  #! FOR NOW TOKEN REVOCATION IS DIAABLED AS THE DATABSE HAS A MODELING PROBLEM WITH IT, REENABLE WHEN DB IS FIXED
+  # token_to_check = payload.get("jti", token)  # Use jti if available, otherwise use the token itself
+  # revoked_token = db.query(model.RevokedJWT).filter(
+  #   model.RevokedJWT.token == token_to_check
+  # ).first()
   
-  if revoked_token:
-    raise HTTPException(
-      status_code=status.HTTP_401_UNAUTHORIZED,
-      detail="Token has been revoked",
-      headers={"WWW-Authenticate": "Bearer"}
-    )
+  # if revoked_token:
+  #   raise HTTPException(
+  #     status_code=status.HTTP_401_UNAUTHORIZED,
+  #     detail="Token has been revoked",
+  #     headers={"WWW-Authenticate": "Bearer"}
+  #   )
 
   user = get_existing_user(email=email, role=role, db=db)
   if not user:
