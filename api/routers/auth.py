@@ -81,3 +81,9 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: 
     token=access_token,
   )
 
+
+
+# Get the map token from the server db or env file and send it to the user for him to use the map
+# @router.get("map_token", response_model=modef.DefaultResponse)
+# async def get_token():
+#    pass

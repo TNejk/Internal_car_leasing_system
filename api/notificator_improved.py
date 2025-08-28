@@ -31,23 +31,7 @@ def create_notification(db_session, actor_user_id: int, recipient_role: UserRole
                        notification_type: NotificationTypes, target_func: TargetFunctions,
                        title: str, message: str, expires_at: Optional[datetime] = None,
                        specific_recipients: Optional[List[int]] = None) -> bool:
-    """
-    Create a notification in the database using SQLAlchemy.
-    
-    Args:
-        db_session: SQLAlchemy session
-        actor_user_id: ID of the user creating the notification
-        recipient_role: Target role for role-based notifications
-        notification_type: Type of notification (info, warning, danger, success)
-        target_func: Target function area (lease, trips, etc.)
-        title: Notification title
-        message: Notification message
-        expires_at: Optional expiration datetime
-        specific_recipients: Optional list of specific user IDs to notify
-    
-    Returns:
-        bool: True if successful, False otherwise
-    """
+
     try:
         notification = model.Notifications(
             title=title,
@@ -83,7 +67,7 @@ def create_notification(db_session, actor_user_id: int, recipient_role: UserRole
         print(f"[NOTIF EXCEPTION] {e}")
         return False
 
-# Firebase initialization
+
 try:
     cred = credentials.Certificate("icls-56e37-firebase-adminsdk-2d4e2-be93ca6a35.json")
     firebase_admin.initialize_app(cred)
@@ -264,7 +248,7 @@ class CarLeaseNotificator:
                     print(f"INFO: Late return notification sent to {driver.email} for car {car.name}")
                     
             
-                    self.handle_upcoming_lease_cancellation(db_session, current_time, car, system_user)
+                    self.handle_upcoming_lease_warning(db_session, current_time, car, system_user)
                     
                     lease.status = LeaseStatus.late
                     
@@ -415,9 +399,12 @@ class CarLeaseNotificator:
             print(f"ERROR: Error during car status cleanup: {e}")
             raise
 
-    def handle_upcoming_lease_cancellation(self, db_session, current_time: datetime, 
+    def handle_upcoming_lease_warning(self, db_session, current_time: datetime, 
                                          car: model.Cars, system_user: model.Users) -> None:
         """Handle warning for upcoming leases if current lease is late."""
+
+        #! Nemazať nasledujúcu rezerváciu, tá sa začne normálne, len bude upozornení pouzivatel 
+        
         try:
             # Find next lease for the same car
             next_lease = db_session.query(model.Leases).filter(

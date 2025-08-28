@@ -855,3 +855,8 @@ async def return_car(request: moreq.LeaseFinish,
     )
 
 
+# * Manager confirmation about a car being actually returned
+# After a user returns a car, make a note of it somehow in our database, maybe by changing the lease status to unconfirmed or smth
+# Then when a manager logs in and gets a list of all the leases it will include a confirmation of car and key return, or maybe we could do it using notifications? I dont know
+
+# Anyway he then will click a button that sends a request here confirming that the car is returned. Changing the lease status and the car status.
