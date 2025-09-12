@@ -68,16 +68,14 @@ def user_dashboard():
 @require_role('user', 'manager')
 def lease():
   assets = gvap(['main', 'js/script', 'js/lease'])
-  location = request.args.get('location', None)
-  cars = api_call(method='GET', postfix='cars/get_cars', payload={'location': location})
   email = session['email']
   role = session['role']
   if session.get('role') == 'manager':
     users = api_call(method='GET', postfix='user/get_users')
-    return render_template('dashboards/lease.html', users=users, cars=cars, token=session.get('token'),
+    return render_template('dashboards/lease.html', users=users, token=session.get('token'),
                            icons=load_icons(), email=email, role=role, show_header=True, assets=assets)
   else:
-    return render_template('dashboards/lease.html', cars=cars, token=session.get('token'),
+    return render_template('dashboards/lease.html', token=session.get('token'),
                            icons=load_icons(), email=email, role=role, show_header=True, assets=assets)
 
 
@@ -187,11 +185,12 @@ def get_report_r():
     return {"msg": f"Server error: {str(e)}"}, 500
 
 
-@app.route('/get_cars', methods=['POST'])
+@app.route('/get_cars', methods=['GET'])
 @require_role('manager', 'user')
 @check_token()
 def get_car_list():
-  data = get_all_cars(session['email'], session['role'])
+  location = request.args.get('location', None)
+  data = api_call(method='GET', postfix='cars/get_cars', payload={'location': location})
   return data
 
 

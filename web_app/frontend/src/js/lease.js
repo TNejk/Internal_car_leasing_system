@@ -8,9 +8,47 @@ let is_private = null;
 let Token = null;
 let car_id = null;
 let stk = null;
+let geojs = null;
 
-const closeModal = document.getElementById('close-modal');
-const modal = document.getElementById('modal');
+function loadCarList(){
+  fetch('/get_cars', {method: 'GET'})
+    .then(response => response.json())
+    .then(data => {
+      // console.log(data['car_list']);
+      //{
+      //   "car_id": 1,
+      //   "car_name": "Volkswagen Golf",
+      //   "car_status": "available",
+      //   "image_url": "https://fl.gamo.sosit-wh.net/wolks.jpg",
+      //}
+      let car_list_div = document.getElementById('car-list');
+
+      for(let car of data['car_list']){
+        let card = document.createElement('div');
+        card.setAttribute('class', 'card');
+        card.setAttribute('onclick', 'renderDetails(car.car_id)');
+
+        let align = document.createElement('div');
+        align.setAttribute('class', 'flex-inline');
+
+        let img = document.createElement('img');
+        img.setAttribute('src', car.image_url);
+        align.appendChild(img);
+
+        let name = document.createElement('h2');
+        name.textContent = car.car_name;
+        align.appendChild(name);
+
+        let status = document.createElement('p');
+        status.textContent = car.car_status;
+        align.appendChild(status);
+
+        card.appendChild(align);
+        car_list_div.appendChild(card);
+      }
+
+    })
+}
 
 function fetchCarData(carId, token, user, useRole) {
   fetch('https://icls.sosit-wh.net/get_full_car_info', {
@@ -220,7 +258,73 @@ function leaseCar(selectedRange) {
     .catch(error => console.error('Error:', error));
 }
 
-closeModal.addEventListener('click', () => {
-  modal.classList.remove('open')
-});
+function getRoute(start, end, map){
+  const key = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImUwZTRmZGQ4ZDQxYjQ4ZjRiNTZjOGVlYzMzNTEzZDM2IiwiaCI6Im11cm11cjY0In0='
+  fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${key}&start=${start['lng']},${start['lat']}&end=${end['lng']},${end['lat']}`, {method: 'GET'})
+    .then(response => response.json())
+    .then(data => {
+      console.log(data['features'][0]['properties']['summary']);
+      let infoCard = document.getElementById('route-info');
 
+      let distanceHeader = document.createElement('h2');
+      distanceHeader.textContent = 'Vzdialenosť'
+      infoCard.appendChild(distanceHeader);
+
+      let distanceData = document.createElement('p');
+      distanceData.textContent = Math.round(data['features'][0]['properties']['summary']['distance'] / 1000) + ' km';
+      infoCard.appendChild(distanceData);
+
+      let durationHeader = document.createElement('h2');
+      durationHeader.textContent = 'Trvanie'
+      infoCard.appendChild(durationHeader);
+
+      let durationData = document.createElement('p');
+      durationData.textContent = data['features'][0]['properties']['summary']['duration'] / 60 + ' h';
+      infoCard.appendChild(durationData);
+
+      geojs = L.geoJSON(data).addTo(map);
+  })
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  let marker_list = [];
+  let coords_list = [];
+  let map = L.map('map').setView([48.727103, 19.120248], 13);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(map);
+
+  map.on('click', (e) => {
+    if (marker_list.length <= 2) {
+      marker_list.push(L.marker(e.latlng).addTo(map));
+      coords_list.push(e.latlng);
+      if (marker_list.length === 2) {
+        getRoute(coords_list[0], coords_list[1], map);
+      }
+    }
+    if (marker_list.length > 2) {
+      geojs.removeFrom(map);
+      for (const marker of marker_list) {
+        marker.remove();
+      }
+      marker_list = [];
+      coords_list = [];
+    }
+  })
+
+  document.getElementById('open-assisted').addEventListener('click', (e) => {
+    document.getElementById('choices').style.display = 'none';
+    document.getElementById('assisted').style.display = 'block';
+    map.invalidateSize();
+  })
+  document.getElementById('open-manual').addEventListener('click', () => {
+    loadCarList();
+    document.getElementById('choices').style.display = 'none';
+    document.getElementById('manual').style.display = 'block';
+  })
+  document.getElementById('open-trip').addEventListener('click', () => {
+    console.log('open-trip');
+    document.getElementById('choices').style.display = 'none';
+    document.getElementById('trip').style.display = 'block';
+  })
+})

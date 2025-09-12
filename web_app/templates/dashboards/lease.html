@@ -1,29 +1,108 @@
 {% extends 'base/base.html' %}
 
 {% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
 <title>ICLS - Gamo</title>
 {% endblock %}
 
 {% block body %}
-<div class="container row layout full-height">
+<div class="container row full-height">
   <!-- LEFT COLUMN: Recommend -->
-  <div class="column-left">
-    <div class="card text-center">
-      <h1>Nechaj systém, aby ti vybral to najvhodnejšie auto na základe tvojich potrieb.</h1>
-      <button type="button" class="btn btn-primary w-full">Vybrať automaticky</button>
+  <div id="choices" class="row">
+    <div class="left">
+      <div class="card text-center ">
+        <h1>Nechaj systém, aby ti vybral to najvhodnejšie auto na základe tvojich potrieb.</h1>
+        <button id="open-assisted" class="btn">Vybrať automaticky</button>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Manual + Trip -->
+    <div class="right">
+      <div class="card text-center">
+        <h2>Vyber si auto podľa seba – presne také, aké chceš.</h2>
+        <button id="open-manual" class="btn">Vybrať manuálne</button>
+      </div>
+
+      <div class="card text-center">
+        <h2>Pripoj sa k niekomu na spoločnú jazdu.</h2>
+        <button id="open-trip" class="btn">Vybrať spoločnú jazdu</button>
+      </div>
     </div>
   </div>
 
-  <!-- RIGHT COLUMN: Manual + Trip -->
-  <div class="column-right">
-    <div class="card text-center">
-      <h2>Vyber si auto podľa seba – presne také, aké chceš.</h2>
-      <button type="button" class="btn btn-primary w-full">Vybrať manuálne</button>
-    </div>
+  <div id="assisted" style="display: none">
+    <div class="card">
+      <form>
+        <div class="flex-inline">
+          <div class="left">
+            <div class="form-container">
+              <div class="form-group">
+                <label for="category">Kategória auta</label>
+                <select id="category">
+                  <option value="personal">Osobné</option>
+                  <option value="cargo">Nákladné</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="gearbox">Typ prevodovky</label>
+                <select id="gearbox">
+                  <option value="manual">Manuálna prevodovka</option>
+                  <option value="automatic">Automatická prevodovka</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="region">Región</label>
+                <select id="region">
+                  <option value="local">Lokál</option>
+                  <option value="global">Globál</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="start_time">Od:</label>
+                <input type="datetime-local" id="start_time">
+              </div>
+              <div class="form-group">
+                <label for="end_time">Do:</label>
+                <input type="datetime-local" id="end_time">
+              </div>
+              <div class="card" id="route-info"></div>
+            </div>
+          </div>
 
-    <div class="card text-center">
-      <h2>Pripoj sa k niekomu na spoločnú jazdu.</h2>
-      <button type="button" class="btn btn-primary w-full">Pozrieť výlety</button>
+          <div class="right">
+            <div id="map" style="height: 600px; width: 800px"></div>
+          </div>
+        </div>
+
+
+        <div class="under">
+          <div class="form-container">
+            <div class="form-actions">
+              <input type="submit" class="btn" value="Vyhľadaj">
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="manual" style="display: none">
+    <div class="flex-inline">
+      <div class="left-panel">
+        <div class="card" id="car-list">
+          <p id="car-list-msg">Načítavam autá...</p>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <h2 id="car-details-msg">Vyber si auto</h2>
+        <div class="card" id="car-details" style="display: none;"></div>
+      </div>
     </div>
   </div>
 </div>

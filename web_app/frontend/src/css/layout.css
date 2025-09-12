@@ -22,6 +22,19 @@
   height: 100vh;
 }
 
+.left-panel {
+  width: 30%;
+  min-width: 250px;
+  padding: var(--space-m);
+  box-sizing: border-box;
+}
+
+.right-panel {
+  flex: 1;
+  padding: var(--space-m);
+  box-sizing: border-box;
+}
+
 .container {
   width: 100%;
   max-width: 1200px;
@@ -93,52 +106,18 @@
   display: flex;
 }
 
-/* Main layout with 2 columns */
-.layout {
-  display: flex;
-  height: 100%;
-  align-items: stretch;
-  flex-wrap: wrap;
-  gap: var(--space-m);
-  margin-top: var(--space-l);
-}
-
-/* Left column: takes 40% of width */
-.column-left {
-  flex: 1 1 40%;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Right column: takes 60% of width, stack vertically */
-.column-right {
-  flex: 1 1 60%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-m);
-}
-
-/* Ensure buttons take full width */
-.card .btn {
-  margin-top: var(--space-m);
-  width: 100%;
-}
-
-.column-left,
-.column-right {
-  display: flex;
-  flex-direction: column;
-  justify-content: stretch;
-  height: 100%;
-}
-
 @media (max-width: 768px) {
-  .layout {
+  .container {
     flex-direction: column;
+    height: auto;
   }
 
-  .column-left,
-  .column-right {
-    flex: 1 1 100%;
+  .left-panel {
+    width: 100%;
+  }
+
+  .right-panel {
+    width: 100%;
+    min-height: 100vh;
   }
 }

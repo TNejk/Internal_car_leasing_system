@@ -37,6 +37,7 @@ function set_light(){
   document.documentElement.setAttribute('data-theme', localStorage.getItem('theme'));
   document.getElementById('toggle-btn').src = localStorage.getItem('dlb');
 }
+
 function toggle() {
   if (localStorage.getItem('theme') === 'dark'){
     set_light();
