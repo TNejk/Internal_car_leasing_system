@@ -105,6 +105,24 @@
       </div>
     </div>
   </div>
+  {% if role == 'manager' %}
+  <div class="modal" id="modal-decom-car" style="display: none">
+      <h1 id="modal-h1-decom"></h1>
+      <div class="form-container">
+        <form>
+            <div class="form-group">
+              <label for="modal-decom-time">Do kedy:</label>
+              <input type="datetime-local" id="modal-decom-time">
+            </div>
+            <div class="form-actions">
+              <button type="button" id="modal-decom-button">Odstav auto</button>
+              <button type="button" id="modal-close-decom-button">Späť</button>
+            </div>
+          </form>
+      </div>
+    </div>
+  {% endif %}
+
 </div>
 
 
