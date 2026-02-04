@@ -2,3 +2,6 @@
 /.venv
 .env
 /db
+web_app/.env
+web_app/.venv
+*.pyc
