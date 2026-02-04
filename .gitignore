@@ -1,6 +1,0 @@
-.idea
-api
-mobile_app
-web_app/.env
-web_app/.venv
-*.pyc
