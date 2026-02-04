@@ -1,0 +1,59 @@
+{
+  "src/js/Adashboard.js": {
+    "file": "assets/Adashboard-D_IQul0r.js",
+    "name": "Adashboard",
+    "src": "src/js/Adashboard.js",
+    "isEntry": true
+  },
+  "src/js/Mdashboard.js": {
+    "file": "assets/Mdashboard-C53FkPei.js",
+    "name": "Mdashboard",
+    "src": "src/js/Mdashboard.js",
+    "isEntry": true
+  },
+  "src/js/dashboard.js": {
+    "file": "assets/dashboard-l0sNRNKZ.js",
+    "name": "dashboard",
+    "src": "src/js/dashboard.js",
+    "isEntry": true
+  },
+  "src/js/lease.js": {
+    "file": "assets/lease-ksBkbrMK.js",
+    "name": "lease",
+    "src": "src/js/lease.js",
+    "isEntry": true
+  },
+  "src/js/private_requests.js": {
+    "file": "assets/private_requests-DIf1pBIZ.js",
+    "name": "private_requests",
+    "src": "src/js/private_requests.js",
+    "isEntry": true
+  },
+  "src/js/reports.js": {
+    "file": "assets/reports-yJCo_O3X.js",
+    "name": "reports",
+    "src": "src/js/reports.js",
+    "isEntry": true
+  },
+  "src/js/reservations.js": {
+    "file": "assets/reservations-OHLOqiTe.js",
+    "name": "reservations",
+    "src": "src/js/reservations.js",
+    "isEntry": true
+  },
+  "src/js/script.js": {
+    "file": "assets/script-CX1eyPmp.js",
+    "name": "script",
+    "src": "src/js/script.js",
+    "isEntry": true
+  },
+  "src/main.js": {
+    "file": "assets/main-CU0J86ip.js",
+    "name": "main",
+    "src": "src/main.js",
+    "isEntry": true,
+    "css": [
+      "assets/main-E_dwhHHD.css"
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+<header class="flex-center header">
+  <div class="flex-center">
+    <img src="../../static/images/logo.svg" alt="GAMO" class="gamo-logo" style="height: 4rem">
+    <img src="{{ url_for('static', filename='images/on-off-white.svg' )}}" id='toggle-btn' class="action-button" alt="On/Off" onclick="toggle()">
+  </div>
+  {% if role == 'admin' %}
+  <a href="/logout">Odhlásiť sa</a>
+  {% else %}
+  <div class="icons">
+    <ul>
+
+
+      {% if role == 'manager' %}
+        <li><a href="/manager/dashboard"><img src="{{ icons[3] }}" alt="Domcek" class="action-button"></a></li>
+      {% elif role == 'user' %}
+        <li><a href="/user/dashboard"><img src="{{ icons[3] }}" alt="Domcek" class="action-button"></a></li>
+      {% endif %}
+
+
+      <li><a href="/lease"><img src="{{ icons[4] }}" alt="Auticko" class="action-button"></a></li>
+
+
+<!--      <li class="notification-dropdown">-->
+<!--        <a href="#" id="notification-bell">-->
+<!--          <img src="{{ icons[0] }}" alt="Zvoncek" style="width: 24px;height: 24px">-->
+<!--          <span id="notification-badge" class="badge">!</span>-->
+<!--        </a>-->
+<!--        <ul class="dropdown" id="notification-list">-->
+<!--          &lt;!&ndash; Notifications will be loaded here &ndash;&gt;-->
+<!--        </ul>-->
+<!--      </li>-->
+
+
+
+      <li>
+        <a href="#"><img src="{{ icons[1] }}" alt="Panacik" class="action-button"></a>
+        <ul class="dropdown">
+          <li><a href="/reservations">Rezervácie</a></li>
+          {% if role == 'manager' %}
+            <li><a href="/manager/reports">Reporty</a></li>
+            <li><a href="/manager/private_requests">Súkromné jazdy</a></li>
+          {% endif %}
+          <li><a href="/logout">Odhlásiť sa</a></li>
+        </ul>
+      </li>
+
+
+    </ul>
+  </div>
+  {% endif %}
+</header>

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% for asset in assets %}
+    {%  if asset.style %}
+      <link rel="stylesheet" href="{{ asset.style }}">
+    {% endif %}
+    {% if asset.script %}
+      <script src="{{ asset.script }}"></script>
+    {% endif %}
+  {% endfor %}
+
+  {% block head %}
+  {% endblock %}
+</head>
+<body>
+
+  {% if show_header %}
+    {% include 'base/header.html' %}
+  {% endif %}
+
+  {% block body %}
+  {% endblock %}
+
+  {% block script %}
+  {% endblock %}
+</body>
+</html>
