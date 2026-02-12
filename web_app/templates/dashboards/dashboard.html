@@ -1,0 +1,57 @@
+{% extends 'base/base.html' %}
+
+{% block head %}
+<title>ICLS - Gamo</title>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  <div class="row flex-center top">
+    <div class="card">
+      <h1>Vitaj {{ email }}!</h1>
+      <br>
+      <h2>Vaše mesačné štatistiky</h2>
+      <div class="card flex-center">
+        <div>
+          <p>
+            Počet rezervácií: 12
+          </p>
+        </div>
+        <div>
+          <p>
+            Odjazdená vzdialenosť: 504 km
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h1>Aktívne a nadchádzajúce rezervácie</h1>
+      <p>Načítavam...</p>
+      <div class="flex-center">
+        <div class="card info">
+          Nenašli sa žiadne rezervácie
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h1>Notifikácie</h1>
+      <div class="container">
+        <div class="flex-center">
+          <div class="card">
+            <h2>Upozornenie o vašej rezervácií!</h2>
+            <p>Vaša rezervácia bola zrušená!</p>
+            <div class="flex-inline">
+              <button class="btn">Detail...</button>
+              <button class="btn bt--secondary">Označiť ako prečítané</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

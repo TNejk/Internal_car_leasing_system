@@ -1,0 +1,127 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+:root {
+
+  /*COLORS*/
+
+  --primary: hsl(358, 71%, 43%);
+  --secondary: hsl(335, 24%, 36%);
+  --success: hsl(163, 100%, 33%);
+  --warning: hsl(46, 51%, 36%);
+  --danger: hsl(0, 94%, 13%);
+  --info: hsl(212, 62%, 40%);
+  --text: hsl(0, 0%, 95%);
+  --text-unmuted: hsl(0, 0%, 88%);
+  --text-muted: hsl(0, 0%, 75%);
+  --border: hsl(0, 0%, 30%);
+  --border-muted: hsl(0, 0%, 50%);
+  --bg-dark: hsl(0,0%,5%);
+  --bg: hsl(0,0%,10%);
+  --bg-light: hsl(0,0%,15%);
+  --border-card: solid 1px var(--border);
+  --shadow: 0px 2px 2px oklch(0 0 0 / 0.2), 0px 4px 4px oklch(0 0 0 / 0.1);
+
+  /*SPACING*/
+
+  --space-xs: 0.25rem; /* 4px */
+  --space-s: 0.5rem;  /* 8px */
+  --space-m: 1rem;    /* 16px */
+  --space-l: 1.5rem;  /* 24px */
+  --space-xl: 2rem;    /* 32px */
+
+  /*FONT SIZE*/
+
+  --font-s: 0.875rem;  /* 14px */
+  --font-m: 1rem;    /* 16px */
+  --font-l: 1.25rem;   /* 20px */
+  --font-xl: 1.5rem;    /* 24px */
+
+  /*RADIUS*/
+
+  --radius-s: 0.25rem;  /* ~4px */
+  --radius-m: 0.5rem;   /* ~8px */
+  --radius-l: 1rem;     /* ~16px */
+  --radius-f: 9999px; /* for pills or circles */
+
+}
+
+html[data-theme=light] {
+  --primary: hsl(358, 71%, 43%);
+  --secondary: hsl(335, 24%, 64%);
+  --success: hsl(163, 100%, 67%);
+  --warning: hsl(46, 51%, 44%);
+  --danger: hsl(0, 94%, 67%);
+  --info: hsl(212, 62%, 60%);
+  --text: hsl(0, 0%, 5%);
+  --text-unmuted: hsl(0, 0%, 12%);
+  --text-muted: hsl(0, 0%, 30%);
+  --border: hsl(0, 0%, 90%);
+  --border-muted: hsl(0, 0%, 80%);
+  --bg-dark: hsl(0,0%,90%);
+  --bg: hsl(0,0%,95%);
+  --bg-light: hsl(0,0%,100%);
+  --border-card: solid 1px var(--bg);
+}
+
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+/** {*/
+/*  outline: 1px solid var(--primary);*/
+/*}*/
+body{
+  background: var(--bg-dark);
+  color: var(--text-muted);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+h1 {
+  font-size: var(--font-xl);
+  color: var(--text);
+}
+
+h2 {
+  font-size: var(--font-l);
+  color: var(--text-unmuted);
+}
+
+
+p {
+  color: var(--text-muted);
+  font-size: var(--font-m);
+}
+
+ul {
+    list-style-type: none;
+}
+
+ul li {
+    display: inline-block;
+    position: relative;
+}
+
+ul li a {
+    text-decoration: none;
+    display: block;
+    padding: 0 14px;
+    text-align: center;
+    font-size: 16px;
+}
+
+ul li ul.dropdown {
+    width: 100%;
+    position: absolute;
+    z-index: 999;
+    display: none;
+    background-color: #ccc;
+}
+
+ul li:hover ul.dropdown {
+    display: block;
+}
